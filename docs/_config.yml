@@ -1,0 +1,30 @@
+# GitHub Pages configuration for documentation
+title: GitHub Copilot Enterprise Dashboard
+description: Production-ready analytics dashboard for GitHub Copilot Enterprise usage data
+theme: jekyll-theme-slate
+markdown: kramdown
+
+# GitHub metadata
+github:
+  repository_url: https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard
+
+# Navigation
+nav:
+  - title: Home
+    url: /
+  - title: Documentation
+    url: /docs/
+  - title: GitHub
+    url: https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard
+
+# Mermaid support (via kramdown)
+kramdown:
+  parse_block_html: true
+
+# Exclude files from processing
+exclude:
+  - .git
+  - .github
+  - .gitignore
+  - .claude
+  - .playwright-mcp

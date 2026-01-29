@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Copilot Enterprise Analytics Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-400: #94a3b8;
+            --slate-50: #f8fafc;
+            --indigo-600: #4f46e5;
+            --indigo-500: #6366f1;
+            --indigo-400: #818cf8;
+            --emerald-500: #10b981;
+            --amber-500: #f59e0b;
+            --red-500: #ef4444;
+            --blue-500: #3b82f6;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--slate-900) 0%, #1a1f35 100%);
+            color: var(--slate-50);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .card {
+            background: var(--slate-800);
+            border: 1px solid var(--slate-700);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, var(--slate-800) 0%, #2d3548 100%);
+            border: 1px solid var(--slate-700);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.4);
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--slate-700);
+            border-radius: 16px;
+            background: var(--slate-800);
+            transition: all 0.3s;
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--indigo-500);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--indigo-600);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--indigo-500);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--emerald-500); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--amber-500); }
+        .badge-error { background: rgba(239, 68, 68, 0.2); color: var(--red-500); }
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--blue-500); }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .chart-container-large {
+            height: 400px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--slate-700);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--indigo-600), var(--indigo-400));
+            transition: width 0.3s;
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 8px;
+            border: 1px solid var(--slate-700);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: var(--slate-800);
+            z-index: 10;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--slate-700);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: var(--slate-700);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--slate-700);
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        select, input[type="date"], input[type="text"] {
+            background: var(--slate-700);
+            border: 1px solid var(--slate-600);
+            color: var(--slate-50);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        select option {
+            background: var(--slate-700);
+            color: var(--slate-50);
+            padding: 0.5rem;
+        }
+
+        select option:checked,
+        select option:hover {
+            background: var(--slate-600);
+            color: var(--slate-50);
+        }
+
+        .hidden { display: none; }
+
+        .sparkline {
+            width: 100%;
+            height: 40px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <!-- Upload Zone (Empty State) -->
+    <div id="uploadContainer" class="min-h-screen flex items-center justify-center">
+        <div class="upload-zone p-12 text-center max-w-2xl w-full">
+            <div class="mb-6">
+                <i data-lucide="upload-cloud" class="mx-auto w-20 h-20 text-slate-400"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-4">GitHub Copilot Enterprise Analytics</h1>
+            <p class="text-slate-400 mb-8">Upload your NDJSON file to visualize Copilot usage data</p>
+
+            <input type="file" id="fileInput" accept=".ndjson,.json" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()" class="btn-primary">
+                <i data-lucide="file-plus" class="inline w-5 h-5 mr-2"></i>
+                Select NDJSON File
+            </button>
+
+            <p class="text-sm text-slate-500 mt-4">or drag and drop your file here</p>
+
+            <div class="mt-8 text-left bg-slate-900 p-4 rounded-lg">
+                <p class="text-xs text-slate-400 mb-2">Supported format:</p>
+                <code class="text-xs text-emerald-400">
+                    {"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150,...}
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div id="progressContainer" class="hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 p-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between mb-2">
+                <span class="text-sm">Processing NDJSON file...</span>
+                <span class="text-sm" id="progressText">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-3xl font-bold">Copilot Analytics Dashboard</h1>
+                <div class="flex gap-2">
+                    <button onclick="exportData()" class="btn-primary text-sm">
+                        <i data-lucide="download" class="inline w-4 h-4 mr-1"></i>
+                        Export CSV
+                    </button>
+                    <button onclick="resetDashboard()" class="btn-primary text-sm bg-slate-700">
+                        <i data-lucide="refresh-cw" class="inline w-4 h-4 mr-1"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global Filters -->
+            <div class="card bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700">
+                <div class="flex items-center gap-2 mb-5 pb-4 border-b border-slate-700/50">
+                    <i data-lucide="filter" class="w-5 h-5 text-indigo-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-200">Filters</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+                    <!-- Date Range -->
+                    <div class="md:col-span-2">
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            Date Range
+                        </label>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <input type="date" id="dateFrom" onchange="applyFilters()" class="h-10 text-sm px-3">
+                            <input type="date" id="dateTo" onchange="applyFilters()" class="h-10 text-sm px-3">
+                        </div>
+                        <select id="quickRange" onchange="applyQuickRange()" class="w-full h-9 text-xs bg-slate-700/50 border-slate-600 px-2">
+                            <option value="">Custom Range</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+
+                    <!-- User Filter -->
+                    <div>
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i>
+                            User
+                        </label>
+                        <select id="userFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
+                            <option value="">All Users</option>
+                        </select>
+                    </div>
+
+                    <!-- IDE Filter -->
+                    <div>
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                            <i data-lucide="code-2" class="w-3.5 h-3.5 text-green-400"></i>
+                            IDE
+                        </label>
+                        <select id="ideFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
+                            <option value="">All IDEs</option>
+                        </select>
+                    </div>
+
+                    <!-- Language Filter -->
+                    <div>
+                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                            <i data-lucide="file-code" class="w-3.5 h-3.5 text-amber-400"></i>
+                            Language
+                        </label>
+                        <select id="languageFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
+                            <option value="">All Languages</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-4 pt-4 border-t border-slate-700/50 flex justify-end">
+                    <button onclick="clearFilters()" class="btn-primary text-sm bg-slate-700/80 hover:bg-slate-600 border border-slate-600 h-9 px-4">
+                        <i data-lucide="x-circle" class="inline w-3.5 h-3.5 mr-1.5"></i>
+                        Clear All Filters
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div id="kpiCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
+
+        <!-- Configuration Info -->
+        <div class="card mb-6 bg-slate-800/50 border border-slate-700">
+            <div class="flex items-start gap-3">
+                <i data-lucide="settings" class="w-5 h-5 text-blue-400 mt-1"></i>
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Value Calculation Configuration</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3 text-sm">
+                            <div class="w-48 text-slate-400">Manual Lines Per Hour:</div>
+                            <input type="number" id="configManualRate" value="30" min="1" max="1000" class="w-20 h-8 px-2 text-sm font-mono font-semibold bg-slate-700 text-slate-100 border border-slate-600 rounded" oninput="updateConfiguration()">
+                            <div class="text-xs text-slate-500">lines/hour</div>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <div class="w-48 text-slate-400">Blended Rate Per Hour:</div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-slate-400">$</span>
+                                <input type="number" id="configBlendedRate" value="90" min="1" max="10000" class="w-20 h-8 px-2 text-sm font-mono font-semibold bg-slate-700 text-slate-100 border border-slate-600 rounded" oninput="updateConfiguration()">
+                            </div>
+                            <div class="text-xs text-slate-500">per developer hour</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Primary Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Activity Timeline</h3>
+                    <button onclick="exportActivityChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Top 15 Users by Generations</h3>
+                    <button onclick="exportTopUsersChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="topUsersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">IDE Market Share</h3>
+                    <button onclick="exportIDEChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ideChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Language Distribution</h3>
+                    <button onclick="exportLanguageChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="languageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Feature Usage</h3>
+                    <button onclick="exportFeatureChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Model Distribution</h3>
+                    <button onclick="exportModelChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="modelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div class="card mb-6">
+            <h3 class="text-lg font-semibold mb-4">
+                <i data-lucide="lightbulb" class="inline w-5 h-5 mr-2"></i>
+                Insights & Anomalies
+            </h3>
+            <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Data Explorer Table -->
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Data Explorer</h3>
+                <div class="flex gap-2 items-center">
+                    <input type="text" id="tableSearch" placeholder="Search..." class="w-64" oninput="filterTable()">
+                    <button onclick="exportTableData()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('user')">User <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('days')">Days Active <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('generations')">Generations <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('linesAdded')">Lines Added <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('linesDeleted')">Lines Deleted <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('netLines')">Net Lines <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('valueAdded')">Value Added <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('valueDeleted')">Value Deleted <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                            <th onclick="sortTable('netValue')">Net Value <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CUSTOMIZATION SECTION - Adjust these values
+        // ============================================
+        const CONFIG = {
+            // Quota Thresholds
+            DAILY_GENERATION_QUOTA: 500,
+            LOW_ACCEPTANCE_THRESHOLD: 0.20,
+            HIGH_ACCEPTANCE_THRESHOLD: 0.70,
+
+            // User Classifications
+            POWER_USER_PERCENTILE: 0.90,
+            MIN_GENERATIONS_FOR_RATE: 50,
+            INACTIVE_DAYS_THRESHOLD: 14,
+
+            // Anomaly Detection
+            SPIKE_STD_DEVIATIONS: 3,
+            TREND_COMPARISON_DAYS: 7,
+
+            // UI Settings
+            TABLE_PAGE_SIZE: 100,
+            CHART_ANIMATION_DURATION: 750,
+            MAX_TOP_USERS_SHOWN: 15,
+            MAX_LANGUAGES_SHOWN: 10,
+
+            // Parser Settings
+            CHUNK_SIZE: 10000,
+            MAX_FILE_SIZE_MB: 100,
+
+            // Value Calculation Settings
+            BLENDED_RATE_PER_HOUR: 90,           // $/hour per developer
+            MANUAL_LINES_PER_HOUR: 30,           // Average lines coded manually per hour
+            MANUAL_LINES_PER_HOUR_CONSERVATIVE: 20,  // Conservative estimate
+            MANUAL_LINES_PER_HOUR_AGGRESSIVE: 40,    // Aggressive estimate
+        };
+
+        // ============================================
+        // CONFIGURATION HELPERS
+        // ============================================
+        function getCurrentConfig() {
+            return {
+                MANUAL_LINES_PER_HOUR: Number(document.getElementById('configManualRate').value) || 30,
+                BLENDED_RATE_PER_HOUR: Number(document.getElementById('configBlendedRate').value) || 90
+            };
+        }
+
+        function updateConfiguration() {
+            // Save to localStorage
+            const config = getCurrentConfig();
+            localStorage.setItem('copilot_manual_lines_per_hour', config.MANUAL_LINES_PER_HOUR);
+            localStorage.setItem('copilot_blended_rate_per_hour', config.BLENDED_RATE_PER_HOUR);
+
+            // Re-render everything that depends on these values
+            if (state.filteredData.length > 0) {
+                renderKPIs();
+                renderTable();
+            }
+        }
+
+        function loadConfiguration() {
+            // Load from localStorage if available
+            const savedManualRate = localStorage.getItem('copilot_manual_lines_per_hour');
+            const savedBlendedRate = localStorage.getItem('copilot_blended_rate_per_hour');
+
+            if (savedManualRate) {
+                document.getElementById('configManualRate').value = savedManualRate;
+            }
+            if (savedBlendedRate) {
+                document.getElementById('configBlendedRate').value = savedBlendedRate;
+            }
+        }
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        const state = {
+            rawData: [],
+            filteredData: [],
+            aggregatedData: {},
+            charts: {},
+            filters: {
+                dateFrom: null,
+                dateTo: null,
+                users: [],
+                ides: [],
+                languages: [],
+                models: []
+            },
+            sortColumn: null,
+            sortDirection: 'asc'
+        };
+
+        // ============================================
+        // FILE UPLOAD & PARSING
+        // ============================================
+        function setupUpload() {
+            const uploadZone = document.querySelector('.upload-zone');
+            const fileInput = document.getElementById('fileInput');
+
+            // Drag and drop handlers
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('drag-over');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('drag-over');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFile(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFile(file);
+            });
+        }
+
+        async function handleFile(file) {
+            // Check file size
+            const sizeMB = file.size / (1024 * 1024);
+            if (sizeMB > CONFIG.MAX_FILE_SIZE_MB) {
+                alert(`Warning: File size is ${sizeMB.toFixed(1)}MB. Processing may be slow.`);
+            }
+
+            // Show progress
+            document.getElementById('uploadContainer').classList.add('hidden');
+            document.getElementById('progressContainer').classList.remove('hidden');
+
+            try {
+                const text = await file.text();
+                await parseNDJSON(text);
+
+                // Hide progress, show dashboard
+                document.getElementById('progressContainer').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+
+                // Initialize dashboard
+                initializeDashboard();
+            } catch (error) {
+                alert('Error parsing file: ' + error.message);
+                resetDashboard();
+            }
+        }
+
+        async function parseNDJSON(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const total = lines.length;
+            let parsed = 0;
+            let errors = 0;
+
+            state.rawData = [];
+
+            // Process in chunks to avoid blocking UI
+            for (let i = 0; i < lines.length; i += CONFIG.CHUNK_SIZE) {
+                const chunk = lines.slice(i, i + CONFIG.CHUNK_SIZE);
+
+                for (const line of chunk) {
+                    try {
+                        const record = JSON.parse(line);
+
+                        // Validate and normalize
+                        if (record.user_login && record.day) {
+                            state.rawData.push({
+                                user_login: record.user_login,
+                                day: record.day,
+                                code_generation_activity_count: Number(record.code_generation_activity_count) || 0,
+                                code_acceptance_activity_count: Number(record.code_acceptance_activity_count) || 0,
+                                loc_added_sum: Number(record.loc_added_sum) || 0,
+                                loc_deleted_sum: Number(record.loc_deleted_sum) || 0,
+                                active_time_minutes: Number(record.active_time_minutes) || 0,
+                                totals_by_ide: record.totals_by_ide || [],
+                                totals_by_feature: record.totals_by_feature || [],
+                                totals_by_language_feature: record.totals_by_language_feature || [],
+                                totals_by_language_model: record.totals_by_language_model || [],
+                                totals_by_model_feature: record.totals_by_model_feature || [],
+                                model: record.model || 'unknown'
+                            });
+                        }
+                    } catch (e) {
+                        errors++;
+                    }
+                    parsed++;
+                }
+
+                // Update progress
+                const progress = (parsed / total) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressText').textContent = Math.round(progress) + '%';
+
+                // Yield to browser
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            if (errors > 0) {
+                console.warn(`Skipped ${errors} malformed records`);
+            }
+
+            console.log(`Parsed ${state.rawData.length} records`);
+        }
+
+        // ============================================
+        // DASHBOARD INITIALIZATION
+        // ============================================
+        function initializeDashboard() {
+            // Set default date range
+            const dates = state.rawData.map(r => new Date(r.day));
+            const maxDate = new Date(Math.max(...dates));
+            const minDate = new Date(maxDate);
+            minDate.setDate(minDate.getDate() - 30);
+
+            document.getElementById('dateFrom').value = minDate.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = maxDate.toISOString().split('T')[0];
+
+            // Populate filter dropdowns
+            populateFilters();
+
+            // Apply initial filters
+            applyFilters();
+        }
+
+        function populateFilters() {
+            // Users
+            const users = [...new Set(state.rawData.map(r => r.user_login))].sort();
+            const userFilter = document.getElementById('userFilter');
+            userFilter.innerHTML = '<option value="">All Users</option>' +
+                users.map(u => `<option value="${u}">${u}</option>`).join('');
+
+            // IDEs
+            const ides = new Set();
+            state.rawData.forEach(r => {
+                r.totals_by_ide.forEach(ide => ides.add(ide.ide));
+            });
+            const ideFilter = document.getElementById('ideFilter');
+            ideFilter.innerHTML = '<option value="">All IDEs</option>' +
+                [...ides].sort().map(ide => `<option value="${ide}">${ide}</option>`).join('');
+
+            // Languages
+            const languages = new Set();
+            state.rawData.forEach(r => {
+                r.totals_by_language_feature.forEach(lf => languages.add(lf.language));
+            });
+            const languageFilter = document.getElementById('languageFilter');
+            languageFilter.innerHTML = '<option value="">All Languages</option>' +
+                [...languages].sort().map(lang => `<option value="${lang}">${lang}</option>`).join('');
+        }
+
+        // ============================================
+        // FILTERING
+        // ============================================
+        function applyQuickRange() {
+            const days = parseInt(document.getElementById('quickRange').value);
+            if (!days) return;
+
+            const maxDate = new Date(Math.max(...state.rawData.map(r => new Date(r.day))));
+            const minDate = new Date(maxDate);
+            minDate.setDate(minDate.getDate() - days);
+
+            document.getElementById('dateFrom').value = minDate.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = maxDate.toISOString().split('T')[0];
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const userFilter = document.getElementById('userFilter').value;
+            const ideFilter = document.getElementById('ideFilter').value;
+            const languageFilter = document.getElementById('languageFilter').value;
+
+            state.filteredData = state.rawData.filter(record => {
+                // Date filter
+                if (dateFrom && record.day < dateFrom) return false;
+                if (dateTo && record.day > dateTo) return false;
+
+                // User filter
+                if (userFilter && record.user_login !== userFilter) return false;
+
+                // IDE filter
+                if (ideFilter) {
+                    const hasIDE = record.totals_by_ide.some(ide => ide.ide === ideFilter);
+                    if (!hasIDE) return false;
+                }
+
+                // Language filter
+                if (languageFilter) {
+                    const hasLanguage = record.totals_by_language_feature.some(lf => lf.language === languageFilter);
+                    if (!hasLanguage) return false;
+                }
+
+                return true;
+            });
+
+            // Refresh dashboard
+            aggregateData();
+            renderKPIs();
+            renderCharts();
+            renderInsights();
+            renderTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('userFilter').value = '';
+            document.getElementById('ideFilter').value = '';
+            document.getElementById('languageFilter').value = '';
+            document.getElementById('quickRange').value = '30';
+            applyQuickRange();
+        }
+
+        // ============================================
+        // DATA AGGREGATION
+        // ============================================
+        function aggregateData() {
+            const data = state.filteredData;
+
+            // By user
+            const byUser = {};
+            data.forEach(record => {
+                if (!byUser[record.user_login]) {
+                    byUser[record.user_login] = {
+                        generations: 0,
+                        acceptances: 0,
+                        linesAdded: 0,
+                        linesDeleted: 0,
+                        activeTime: 0,
+                        days: new Set()
+                    };
+                }
+                const user = byUser[record.user_login];
+                user.generations += record.code_generation_activity_count;
+                user.acceptances += record.code_acceptance_activity_count;
+                user.linesAdded += record.loc_added_sum;
+                user.linesDeleted += record.loc_deleted_sum;
+                user.activeTime += record.active_time_minutes;
+                user.days.add(record.day);
+            });
+
+            // By day
+            const byDay = {};
+            data.forEach(record => {
+                if (!byDay[record.day]) {
+                    byDay[record.day] = {
+                        generations: 0,
+                        acceptances: 0,
+                        linesAdded: 0,
+                        linesDeleted: 0,
+                        chatCount: 0
+                    };
+                }
+                const day = byDay[record.day];
+                day.generations += record.code_generation_activity_count;
+                day.acceptances += record.code_acceptance_activity_count;
+                day.linesAdded += record.loc_added_sum;
+                day.linesDeleted += record.loc_deleted_sum;
+
+                // Chat count
+                const chatFeature = record.totals_by_feature.find(f => f.feature === 'chat' || f.feature === 'inline_chat');
+                if (chatFeature) day.chatCount += chatFeature.count;
+            });
+
+            // By IDE
+            const byIDE = {};
+            data.forEach(record => {
+                record.totals_by_ide.forEach(ide => {
+                    if (!byIDE[ide.ide]) byIDE[ide.ide] = 0;
+                    byIDE[ide.ide] += ide.code_generation_activity_count || 0;
+                });
+            });
+
+            // By Language
+            const byLanguage = {};
+            data.forEach(record => {
+                record.totals_by_language_feature.forEach(lf => {
+                    if (!byLanguage[lf.language]) byLanguage[lf.language] = 0;
+                    byLanguage[lf.language] += lf.code_generation_activity_count || 0;
+                });
+            });
+
+            // By Feature
+            const byFeature = {};
+            data.forEach(record => {
+                record.totals_by_feature.forEach(f => {
+                    if (!byFeature[f.feature]) byFeature[f.feature] = 0;
+                    byFeature[f.feature] += f.code_generation_activity_count || 0;
+                });
+            });
+
+            // By Model
+            const byModel = {};
+            data.forEach(record => {
+                if (record.totals_by_language_model && record.totals_by_language_model.length > 0) {
+                    record.totals_by_language_model.forEach(lm => {
+                        const model = lm.model || 'unknown';
+                        if (!byModel[model]) byModel[model] = 0;
+                        byModel[model] += lm.code_generation_activity_count || 0;
+                    });
+                }
+            });
+
+            state.aggregatedData = {
+                byUser,
+                byDay,
+                byIDE,
+                byLanguage,
+                byFeature,
+                byModel
+            };
+        }
+
+        // ============================================
+        // KPI RENDERING
+        // ============================================
+        function renderKPIs() {
+            const { byUser, byDay, byFeature } = state.aggregatedData;
+
+            const totalUsers = Object.keys(byUser).length;
+            const totalGenerations = Object.values(byUser).reduce((sum, u) => sum + u.generations, 0);
+            const totalLinesAdded = Object.values(byUser).reduce((sum, u) => sum + u.linesAdded, 0);
+            const totalLinesDeleted = Object.values(byUser).reduce((sum, u) => sum + u.linesDeleted, 0);
+            const netLines = totalLinesAdded - totalLinesDeleted;
+            const chatInteractions = byFeature.chat || 0 + byFeature.inline_chat || 0;
+            const activeDays = Object.keys(byDay).length;
+
+            // Value Calculations - use current configuration
+            const config = getCurrentConfig();
+
+            // Option 1: Based on Total Lines Changed (GitHub Standard - Added + Deleted)
+            const totalLinesChanged = totalLinesAdded + totalLinesDeleted;
+            const hoursSavedTotal = totalLinesChanged / config.MANUAL_LINES_PER_HOUR;
+            const valueTotal = hoursSavedTotal * config.BLENDED_RATE_PER_HOUR;
+
+            // Option 2: Based on Lines Added Only
+            const hoursSavedLinesAdded = totalLinesAdded / config.MANUAL_LINES_PER_HOUR;
+            const valueLinesAdded = hoursSavedLinesAdded * config.BLENDED_RATE_PER_HOUR;
+
+            // Option 3: Based on Net Lines (Conservative - accounts for churn)
+            const hoursSavedNetLines = netLines / config.MANUAL_LINES_PER_HOUR;
+            const valueNetLines = hoursSavedNetLines * config.BLENDED_RATE_PER_HOUR;
+
+            const kpis = [
+                { label: 'Active Users', value: totalUsers, icon: 'users', color: 'indigo' },
+                { label: 'Total Generations', value: formatNumber(totalGenerations), icon: 'zap', color: 'yellow' },
+                { label: 'Lines Added', value: formatNumber(totalLinesAdded), icon: 'plus', color: 'emerald' },
+                { label: 'Net Lines', value: formatNumber(netLines), icon: 'git-commit', color: 'purple' },
+                { label: 'Chat Interactions', value: formatNumber(chatInteractions), icon: 'message-square', color: 'pink' },
+                { label: 'Active Days', value: activeDays, icon: 'calendar', color: 'orange' },
+                { label: 'Value (Total Changed)', value: '$' + formatNumber(Math.round(valueTotal)), icon: 'dollar-sign', color: 'green', subtitle: 'Added + Deleted • ' + formatNumber(Math.round(hoursSavedTotal)) + ' hrs', description: `(Lines added + Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` },
+                { label: 'Value (Lines Added)', value: '$' + formatNumber(Math.round(valueLinesAdded)), icon: 'plus-circle', color: 'emerald', subtitle: 'New code only • ' + formatNumber(Math.round(hoursSavedLinesAdded)) + ' hrs', description: `Lines added ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` },
+                { label: 'Value (Net Lines)', value: '$' + formatNumber(Math.round(valueNetLines)), icon: 'trending-up', color: 'blue', subtitle: 'After deletions • ' + formatNumber(Math.round(hoursSavedNetLines)) + ' hrs', description: `(Lines added - Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` }
+            ];
+
+            const container = document.getElementById('kpiCards');
+            container.innerHTML = kpis.map(kpi => `
+                <div class="kpi-card">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-sm text-slate-400">${kpi.label}</span>
+                        <i data-lucide="${kpi.icon}" class="w-5 h-5 text-${kpi.color}-500"></i>
+                    </div>
+                    ${kpi.description ? `<div class="text-xs text-slate-400 mb-2">${kpi.description}</div>` : ''}
+                    <div class="text-3xl font-bold">${kpi.value}</div>
+                    ${kpi.subtitle ? `<div class="text-xs text-slate-500 mt-1">${kpi.subtitle}</div>` : ''}
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+
+        // ============================================
+        // CHART RENDERING
+        // ============================================
+        function renderCharts() {
+            renderActivityChart();
+            renderTopUsersChart();
+            renderIDEChart();
+            renderLanguageChart();
+            renderFeatureChart();
+            renderModelChart();
+        }
+
+        function renderActivityChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const ctx = document.getElementById('activityChart');
+            if (state.charts.activity) state.charts.activity.destroy();
+
+            state.charts.activity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDays,
+                    datasets: [
+                        {
+                            label: 'Generations',
+                            data: sortedDays.map(day => byDay[day].generations),
+                            borderColor: '#818cf8',
+                            backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Chat',
+                            data: sortedDays.map(day => byDay[day].chatCount),
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: getChartOptions('Activity over time')
+            });
+        }
+
+
+        function renderTopUsersChart() {
+            const { byUser } = state.aggregatedData;
+            const users = Object.entries(byUser)
+                .map(([name, data]) => ({
+                    name,
+                    generations: data.generations,
+                    rate: data.generations > 0 ? data.acceptances / data.generations : 0
+                }))
+                .sort((a, b) => b.generations - a.generations)
+                .slice(0, CONFIG.MAX_TOP_USERS_SHOWN);
+
+            const ctx = document.getElementById('topUsersChart');
+            if (state.charts.topUsers) state.charts.topUsers.destroy();
+
+            state.charts.topUsers = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: users.map(u => u.name),
+                    datasets: [{
+                        label: 'Generations',
+                        data: users.map(u => u.generations),
+                        backgroundColor: users.map(u => {
+                            if (u.rate > CONFIG.HIGH_ACCEPTANCE_THRESHOLD) return '#10b981';
+                            if (u.rate < CONFIG.LOW_ACCEPTANCE_THRESHOLD) return '#ef4444';
+                            return '#818cf8';
+                        })
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Top users by activity'),
+                    indexAxis: 'y'
+                }
+            });
+        }
+
+
+        function renderIDEChart() {
+            const { byIDE } = state.aggregatedData;
+            const data = Object.entries(byIDE).sort((a, b) => b[1] - a[1]);
+
+            const ctx = document.getElementById('ideChart');
+            if (state.charts.ide) state.charts.ide.destroy();
+
+            state.charts.ide = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(([ide]) => ide),
+                    datasets: [{
+                        data: data.map(([_, count]) => count),
+                        backgroundColor: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: {
+                    ...getChartOptions('IDE usage'),
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function renderLanguageChart() {
+            const { byLanguage } = state.aggregatedData;
+            let data = Object.entries(byLanguage).sort((a, b) => b[1] - a[1]);
+
+            // Group small languages into "Other"
+            if (data.length > CONFIG.MAX_LANGUAGES_SHOWN) {
+                const top = data.slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
+                const other = data.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, count]) => sum + count, 0);
+                data = [...top, ['Other', other]];
+            }
+
+            const ctx = document.getElementById('languageChart');
+            if (state.charts.language) state.charts.language.destroy();
+
+            state.charts.language = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(([lang]) => lang),
+                    datasets: [{
+                        data: data.map(([_, count]) => count),
+                        backgroundColor: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#14b8a6', '#6366f1']
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Language distribution'),
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderFeatureChart() {
+            const { byFeature } = state.aggregatedData;
+            const data = Object.entries(byFeature).sort((a, b) => b[1] - a[1]);
+
+            const ctx = document.getElementById('featureChart');
+            if (state.charts.feature) state.charts.feature.destroy();
+
+            state.charts.feature = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(([feature]) => feature),
+                    datasets: [{
+                        label: 'Usage Count',
+                        data: data.map(([_, count]) => count),
+                        backgroundColor: '#818cf8'
+                    }]
+                },
+                options: getChartOptions('Feature usage breakdown')
+            });
+        }
+
+
+        function renderModelChart() {
+            const { byModel } = state.aggregatedData;
+            const data = Object.entries(byModel).sort((a, b) => b[1] - a[1]);
+
+            const ctx = document.getElementById('modelChart');
+            if (state.charts.model) state.charts.model.destroy();
+
+            state.charts.model = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(([model]) => model),
+                    datasets: [{
+                        data: data.map(([_, count]) => count),
+                        backgroundColor: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Model distribution'),
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function getChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: CONFIG.CHART_ANIMATION_DURATION },
+                plugins: {
+                    legend: { labels: { color: '#94a3b8' } },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    }
+                }
+            };
+        }
+
+        // ============================================
+        // INSIGHTS RENDERING
+        // ============================================
+        function renderInsights() {
+            const insights = [];
+            const { byUser, byDay } = state.aggregatedData;
+
+            // Power Users
+            const userArray = Object.entries(byUser).map(([name, data]) => ({ name, ...data }));
+            const generationsSorted = [...userArray].sort((a, b) => b.generations - a.generations);
+            const powerUserThreshold = generationsSorted[Math.floor(generationsSorted.length * CONFIG.POWER_USER_PERCENTILE)]?.generations || 0;
+            const powerUsers = generationsSorted.filter(u => u.generations >= powerUserThreshold).slice(0, 5);
+
+            if (powerUsers.length > 0) {
+                insights.push({
+                    title: 'Power Users',
+                    type: 'success',
+                    icon: 'star',
+                    content: powerUsers.map(u => `${u.name} (${formatNumber(u.generations)})`).join(', ')
+                });
+            }
+
+            // High Efficiency Users
+            const highEfficiency = userArray
+                .filter(u => u.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(u => ({ ...u, rate: u.acceptances / u.generations }))
+                .filter(u => u.rate >= CONFIG.HIGH_ACCEPTANCE_THRESHOLD)
+                .sort((a, b) => b.rate - a.rate)
+                .slice(0, 5);
+
+            if (highEfficiency.length > 0) {
+                insights.push({
+                    title: 'High Efficiency Users',
+                    type: 'success',
+                    icon: 'trending-up',
+                    content: highEfficiency.map(u => `${u.name} (${(u.rate * 100).toFixed(1)}%)`).join(', ')
+                });
+            }
+
+            // Low Acceptance Rate Alert - REMOVED
+            // This metric is misleading because ~94% of activity is agent mode which doesn't
+            // track acceptances. Low acceptance rates are normal and don't indicate problems.
+
+            // Quota Exceeded
+            const quotaExceeded = state.filteredData
+                .filter(r => r.code_generation_activity_count > CONFIG.DAILY_GENERATION_QUOTA)
+                .map(r => `${r.user_login} on ${r.day} (${r.code_generation_activity_count})`)
+                .slice(0, 5);
+
+            if (quotaExceeded.length > 0) {
+                insights.push({
+                    title: 'Daily Quota Exceeded',
+                    type: 'error',
+                    icon: 'alert-circle',
+                    content: quotaExceeded.join(', ')
+                });
+            }
+
+            // Trend Insight - Week over Week
+            const sortedDays = Object.keys(byDay).sort();
+            if (sortedDays.length >= CONFIG.TREND_COMPARISON_DAYS * 2) {
+                const recentDays = sortedDays.slice(-CONFIG.TREND_COMPARISON_DAYS);
+                const previousDays = sortedDays.slice(-CONFIG.TREND_COMPARISON_DAYS * 2, -CONFIG.TREND_COMPARISON_DAYS);
+
+                const recentTotal = recentDays.reduce((sum, day) => sum + byDay[day].generations, 0);
+                const previousTotal = previousDays.reduce((sum, day) => sum + byDay[day].generations, 0);
+
+                const change = previousTotal > 0 ? ((recentTotal - previousTotal) / previousTotal * 100) : 0;
+
+                insights.push({
+                    title: 'Week-over-Week Trend',
+                    type: change > 0 ? 'success' : change < -10 ? 'warning' : 'info',
+                    icon: change > 0 ? 'trending-up' : 'trending-down',
+                    content: `${change > 0 ? '+' : ''}${change.toFixed(1)}% change in generations`
+                });
+            }
+
+            // Zero Acceptance Days
+            const zeroAcceptance = state.filteredData
+                .filter(r => r.code_generation_activity_count > 0 && r.code_acceptance_activity_count === 0)
+                .length;
+
+            if (zeroAcceptance > 0) {
+                insights.push({
+                    title: 'Zero Acceptance Days',
+                    type: 'warning',
+                    icon: 'x-circle',
+                    content: `${zeroAcceptance} user-days with generations but no acceptances`
+                });
+            }
+
+            // Render insights
+            const container = document.getElementById('insightsContainer');
+            container.innerHTML = insights.map(insight => `
+                <div class="card">
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="${insight.icon}" class="w-5 h-5 text-${insight.type === 'success' ? 'emerald' : insight.type === 'warning' ? 'amber' : insight.type === 'error' ? 'red' : 'blue'}-500 flex-shrink-0 mt-1"></i>
+                        <div>
+                            <h4 class="font-semibold mb-1">${insight.title}</h4>
+                            <p class="text-sm text-slate-400">${insight.content}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // ============================================
+        // TABLE RENDERING
+        // ============================================
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+
+            // Aggregate data by user
+            const userAggregates = {};
+            state.filteredData.forEach(record => {
+                const user = record.user_login;
+                if (!userAggregates[user]) {
+                    userAggregates[user] = {
+                        generations: 0,
+                        acceptances: 0,
+                        linesAdded: 0,
+                        linesDeleted: 0,
+                        days: new Set()
+                    };
+                }
+                userAggregates[user].generations += record.code_generation_activity_count;
+                userAggregates[user].acceptances += record.code_acceptance_activity_count;
+                userAggregates[user].linesAdded += record.loc_added_sum;
+                userAggregates[user].linesDeleted += record.loc_deleted_sum;
+                userAggregates[user].days.add(record.day);
+            });
+
+            // Prepare table data
+            const config = getCurrentConfig();
+            const tableData = Object.entries(userAggregates).map(([user, data]) => {
+                const netLines = data.linesAdded - data.linesDeleted;
+
+                // Calculate values
+                const valueAdded = (data.linesAdded / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const valueDeleted = (data.linesDeleted / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const netValue = (netLines / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+
+                return {
+                    user: user,
+                    days: data.days.size,
+                    generations: data.generations,
+                    linesAdded: data.linesAdded,
+                    linesDeleted: data.linesDeleted,
+                    netLines: netLines,
+                    valueAdded: valueAdded,
+                    valueDeleted: valueDeleted,
+                    netValue: netValue
+                };
+            });
+
+            // Sort if needed
+            if (state.sortColumn) {
+                tableData.sort((a, b) => {
+                    let aVal = a[state.sortColumn];
+                    let bVal = b[state.sortColumn];
+
+                    // Convert to numbers for numeric columns
+                    if (['days', 'generations', 'linesAdded', 'linesDeleted', 'netLines', 'valueAdded', 'valueDeleted', 'netValue'].includes(state.sortColumn)) {
+                        aVal = parseFloat(aVal);
+                        bVal = parseFloat(bVal);
+                    }
+
+                    if (state.sortDirection === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+            }
+
+            // Render rows (limit to TABLE_PAGE_SIZE for performance)
+            const rows = tableData.slice(0, CONFIG.TABLE_PAGE_SIZE * 5).map(row => `
+                <tr>
+                    <td><strong>${row.user}</strong></td>
+                    <td class="text-slate-400">${row.days}</td>
+                    <td>${formatNumber(row.generations)}</td>
+                    <td class="text-emerald-400">${formatNumber(row.linesAdded)}</td>
+                    <td class="text-red-400">${formatNumber(row.linesDeleted)}</td>
+                    <td class="${row.netLines >= 0 ? 'text-emerald-400' : 'text-red-400'}">${row.netLines >= 0 ? '+' : ''}${formatNumber(row.netLines)}</td>
+                    <td class="text-emerald-400">$${formatNumber(Math.round(row.valueAdded))}</td>
+                    <td class="text-red-400">$${formatNumber(Math.round(row.valueDeleted))}</td>
+                    <td class="${row.netValue >= 0 ? 'text-emerald-400' : 'text-red-400'}">$${row.netValue >= 0 ? '' : '-'}${formatNumber(Math.abs(Math.round(row.netValue)))}</td>
+                </tr>
+            `).join('');
+
+            tbody.innerHTML = rows;
+
+            if (tableData.length > CONFIG.TABLE_PAGE_SIZE * 5) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td colspan="9" class="text-center text-slate-400">
+                            Showing first ${CONFIG.TABLE_PAGE_SIZE * 5} of ${tableData.length} rows
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function sortTable(column) {
+            if (state.sortColumn === column) {
+                state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.sortColumn = column;
+                state.sortDirection = 'desc';
+            }
+            renderTable();
+        }
+
+        function filterTable() {
+            const search = document.getElementById('tableSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        // ============================================
+        // EXPORT
+        // ============================================
+        function exportData() {
+            const config = getCurrentConfig();
+            const headers = ['User', 'Date', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Net Value'];
+
+            const rows = state.filteredData.map(record => {
+                const netLines = record.loc_added_sum - record.loc_deleted_sum;
+                const valueAdded = (record.loc_added_sum / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const valueDeleted = (record.loc_deleted_sum / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const netValue = (netLines / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+
+                return [
+                    record.user_login,
+                    record.day,
+                    record.code_generation_activity_count,
+                    record.loc_added_sum,
+                    record.loc_deleted_sum,
+                    netLines,
+                    valueAdded.toFixed(2),
+                    valueDeleted.toFixed(2),
+                    netValue.toFixed(2)
+                ].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'copilot-analytics-export.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function formatNumber(num) {
+            if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // ============================================
+        // INDIVIDUAL EXPORT FUNCTIONS
+        // ============================================
+        function downloadCSV(filename, csvContent) {
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportActivityChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const headers = ['Date', 'Generations', 'Chat Interactions'];
+            const rows = sortedDays.map(day => {
+                const dayData = byDay[day];
+                return [day, dayData.generations, dayData.chatCount].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('activity-timeline.csv', csv);
+        }
+
+        function exportTopUsersChart() {
+            const { byUser } = state.aggregatedData;
+            const sortedUsers = Object.entries(byUser)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.generations - a.generations)
+                .slice(0, CONFIG.MAX_TOP_USERS_SHOWN);
+
+            const headers = ['User', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines'];
+            const rows = sortedUsers.map(user => {
+                return [user.name, user.generations, user.linesAdded, user.linesDeleted, user.linesAdded - user.linesDeleted].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('top-users.csv', csv);
+        }
+
+        function exportIDEChart() {
+            const { byIDE } = state.aggregatedData;
+            const data = Object.entries(byIDE).sort((a, b) => b[1] - a[1]);
+
+            const headers = ['IDE', 'Generations'];
+            const rows = data.map(([ide, count]) => [ide, count].join(','));
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('ide-market-share.csv', csv);
+        }
+
+        function exportLanguageChart() {
+            const { byLanguage } = state.aggregatedData;
+            const sorted = Object.entries(byLanguage).sort((a, b) => b[1] - a[1]);
+            const topLanguages = sorted.slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
+            const otherCount = sorted.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, count]) => sum + count, 0);
+
+            const headers = ['Language', 'Generations'];
+            const rows = topLanguages.map(([lang, count]) => [lang, count].join(','));
+            if (otherCount > 0) {
+                rows.push(['Other', otherCount].join(','));
+            }
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('language-distribution.csv', csv);
+        }
+
+        function exportFeatureChart() {
+            const { byFeature } = state.aggregatedData;
+            const data = Object.entries(byFeature).sort((a, b) => b[1] - a[1]);
+
+            const headers = ['Feature', 'Usage Count'];
+            const rows = data.map(([feature, count]) => [feature, count].join(','));
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('feature-usage.csv', csv);
+        }
+
+        function exportModelChart() {
+            const { byModel } = state.aggregatedData;
+            const data = Object.entries(byModel).sort((a, b) => b[1] - a[1]);
+
+            const headers = ['Model', 'Generations'];
+            const rows = data.map(([model, count]) => [model, count].join(','));
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('model-distribution.csv', csv);
+        }
+
+        function exportTableData() {
+            // Aggregate data by user (same as renderTable)
+            const userAggregates = {};
+            state.filteredData.forEach(record => {
+                const user = record.user_login;
+                if (!userAggregates[user]) {
+                    userAggregates[user] = {
+                        generations: 0,
+                        linesAdded: 0,
+                        linesDeleted: 0,
+                        days: new Set()
+                    };
+                }
+                userAggregates[user].generations += record.code_generation_activity_count;
+                userAggregates[user].linesAdded += record.loc_added_sum;
+                userAggregates[user].linesDeleted += record.loc_deleted_sum;
+                userAggregates[user].days.add(record.day);
+            });
+
+            const config = getCurrentConfig();
+            const headers = ['User', 'Days Active', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Net Value'];
+            const rows = Object.entries(userAggregates).map(([user, data]) => {
+                const netLines = data.linesAdded - data.linesDeleted;
+                const valueAdded = (data.linesAdded / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const valueDeleted = (data.linesDeleted / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+                const netValue = (netLines / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+
+                return [
+                    user,
+                    data.days.size,
+                    data.generations,
+                    data.linesAdded,
+                    data.linesDeleted,
+                    netLines,
+                    valueAdded.toFixed(2),
+                    valueDeleted.toFixed(2),
+                    netValue.toFixed(2)
+                ].join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadCSV('data-explorer.csv', csv);
+        }
+
+        function resetDashboard() {
+            state.rawData = [];
+            state.filteredData = [];
+            state.aggregatedData = {};
+
+            // Destroy all charts
+            Object.values(state.charts).forEach(chart => chart.destroy());
+            state.charts = {};
+
+            document.getElementById('uploadContainer').classList.remove('hidden');
+            document.getElementById('progressContainer').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+
+            document.getElementById('fileInput').value = '';
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfiguration();
+            setupUpload();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
