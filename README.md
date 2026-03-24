@@ -68,6 +68,7 @@ See [`docs/architecture.md`](docs/architecture.md) for diagrams.
 
 | Doc | What's in it |
 |-----|-------------|
+| [`docs/data.md`](docs/data.md) | Every data point, all 14 charts, Data Explorer columns, insights, value calculation |
 | [`docs/architecture.md`](docs/architecture.md) | Layer diagrams, data flow, NDJSON schema, SOLID table |
 | [`docs/development.md`](docs/development.md) | How to add charts, insights, KPIs, filters, exports |
 | [`docs/configuration.md`](docs/configuration.md) | CONFIG thresholds, FEATURE_LABELS, value calculation |

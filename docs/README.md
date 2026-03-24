@@ -6,6 +6,7 @@ Analytics dashboard for GitHub Copilot Enterprise usage data. Zero backend, runs
 
 | File | What's in it |
 |------|-------------|
+| [data.md](data.md) | Every data point, all 14 charts, the Data Explorer table, insights, value calculation |
 | [architecture.md](architecture.md) | Layer diagram, data flow, module map |
 | [development.md](development.md) | How to add charts, KPIs, insights, filters |
 | [configuration.md](configuration.md) | All CONFIG thresholds and value calc options |
