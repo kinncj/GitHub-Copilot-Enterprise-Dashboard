@@ -593,30 +593,31 @@
                         <span style="color:var(--text-2)"> — passive inline suggestions (grey ghost text). Zero clicks required; Copilot predicts as you type.</span>
                     </div>
                     <div>
-                        <span class="font-semibold" style="color:var(--text-1)">Edit Mode</span>
-                        <span style="color:var(--text-2)"> — you describe a change in plain English; Copilot edits across multiple files at once. You review a diff before accepting.</span>
+                        <span class="font-semibold" style="color:var(--text-1)">Edit Mode <code style="font-size:0.68rem;color:var(--text-2)">agent_edit</code></span>
+                        <span style="color:var(--text-2)"> — Copilot Edits panel. Agentic multi-file editing; shows a diff for review before applying. Same autonomous engine as Chat · Agent — the difference is the UI and workflow, not what it can do.</span>
                     </div>
                     <div>
-                        <span class="font-semibold" style="color:var(--text-1)">Agent Mode</span>
-                        <span style="color:var(--text-2)"> — like Edit Mode but autonomous: Copilot plans, runs commands, reads errors, and iterates until the task is done. Least human intervention.</span>
+                        <span class="font-semibold" style="color:var(--text-1)">Chat · Agent <code style="font-size:0.68rem;color:var(--text-2)">chat_panel_agent_mode</code></span>
+                        <span style="color:var(--text-2)"> — agent mode in the Chat panel. Same capability as Edit Mode but accessed conversationally — you stay in a chat thread and can ask follow-ups mid-task. GitHub is converging these two.</span>
                     </div>
                     <div>
-                        <span class="font-semibold" style="color:var(--text-1)">Inline Chat</span>
-                        <span style="color:var(--text-2)"> — press ⌘I inside the editor to ask a focused question or request an edit without opening the sidebar.</span>
+                        <span class="font-semibold" style="color:var(--text-1)">Inline Chat <code style="font-size:0.68rem;color:var(--text-2)">chat_inline</code></span>
+                        <span style="color:var(--text-2)"> — press ⌘I / Ctrl+I inside the editor to ask a focused question or request a localised edit without leaving the file.</span>
                     </div>
                     <div>
-                        <span class="font-semibold" style="color:var(--text-1)">Chat · Ask</span>
-                        <span style="color:var(--text-2)"> — question-and-answer mode in the chat panel. Copilot responds but does not modify files automatically.</span>
+                        <span class="font-semibold" style="color:var(--text-1)">Chat · Ask <code style="font-size:0.68rem;color:var(--text-2)">chat_panel_ask_mode</code></span>
+                        <span style="color:var(--text-2)"> — Q&amp;A mode in the Chat panel. Copilot responds but does not modify files automatically.</span>
                     </div>
                     <div>
-                        <span class="font-semibold" style="color:var(--text-1)">Chat · Agent / Plan</span>
-                        <span style="color:var(--text-2)"> — agent or planning mode accessed through the chat panel rather than the editor toolbar. Same autonomy as Agent Mode, different entry point.</span>
+                        <span class="font-semibold" style="color:var(--text-1)">Chat · Plan <code style="font-size:0.68rem;color:var(--text-2)">chat_panel_plan_mode</code></span>
+                        <span style="color:var(--text-2)"> — Copilot produces a step-by-step plan and waits for approval before making any changes.</span>
                     </div>
                 </div>
                 <p class="text-xs mt-3" style="color:var(--text-2)">
-                    <strong style="color:var(--text-1)">Rule of thumb:</strong> Code Completion = fastest, least effort.
-                    Inline Chat = targeted questions. Edit Mode = multi-file rewrites with a review step.
-                    Agent Mode = hands-off automation. The more agentic the mode, the fewer acceptances are recorded — which is why a low acceptance rate is normal.
+                    <strong style="color:var(--text-1)">Key distinction:</strong> Code Completion is passive (no prompt needed).
+                    Ask / Inline Chat are conversational but read-only.
+                    Edit Mode and Chat · Agent are both agentic — the difference is the entry point: Edits panel with a diff review vs. Chat panel with a conversation thread.
+                    The more agentic the mode, the fewer acceptances are recorded, which is why a low acceptance rate is normal and expected.
                 </p>
             </div>
         </div>
@@ -2423,77 +2424,83 @@
 
         // Human-readable labels and descriptions for every Copilot feature key
         // that can appear in totals_by_feature.
+        //
+        // Note on agent_edit vs chat_panel_agent_mode:
+        // Both are agentic — both can plan, edit files, and iterate autonomously.
+        // The difference is the UI entry point and review workflow, not the capability.
+        // GitHub has been converging these two experiences since late 2024.
         const FEATURE_LABELS = {
             // ── Inline completions ───────────────────────────
             code_completion: {
                 label: 'Code Completion',
                 short: 'Completions',
                 icon: 'code-2',
-                desc: 'Inline suggestions accepted while typing — the classic "grey ghost text" experience.'
+                desc: 'Passive inline suggestions as you type — the "grey ghost text". Accepted by pressing Tab.'
             },
             // ── Chat panel modes (new panel-based UI) ────────
             chat_panel_agent_mode: {
                 label: 'Chat · Agent',
-                short: 'Agent',
+                short: 'Chat Agent',
                 icon: 'bot',
-                desc: 'Agent mode via the chat panel — Copilot plans and executes multi-step tasks autonomously.'
+                desc: 'Agent mode in the Chat panel — same autonomous engine as Edit Mode, but accessed conversationally. You stay in a chat thread and can ask follow-up questions mid-task.'
             },
             chat_panel_ask_mode: {
                 label: 'Chat · Ask',
                 short: 'Ask',
                 icon: 'message-square',
-                desc: 'Ask mode in the chat panel — question-and-answer about code, no edits applied automatically.'
+                desc: 'Ask mode in the Chat panel — Q&A about code. Copilot explains and suggests but does not modify files automatically.'
             },
             chat_panel_plan_mode: {
                 label: 'Chat · Plan',
                 short: 'Plan',
                 icon: 'list-checks',
-                desc: 'Plan mode in the chat panel — Copilot outlines a step-by-step plan before making changes.'
+                desc: 'Plan mode — Copilot produces a structured step-by-step plan before executing any changes. Useful for reviewing intent before committing.'
             },
             chat_panel_custom_mode: {
                 label: 'Chat · Custom',
                 short: 'Custom',
                 icon: 'sliders-horizontal',
-                desc: 'Custom-instructions mode — user-defined system prompts shape how the chat panel responds.'
+                desc: 'Custom-instructions mode — user-defined system prompts are active, shaping how the chat panel responds.'
             },
             chat_panel_unknown_mode: {
                 label: 'Chat · Other',
-                short: 'Other chat',
+                short: 'Other',
                 icon: 'help-circle',
-                desc: 'Chat panel interactions with an unrecognised mode flag — may include beta or preview features.'
+                desc: 'Chat interactions with an unrecognised mode flag — likely beta or preview features not yet in the public API schema.'
             },
-            // ── Edit & Agent (editor-level) ──────────────────
+            // ── Edit Mode (Copilot Edits panel) ─────────────
             agent_edit: {
                 label: 'Edit Mode',
                 short: 'Edits',
                 icon: 'pencil-line',
-                desc: 'Copilot Edits — AI applies targeted changes across multiple files from a single instruction.'
+                desc: 'Copilot Edits panel — agentic multi-file editing opened from the dedicated Edits sidebar. Presents a file-by-file diff for review before applying. Similar engine to Chat · Agent; the difference is workflow (diff review) not capability.'
             },
+            // ── Agent (generic / pre-panel) ─────────────────
             agent: {
                 label: 'Agent Mode',
                 short: 'Agent',
                 icon: 'cpu',
-                desc: 'Agentic mode — Copilot autonomously reads, edits and runs code to complete an open-ended task.'
+                desc: 'General agentic activity — Copilot autonomously reads files, runs commands, fixes errors, and iterates. May represent activity from before the Chat/Edit panel split was introduced.'
             },
             // ── Inline chat (editor shortcut) ────────────────
             chat_inline: {
                 label: 'Inline Chat',
                 short: 'Inline',
                 icon: 'message-circle',
-                desc: 'Inline chat (⌘I / Ctrl+I) — ask Copilot a question or request an edit directly inside the editor.'
+                desc: 'Inline chat triggered with ⌘I / Ctrl+I inside the editor — focused question or edit request without leaving the file.'
             },
             inline_chat: {
                 label: 'Inline Chat',
                 short: 'Inline',
                 icon: 'message-circle',
-                desc: 'Inline chat opened inside the editor — ask questions or request edits without leaving the file.'
+                desc: 'Inline chat inside the editor — ask questions or request a localised edit without opening the sidebar.'
             },
             // ── Legacy / general chat ────────────────────────
             chat: {
                 label: 'Copilot Chat',
                 short: 'Chat',
                 icon: 'messages-square',
-                desc: 'General Copilot Chat conversations — questions, explanations, refactoring, and code generation.'
+                desc: 'General Copilot Chat — questions, explanations, refactoring suggestions. Older catch-all key before Ask/Agent/Plan modes were split into separate entries.'
             }
         };
 
