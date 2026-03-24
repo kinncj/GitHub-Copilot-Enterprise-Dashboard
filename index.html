@@ -85,7 +85,6 @@
             padding: 1.5rem 1.75rem;
             transition: border-color 0.25s, transform 0.2s;
             position: relative;
-            overflow: hidden;
         }
 
         .kpi-card::after {
@@ -2688,27 +2687,77 @@
         // FULL HTML REPORT
         // ============================================
         function exportReport() {
-            const { byDay, byUser, byIDE, byLanguage, byFeature, byModel } = state.aggregatedData;
+            const { byDay, byUser, byFeature } = state.aggregatedData;
             const config = getCurrentConfig();
 
-            // Capture all charts as base64 PNGs
-            const chartMap = [
-                ['activity',         'Activity Timeline'],
-                ['locTrend',         'Lines of Code Trend'],
-                ['acceptanceRate',   'Acceptance Rate Trend'],
-                ['dailyActiveUsers', 'Daily Active Users'],
-                ['topUsers',         'Top Users by Generations'],
-                ['topUsersByLoC',    'Top Users by Lines Added'],
-                ['efficiency',       'User Efficiency Matrix'],
-                ['userEngagement',   'User Engagement Distribution'],
-                ['ide',              'IDE Market Share'],
-                ['ideAcceptance',    'Acceptance Rate by IDE'],
-                ['language',         'Language Distribution'],
-                ['languageAcceptance','Acceptance Rate by Language'],
-                ['feature',          'Feature Usage'],
-                ['model',            'Model Distribution'],
-            ];
+            // ── Computed values (mirrors renderKPIs) ──────────
+            const totalUsers        = Object.keys(byUser).length;
+            const totalGenerations  = Object.values(byUser).reduce((s, u) => s + u.generations, 0);
+            const totalLinesAdded   = Object.values(byUser).reduce((s, u) => s + u.linesAdded, 0);
+            const totalLinesDeleted = Object.values(byUser).reduce((s, u) => s + u.linesDeleted, 0);
+            const netLines          = totalLinesAdded - totalLinesDeleted;
+            const chatInteractions  = (byFeature.chat?.generations || 0) + (byFeature.inline_chat?.generations || 0);
+            const activeDays        = Object.keys(byDay).length;
 
+            const totalLinesChanged    = totalLinesAdded + totalLinesDeleted;
+            const valueTotal           = (totalLinesChanged  / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+            const valueLinesAdded      = (totalLinesAdded    / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+            const valueNetLines        = (netLines           / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
+            const hoursSavedTotal      = totalLinesChanged   / config.MANUAL_LINES_PER_HOUR;
+            const hoursSavedLinesAdded = totalLinesAdded     / config.MANUAL_LINES_PER_HOUR;
+            const hoursSavedNetLines   = netLines            / config.MANUAL_LINES_PER_HOUR;
+
+            const allDates = state.rawData.map(r => r.day).sort();
+            const fromDate = allDates[0] || '';
+            const toDate   = allDates[allDates.length - 1] || '';
+
+            // ── Feature adoption ──────────────────────────────
+            const featureUserCount = {};
+            Object.values(byUser).forEach(u => {
+                (u.features || new Set()).forEach(f => {
+                    featureUserCount[f] = (featureUserCount[f] || 0) + 1;
+                });
+            });
+            const featureOrder = ['code_completion','agent_edit','agent','chat_panel_ask_mode',
+                                  'chat_panel_agent_mode','chat_panel_plan_mode','chat_inline',
+                                  'inline_chat','chat','chat_panel_custom_mode','chat_panel_unknown_mode'];
+            Object.keys(featureUserCount).sort().forEach(f => { if (!featureOrder.includes(f)) featureOrder.push(f); });
+
+            const featureCards = featureOrder.filter(k => featureUserCount[k]).map(featureKey => {
+                const count  = featureUserCount[featureKey] || 0;
+                const pct    = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
+                const meta   = humanizeFeature(featureKey);
+                const accent = pct > 60 ? '#00C896' : pct > 25 ? '#34d399' : 'rgba(255,255,255,0.38)';
+                return `<div class="kpi-card">
+                  <div class="kpi-label">${meta.label}</div>
+                  <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.5rem">
+                    <span class="kpi-value" style="color:${accent}">${pct}%</span>
+                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.38)">${count} user${count !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div style="height:2px;background:rgba(255,255,255,0.07);border-radius:9999px;margin-bottom:0.5rem">
+                    <div style="height:100%;width:${pct}%;background:${accent};border-radius:9999px"></div>
+                  </div>
+                  <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);line-height:1.5">${meta.desc}</div>
+                </div>`;
+            }).join('');
+
+            // ── Charts ────────────────────────────────────────
+            const chartMap = [
+                ['activity',          'Activity Timeline'],
+                ['locTrend',          'Lines of Code Trend'],
+                ['acceptanceRate',    'Acceptance Rate Trend'],
+                ['dailyActiveUsers',  'Daily Active Users'],
+                ['topUsers',          'Top Users by Generations'],
+                ['topUsersByLoC',     'Top Users by Lines Added'],
+                ['efficiency',        'User Efficiency Matrix'],
+                ['userEngagement',    'User Engagement Distribution'],
+                ['ide',               'IDE Market Share'],
+                ['ideAcceptance',     'Acceptance Rate by IDE'],
+                ['language',          'Language Distribution'],
+                ['languageAcceptance','Acceptance Rate by Language'],
+                ['feature',           'Feature Usage'],
+                ['model',             'Model Distribution'],
+            ];
             const chartSections = chartMap.map(([key, title]) => {
                 const chart = state.charts[key];
                 if (!chart) return '';
@@ -2722,33 +2771,26 @@
                 return `<div class="chart-item"><h3>${title}</h3><img src="${out.toDataURL('image/png')}" alt="${title}"></div>`;
             }).filter(Boolean).join('');
 
-            // Summary numbers
-            const totalUsers = Object.keys(byUser).length;
-            const totalGens  = Object.values(byUser).reduce((s, u) => s + u.generations, 0);
-            const totalLines = Object.values(byUser).reduce((s, u) => s + u.linesAdded, 0);
-            const allDates   = state.rawData.map(r => r.day).sort();
-            const fromDate   = allDates[0] || '';
-            const toDate     = allDates[allDates.length - 1] || '';
-
-            // Build all-users table rows (no 500-row cap)
-            const hoursPerLine = 1 / config.MANUAL_LINES_PER_HOUR;
+            // ── User table (all rows, no cap) ─────────────────
             const userRows = Object.entries(byUser)
                 .sort((a, b) => b[1].generations - a[1].generations)
                 .map(([user, d]) => {
-                    const valueAdded = d.linesAdded * hoursPerLine * config.BLENDED_RATE_PER_HOUR;
+                    const val = (d.linesAdded / config.MANUAL_LINES_PER_HOUR) * config.BLENDED_RATE_PER_HOUR;
                     const net = d.linesAdded - d.linesDeleted;
                     return `<tr>
-                        <td>${user}</td>
-                        <td>${d.activeDays}</td>
-                        <td>${d.generations.toLocaleString()}</td>
-                        <td>${d.linesAdded.toLocaleString()}</td>
-                        <td>${d.linesDeleted.toLocaleString()}</td>
-                        <td>${net.toLocaleString()}</td>
-                        <td>$${valueAdded.toFixed(2)}</td>
+                      <td>${user}</td>
+                      <td>${d.days.size}</td>
+                      <td>${d.generations.toLocaleString()}</td>
+                      <td>${d.linesAdded.toLocaleString()}</td>
+                      <td>${d.linesDeleted.toLocaleString()}</td>
+                      <td>${net.toLocaleString()}</td>
+                      <td>$${val.toFixed(2)}</td>
                     </tr>`;
                 }).join('');
 
+            const fn = (n) => n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toString();
             const generatedAt = new Date().toLocaleString();
+
             const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2756,46 +2798,119 @@
 <title>Copilot Analytics Report — ${fromDate} to ${toDate}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #080808; color: #f5f5f5; padding: 2.5rem; line-height: 1.5; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #080808; color: #f5f5f5; padding: 2.5rem; line-height: 1.5; max-width: 1280px; margin: 0 auto; }
   h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
   .meta { color: rgba(255,255,255,0.4); font-size: 0.82rem; margin-bottom: 2.5rem; }
-  .section { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 0.5rem; }
-  .kpi { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.25rem 1.5rem; }
-  .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.38); margin-bottom: 0.5rem; }
-  .kpi-value { font-size: 1.8rem; font-weight: 700; color: #00C896; letter-spacing: -0.02em; }
+  .section-hdr { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #f5f5f5; margin: 2.25rem 0 0.85rem; padding-bottom: 0.65rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .section-sub { font-size: 0.72rem; color: rgba(255,255,255,0.38); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .kpis-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+  .kpis-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+  .kpis-4x { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+  .kpi-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .kpi-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: rgba(255,255,255,0.38); margin-bottom: 0.4rem; }
+  .kpi-sub  { font-size: 0.68rem; color: rgba(255,255,255,0.38); margin-bottom: 0.35rem; }
+  .kpi-value { font-size: 2rem; font-weight: 700; color: #00C896; letter-spacing: -0.03em; line-height: 1.1; }
+  .kpi-foot { font-size: 0.72rem; margin-top: 0.35rem; color: rgba(255,255,255,0.38); }
   .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
   .chart-item { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.25rem; }
   .chart-item h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; color: rgba(255,255,255,0.7); }
   .chart-item img { width: 100%; height: auto; border-radius: 6px; display: block; }
+  .glossary { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.5rem; }
+  .glossary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1.25rem; }
+  .glossary-item h4 { font-size: 0.78rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .glossary-item p { font-size: 0.72rem; color: rgba(255,255,255,0.45); line-height: 1.55; }
+  .glossary-note { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.65; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+  .feature-modes { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+  .feature-modes h4 { font-size: 0.78rem; font-weight: 700; margin-bottom: 0.75rem; }
+  .feature-modes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 2rem; }
+  .feature-modes-grid dt { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .feature-modes-grid dd { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-bottom: 0.6rem; }
+  code { font-family: monospace; font-size: 0.85em; color: #00C896; }
   table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
   th { padding: 0.55rem 0.75rem; background: #1a1a1a; color: rgba(255,255,255,0.38); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.07); }
   td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
   tr:hover td { background: rgba(255,255,255,0.02); }
-  @media print { body { background: #fff; color: #000; padding: 1rem; } .kpi { background: #f8f8f8; border-color: #ddd; } .chart-item { background: #f8f8f8; border-color: #ddd; } th { background: #f0f0f0; } }
 </style>
 </head>
 <body>
 <h1>GitHub Copilot Analytics</h1>
 <div class="meta">Generated ${generatedAt} &nbsp;·&nbsp; ${fromDate} to ${toDate} &nbsp;·&nbsp; ${totalUsers.toLocaleString()} users &nbsp;·&nbsp; ${state.rawData.length.toLocaleString()} records${state.loadedFiles.length > 1 ? ' &nbsp;·&nbsp; ' + state.loadedFiles.length + ' files merged' : ''}</div>
 
-<div class="kpis">
-  <div class="kpi"><div class="kpi-label">Users</div><div class="kpi-value">${totalUsers.toLocaleString()}</div></div>
-  <div class="kpi"><div class="kpi-label">Total Generations</div><div class="kpi-value">${totalGens.toLocaleString()}</div></div>
-  <div class="kpi"><div class="kpi-label">Lines Added</div><div class="kpi-value">${totalLines.toLocaleString()}</div></div>
-  <div class="kpi"><div class="kpi-label">Date Range</div><div class="kpi-value" style="font-size:1rem;padding-top:0.3rem">${fromDate}<br>${toDate}</div></div>
+<div class="section-hdr">⚡ Copilot Activity <span class="section-sub">— prompts, completions &amp; usage</span></div>
+<div class="kpis-4">
+  <div class="kpi-card"><div class="kpi-label">Active Users</div><div class="kpi-value">${totalUsers.toLocaleString()}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Total Generations</div><div class="kpi-value">${fn(totalGenerations)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Chat Interactions</div><div class="kpi-value">${fn(chatInteractions)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Active Days</div><div class="kpi-value">${activeDays}</div></div>
 </div>
 
-<div class="section">Charts</div>
+<div class="section-hdr">📄 Lines of Code <span class="section-sub">— written output &amp; estimated value</span></div>
+<div class="kpis-5">
+  <div class="kpi-card"><div class="kpi-label">Lines Added</div><div class="kpi-value">${fn(totalLinesAdded)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Net Lines</div><div class="kpi-value">${fn(netLines)}</div></div>
+  <div class="kpi-card">
+    <div class="kpi-label">Value (Total Changed)</div>
+    <div class="kpi-sub">(Lines added + Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr</div>
+    <div class="kpi-value">$${fn(Math.round(valueTotal))}</div>
+    <div class="kpi-foot">Added + Deleted · ${fn(Math.round(hoursSavedTotal))} hrs</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Value (Lines Added)</div>
+    <div class="kpi-sub">Lines added ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr</div>
+    <div class="kpi-value">$${fn(Math.round(valueLinesAdded))}</div>
+    <div class="kpi-foot">New code only · ${fn(Math.round(hoursSavedLinesAdded))} hrs</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Value (Net Lines)</div>
+    <div class="kpi-sub">(Lines added - Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr</div>
+    <div class="kpi-value">$${fn(Math.round(valueNetLines))}</div>
+    <div class="kpi-foot">After deletions · ${fn(Math.round(hoursSavedNetLines))} hrs</div>
+  </div>
+</div>
+
+<div class="section-hdr">🗂 Feature Adoption <span class="section-sub">— of ${totalUsers} active users, how many used each mode</span></div>
+<div class="kpis-4x">${featureCards}</div>
+
+<div class="section-hdr">📊 Charts</div>
 <div class="charts">${chartSections}</div>
 
-<div class="section">All Users (${Object.keys(byUser).length})</div>
+<div class="section-hdr">📖 Understanding Your Metrics</div>
+<div class="glossary">
+  <div class="glossary-grid">
+    <div class="glossary-item">
+      <h4>⚡ Generations</h4>
+      <p>How many times Copilot was <strong>triggered</strong> — code completions, inline suggestions, and agent mode prompts. Measures <strong>usage intensity</strong>, not how much code was produced. Used by: Power Users insight, Activity Timeline, Top Users by Generations.</p>
+    </div>
+    <div class="glossary-item">
+      <h4>📄 Lines of Code</h4>
+      <p>Actual code <strong>written or deleted</strong> (<code>loc_added_sum</code> / <code>loc_deleted_sum</code>). Measures output volume — varies by language and task. Used by: Top Users by Lines Added, LoC Trend, Value estimates.</p>
+    </div>
+    <div class="glossary-item">
+      <h4>✅ Acceptance Rate</h4>
+      <p>% of code completions that were <strong>kept</strong>. Treat with caution — ~94% of activity is agent mode, which does not record acceptances. A low rate likely reflects agent usage, not rejected suggestions.</p>
+    </div>
+  </div>
+  <div class="glossary-note">
+    <strong>These metrics tell different stories.</strong> A user with 5,000 generations and 200 lines is doing intensive chat/refactoring work. A user with 500 generations and 8,000 lines is writing large files with few prompts. Neither pattern is better — they reflect different working styles.
+  </div>
+  <div class="feature-modes">
+    <h4>Feature Modes — what each one means</h4>
+    <dl class="feature-modes-grid">
+      <div><dt>Code Completion</dt><dd>Passive inline suggestions (grey ghost text). Zero clicks required; Copilot predicts as you type.</dd></div>
+      <div><dt>Edit Mode <code>agent_edit</code></dt><dd>Copilot Edits panel. Agentic multi-file editing; shows a diff for review before applying. Same autonomous engine as Chat · Agent.</dd></div>
+      <div><dt>Chat · Agent <code>chat_panel_agent_mode</code></dt><dd>Agent mode in the Chat panel. Same capability as Edit Mode but accessed conversationally. GitHub is converging these two.</dd></div>
+      <div><dt>Inline Chat <code>chat_inline</code></dt><dd>Press ⌘I / Ctrl+I inside the editor to ask a focused question or request a localised edit without leaving the file.</dd></div>
+      <div><dt>Chat · Ask <code>chat_panel_ask_mode</code></dt><dd>Q&amp;A mode in the Chat panel. Copilot responds but read-only; does not modify files automatically.</dd></div>
+      <div><dt>Chat · Plan <code>chat_panel_plan_mode</code></dt><dd>Plan mode — Copilot produces a structured step-by-step plan and waits for approval before making any changes.</dd></div>
+    </dl>
+    <p style="font-size:0.72rem;color:rgba(255,255,255,0.38);margin-top:0.75rem"><strong>Key distinction:</strong> Code Completion is passive (no prompt needed). Ask / Inline Chat are conversational but read-only. Edit Mode and Chat · Agent are both agentic — the difference is the UI entry point, not the underlying model.</p>
+  </div>
+</div>
+
+<div class="section-hdr">👥 All Users (${Object.keys(byUser).length})</div>
 <table>
   <thead>
-    <tr>
-      <th>User</th><th>Days Active</th><th>Generations</th>
-      <th>Lines Added</th><th>Lines Deleted</th><th>Net Lines</th><th>Est. Value</th>
-    </tr>
+    <tr><th>User</th><th>Days Active</th><th>Generations</th><th>Lines Added</th><th>Lines Deleted</th><th>Net Lines</th><th>Est. Value (Lines Added)</th></tr>
   </thead>
   <tbody>${userRows}</tbody>
 </table>
