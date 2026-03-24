@@ -25,29 +25,21 @@ const CONFIG = {
     HIGH_ACCEPTANCE_THRESHOLD: 0.70,       // 70% - Badge users above this acceptance rate
     POWER_USER_PERCENTILE: 0.90,           // Top 10% - Identify power users
     MIN_GENERATIONS_FOR_RATE: 50,          // Minimum generations required for meaningful acceptance rate
+    TREND_COMPARISON_DAYS: 7,             // Days window for week-over-week trend comparison
 
     // ===== Chart Settings =====
     CHART_ANIMATION_DURATION: 750,         // Animation duration in milliseconds
-    MAX_TOP_USERS_SHOWN: 15,               // Number of users in "Top Users" charts
+    MAX_TOP_USERS_SHOWN: 15,               // Number of users in "Top Users" chart
     MAX_LANGUAGES_SHOWN: 10,               // Number of languages before grouping into "Other"
 
     // ===== Performance Settings =====
     CHUNK_SIZE: 10000,                     // Lines to process per parsing chunk
-    MAX_TABLE_ROWS: 500,                   // Maximum rows to display in data table
-    CHART_POINT_RADIUS: 3,                 // Size of points in scatter plots
+    MAX_FILE_SIZE_MB: 100,                 // Warning threshold for large file uploads
+    TABLE_PAGE_SIZE: 100,                  // Rows per page multiplier (table shows PAGE_SIZE × 5)
 
-    // ===== Date Settings =====
-    QUICK_RANGE_DAYS: [7, 30, 90],        // Quick filter buttons (days)
-    MOVING_AVERAGE_WINDOW: 7,              // Days for moving average calculation
-
-    // ===== Export Settings =====
-    CSV_DELIMITER: ',',                    // CSV column delimiter
-    CSV_INCLUDE_HEADER: true,              // Include header row in CSV export
-
-    // ===== UI Settings =====
-    SHOW_WARNINGS: true,                   // Display warning messages
-    AUTO_APPLY_FILTERS: true,              // Auto-apply filters on change
-    ENABLE_TOOLTIPS: true                  // Show tooltips on charts
+    // ===== Value Calculation Settings =====
+    BLENDED_RATE_PER_HOUR: 90,            // $/hour per developer (overridable via UI)
+    MANUAL_LINES_PER_HOUR: 30,            // Average lines coded manually per hour (overridable via UI)
 };
 ```
 
@@ -294,28 +286,6 @@ CHUNK_SIZE: 10000
 - **Larger chunks:** Faster total parse time, potential UI freezing
 - **Smaller chunks:** Slower parse, smoother progress updates
 
-#### MAX_TABLE_ROWS
-
-**Default:** `500`
-
-Maximum rows displayed in the data table (virtual scrolling simulation).
-
-```javascript
-// High-performance devices
-MAX_TABLE_ROWS: 1000
-
-// Standard (default)
-MAX_TABLE_ROWS: 500
-
-// Low-end devices
-MAX_TABLE_ROWS: 250
-```
-
-**Impact:**
-- Rendering performance
-- Scroll smoothness
-- Memory usage
-
 ### Chart Performance
 
 #### CHART_ANIMATION_DURATION
@@ -333,23 +303,6 @@ CHART_ANIMATION_DURATION: 750
 
 // Smooth/slow
 CHART_ANIMATION_DURATION: 1500
-```
-
-#### CHART_POINT_RADIUS
-
-**Default:** `3`
-
-Size of data points in scatter plots.
-
-```javascript
-// Minimal (performance)
-CHART_POINT_RADIUS: 2
-
-// Standard (default)
-CHART_POINT_RADIUS: 3
-
-// Prominent
-CHART_POINT_RADIUS: 5
 ```
 
 ## Chart Configuration
@@ -395,132 +348,21 @@ MAX_LANGUAGES_SHOWN: 15
 All charts use a shared options template via `getChartOptions()`:
 
 ```javascript
-function getChartOptions(type, customOptions = {}) {
-    const baseOptions = {
+function getChartOptions(title) {
+    return {
         responsive: true,
         maintainAspectRatio: false,
-        animation: {
-            duration: CONFIG.CHART_ANIMATION_DURATION
-        },
+        animation: { duration: CONFIG.CHART_ANIMATION_DURATION },
         plugins: {
-            legend: {
-                labels: {
-                    color: '#f8fafc',  // --slate-50
-                    font: { size: 12 }
-                }
-            },
-            tooltip: {
-                enabled: CONFIG.ENABLE_TOOLTIPS,
-                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleColor: '#f8fafc',
-                bodyColor: '#f8fafc',
-                borderColor: '#334155',
-                borderWidth: 1
-            }
+            legend: { labels: { color: '#94a3b8' } },
+            title: { display: false }
         },
-        scales: type === 'line' || type === 'bar' ? {
-            x: {
-                grid: { color: 'rgba(51, 65, 85, 0.5)' },
-                ticks: { color: '#94a3b8' }
-            },
-            y: {
-                grid: { color: 'rgba(51, 65, 85, 0.5)' },
-                ticks: { color: '#94a3b8' }
-            }
-        } : {}
+        scales: {
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+        }
     };
-
-    return { ...baseOptions, ...customOptions };
 }
-```
-
-## Advanced Configuration
-
-### Date Range Defaults
-
-#### QUICK_RANGE_DAYS
-
-**Default:** `[7, 30, 90]`
-
-Quick filter buttons for date ranges.
-
-```javascript
-// Weekly, monthly, quarterly, yearly
-QUICK_RANGE_DAYS: [7, 30, 90, 365]
-
-// Custom ranges
-QUICK_RANGE_DAYS: [14, 28, 60]
-```
-
-#### MOVING_AVERAGE_WINDOW
-
-**Default:** `7`
-
-Days for moving average calculation in acceptance rate trend.
-
-```javascript
-// 3-day (more responsive)
-MOVING_AVERAGE_WINDOW: 3
-
-// 7-day (default, weekly)
-MOVING_AVERAGE_WINDOW: 7
-
-// 30-day (monthly smoothing)
-MOVING_AVERAGE_WINDOW: 30
-```
-
-### Export Configuration
-
-#### CSV_DELIMITER
-
-**Default:** `','`
-
-Column delimiter for CSV exports.
-
-```javascript
-// Comma (standard)
-CSV_DELIMITER: ','
-
-// Semicolon (Excel Europe)
-CSV_DELIMITER: ';'
-
-// Tab
-CSV_DELIMITER: '\t'
-```
-
-#### CSV_INCLUDE_HEADER
-
-**Default:** `true`
-
-Include header row in CSV export.
-
-```javascript
-CSV_INCLUDE_HEADER: true   // With headers
-CSV_INCLUDE_HEADER: false  // Data only
-```
-
-### UI Behavior
-
-#### AUTO_APPLY_FILTERS
-
-**Default:** `true`
-
-Automatically apply filters on change.
-
-```javascript
-AUTO_APPLY_FILTERS: true   // Instant updates (default)
-AUTO_APPLY_FILTERS: false  // Requires "Apply" button click
-```
-
-#### SHOW_WARNINGS
-
-**Default:** `true`
-
-Display warning messages (file size, data quality).
-
-```javascript
-SHOW_WARNINGS: true   // Show all warnings
-SHOW_WARNINGS: false  // Silent operation
 ```
 
 ## Configuration Best Practices
@@ -528,20 +370,18 @@ SHOW_WARNINGS: false  // Silent operation
 ### 1. Environment-Specific Configs
 
 ```javascript
-// Development
+// Faster iteration (disable animation)
 const CONFIG = {
-    CHUNK_SIZE: 5000,              // Smaller chunks for debugging
-    CHART_ANIMATION_DURATION: 0,   // No animation for speed
-    SHOW_WARNINGS: true,           // All warnings
-    MAX_TABLE_ROWS: 100            // Smaller dataset
+    CHUNK_SIZE: 5000,
+    CHART_ANIMATION_DURATION: 0,
+    TABLE_PAGE_SIZE: 20
 };
 
-// Production
+// Production defaults
 const CONFIG = {
-    CHUNK_SIZE: 10000,             // Optimized chunks
-    CHART_ANIMATION_DURATION: 750, // Smooth animations
-    SHOW_WARNINGS: false,          // Clean UX
-    MAX_TABLE_ROWS: 500            // Full dataset
+    CHUNK_SIZE: 10000,
+    CHART_ANIMATION_DURATION: 750,
+    TABLE_PAGE_SIZE: 100
 };
 ```
 
@@ -571,17 +411,15 @@ const CONFIG = {
 // High-end devices
 const CONFIG = {
     CHUNK_SIZE: 20000,
-    MAX_TABLE_ROWS: 1000,
-    CHART_ANIMATION_DURATION: 1000,
-    CHART_POINT_RADIUS: 4
+    TABLE_PAGE_SIZE: 200,
+    CHART_ANIMATION_DURATION: 1000
 };
 
 // Low-end devices
 const CONFIG = {
     CHUNK_SIZE: 5000,
-    MAX_TABLE_ROWS: 250,
-    CHART_ANIMATION_DURATION: 300,
-    CHART_POINT_RADIUS: 2
+    TABLE_PAGE_SIZE: 50,
+    CHART_ANIMATION_DURATION: 300
 };
 ```
 

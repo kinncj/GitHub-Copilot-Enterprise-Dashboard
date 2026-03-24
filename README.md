@@ -30,7 +30,7 @@ A production-ready, zero-dependency analytics dashboard for visualizing GitHub C
 - **Zero Dependencies** - Single HTML file, no build process required
 - **100% Client-Side** - All data processing happens in your browser
 - **Privacy First** - No data leaves your machine
-- **Rich Visualizations** - 9 interactive charts powered by Chart.js
+- **Rich Visualizations** - 14 interactive charts powered by Chart.js
 - **Smart Insights** - Automated detection of power users and efficiency metrics
 - **Enterprise Ready** - Handles large datasets (100MB+) with chunked parsing
 - **Responsive Design** - Works on desktop, tablet, and mobile
@@ -65,19 +65,24 @@ See [Getting Started Guide](docs/getting-started.md) for detailed instructions.
 - Chat activity and feature usage
 
 ### Visualizations
-- **Activity Timeline** - Daily trends of generations, acceptances, and chat
-- **Acceptance Rate Trends** - Track code quality over time
-- **Top Users** - Identify power users and high-efficiency developers
-- **IDE Distribution** - See which IDEs your team prefers
-- **Language Breakdown** - Understand your tech stack usage
+- **Activity Timeline** - Daily trends of generations, chat, and lines of code
+- **Lines of Code Trend** - Daily lines added vs deleted over time
+- **Acceptance Rate Trend** - Daily rate + 7-day moving average
+- **Daily Active Users** - Adoption trend over time
+- **Top Users by Generations** - Identify power users, color-coded by acceptance rate
+- **Top Users by Lines Added** - Alternative ranking by output volume
+- **User Efficiency Matrix** - Scatter plot of volume vs. acceptance rate
+- **User Engagement Distribution** - Histogram of days active per user
+- **IDE Market Share** - Which editors your team uses
+- **Acceptance Rate by IDE** - Which editor produces best acceptance rates
+- **Language Distribution** - Tech stack usage by generations
+- **Acceptance Rate by Language** - Which languages benefit most from Copilot
 - **Feature Usage** - Monitor which Copilot features are most popular
-- **Efficiency Matrix** - Scatter plot of volume vs. quality
 - **Model Distribution** - Track AI model usage
 
 ### Automated Insights
 - ⭐ Power Users (top 10% by activity)
 - ✅ High Efficiency Users (>70% acceptance rate)
-- ⚠️ Low Acceptance Alerts (<20% acceptance rate)
 - 🚨 Quota Exceeded Days (unusual activity spikes)
 - 📈 Week-over-Week Trends
 - ❌ Zero Acceptance Days (potential issues)
@@ -193,9 +198,9 @@ If you modify this software and make it available over a network, you must make 
 
 ## 📈 Project Stats
 
-- **Single File:** ~3,000 lines of code
+- **Single File:** ~2,400 lines of code
 - **Zero Build Tools:** No npm, webpack, or bundlers needed
-- **9 Charts:** Comprehensive analytics
+- **14 Charts:** Comprehensive analytics
 - **100% Browser-Based:** Privacy-first architecture
 
 ## 🗺️ Roadmap

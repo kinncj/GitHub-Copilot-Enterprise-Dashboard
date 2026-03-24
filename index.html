@@ -357,7 +357,11 @@
             </div>
         </div>
 
-        <!-- Primary Charts -->
+        <!-- ── Activity & Time ─────────────────────────────────────── -->
+        <div class="flex items-center gap-2 mb-4 mt-2">
+            <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
+            <span class="text-sm font-semibold text-indigo-400 uppercase tracking-wide">Activity &amp; Time</span>
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
@@ -381,6 +385,59 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">Lines of Code Trend</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            <span style="color:#10b981">— Added</span>
+                            <span class="mx-2 text-slate-600">|</span>
+                            <span style="color:#ef4444">— Deleted</span>
+                        </p>
+                    </div>
+                    <button onclick="exportLoCTrendChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="locTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">Acceptance Rate Trend</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            <span style="color:rgba(129,140,248,0.5)">— Daily rate</span>
+                            <span class="mx-2 text-slate-600">|</span>
+                            <span style="color:#818cf8">— 7-day average</span>
+                        </p>
+                    </div>
+                    <button onclick="exportAcceptanceRateChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="acceptanceRateChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Daily Active Users</h3>
+                    <button onclick="exportDailyActiveUsersChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="dailyActiveUsersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── User Analysis ──────────────────────────────────────── -->
+        <div class="flex items-center gap-2 mb-4 mt-2">
+            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+            <span class="text-sm font-semibold text-emerald-400 uppercase tracking-wide">User Analysis</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Top 15 Users by Generations</h3>
                     <button onclick="exportTopUsersChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -388,8 +445,57 @@
                     <canvas id="topUsersChart"></canvas>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Top 15 Users by Lines Added</h3>
+                    <button onclick="exportTopUsersByLoCChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="topUsersByLoCChart"></canvas>
+                </div>
+            </div>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">User Efficiency Matrix</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            <span style="color:#10b981">● ≥70% acceptance</span>
+                            <span class="mx-2 text-slate-600">|</span>
+                            <span style="color:#818cf8">● normal</span>
+                            <span class="mx-2 text-slate-600">|</span>
+                            <span style="color:#ef4444">● &lt;20%</span>
+                        </p>
+                    </div>
+                    <button onclick="exportEfficiencyChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="efficiencyMatrix"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">User Engagement Distribution</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Number of users by days active</p>
+                    </div>
+                    <button onclick="exportUserEngagementChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="userEngagementChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Tools & Languages ──────────────────────────────────── -->
+        <div class="flex items-center gap-2 mb-4 mt-2">
+            <i data-lucide="code-2" class="w-4 h-4 text-amber-400"></i>
+            <span class="text-sm font-semibold text-amber-400 uppercase tracking-wide">Tools &amp; Languages</span>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
@@ -422,14 +528,39 @@
             </div>
         </div>
 
-        <!-- Analysis Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">Acceptance Rate by IDE</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Min. 50 generations</p>
+                    </div>
+                    <button onclick="exportIDEAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ideAcceptanceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">Acceptance Rate by Language</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Min. 50 generations</p>
+                    </div>
+                    <button onclick="exportLanguageAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="languageAcceptanceChart"></canvas>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Model Distribution</h3>
                     <button onclick="exportModelChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
-                <div class="chart-container-large">
+                <div class="chart-container">
                     <canvas id="modelChart"></canvas>
                 </div>
             </div>
@@ -492,10 +623,6 @@
             // User Classifications
             POWER_USER_PERCENTILE: 0.90,
             MIN_GENERATIONS_FOR_RATE: 50,
-            INACTIVE_DAYS_THRESHOLD: 14,
-
-            // Anomaly Detection
-            SPIKE_STD_DEVIATIONS: 3,
             TREND_COMPARISON_DAYS: 7,
 
             // UI Settings
@@ -511,8 +638,6 @@
             // Value Calculation Settings
             BLENDED_RATE_PER_HOUR: 90,           // $/hour per developer
             MANUAL_LINES_PER_HOUR: 30,           // Average lines coded manually per hour
-            MANUAL_LINES_PER_HOUR_CONSERVATIVE: 20,  // Conservative estimate
-            MANUAL_LINES_PER_HOUR_AGGRESSIVE: 40,    // Aggressive estimate
         };
 
         // ============================================
@@ -677,11 +802,6 @@
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
 
-            if (errors > 0) {
-                console.warn(`Skipped ${errors} malformed records`);
-            }
-
-            console.log(`Parsed ${state.rawData.length} records`);
         }
 
         // ============================================
@@ -830,7 +950,8 @@
                         acceptances: 0,
                         linesAdded: 0,
                         linesDeleted: 0,
-                        chatCount: 0
+                        chatCount: 0,
+                        users: new Set()
                     };
                 }
                 const day = byDay[record.day];
@@ -838,18 +959,23 @@
                 day.acceptances += record.code_acceptance_activity_count;
                 day.linesAdded += record.loc_added_sum;
                 day.linesDeleted += record.loc_deleted_sum;
+                day.users.add(record.user_login);
 
                 // Chat count
                 const chatFeature = record.totals_by_feature.find(f => f.feature === 'chat' || f.feature === 'inline_chat');
                 if (chatFeature) day.chatCount += chatFeature.count;
             });
 
+            // Convert users Set to count
+            Object.values(byDay).forEach(d => { d.activeUsers = d.users.size; delete d.users; });
+
             // By IDE
             const byIDE = {};
             data.forEach(record => {
                 record.totals_by_ide.forEach(ide => {
-                    if (!byIDE[ide.ide]) byIDE[ide.ide] = 0;
-                    byIDE[ide.ide] += ide.code_generation_activity_count || 0;
+                    if (!byIDE[ide.ide]) byIDE[ide.ide] = { generations: 0, acceptances: 0 };
+                    byIDE[ide.ide].generations += ide.code_generation_activity_count || 0;
+                    byIDE[ide.ide].acceptances += ide.code_acceptance_activity_count || 0;
                 });
             });
 
@@ -857,8 +983,9 @@
             const byLanguage = {};
             data.forEach(record => {
                 record.totals_by_language_feature.forEach(lf => {
-                    if (!byLanguage[lf.language]) byLanguage[lf.language] = 0;
-                    byLanguage[lf.language] += lf.code_generation_activity_count || 0;
+                    if (!byLanguage[lf.language]) byLanguage[lf.language] = { generations: 0, acceptances: 0 };
+                    byLanguage[lf.language].generations += lf.code_generation_activity_count || 0;
+                    byLanguage[lf.language].acceptances += lf.code_acceptance_activity_count || 0;
                 });
             });
 
@@ -866,8 +993,9 @@
             const byFeature = {};
             data.forEach(record => {
                 record.totals_by_feature.forEach(f => {
-                    if (!byFeature[f.feature]) byFeature[f.feature] = 0;
-                    byFeature[f.feature] += f.code_generation_activity_count || 0;
+                    if (!byFeature[f.feature]) byFeature[f.feature] = { generations: 0, acceptances: 0 };
+                    byFeature[f.feature].generations += f.code_generation_activity_count || 0;
+                    byFeature[f.feature].acceptances += f.code_acceptance_activity_count || 0;
                 });
             });
 
@@ -904,7 +1032,7 @@
             const totalLinesAdded = Object.values(byUser).reduce((sum, u) => sum + u.linesAdded, 0);
             const totalLinesDeleted = Object.values(byUser).reduce((sum, u) => sum + u.linesDeleted, 0);
             const netLines = totalLinesAdded - totalLinesDeleted;
-            const chatInteractions = byFeature.chat || 0 + byFeature.inline_chat || 0;
+            const chatInteractions = (byFeature.chat?.generations || 0) + (byFeature.inline_chat?.generations || 0);
             const activeDays = Object.keys(byDay).length;
 
             // Value Calculations - use current configuration
@@ -983,9 +1111,17 @@
         // ============================================
         function renderCharts() {
             renderActivityChart();
+            renderLoCTrendChart();
+            renderAcceptanceRateChart();
+            renderDailyActiveUsersChart();
             renderTopUsersChart();
+            renderTopUsersByLoCChart();
+            renderEfficiencyMatrix();
+            renderUserEngagementChart();
             renderIDEChart();
+            renderIDEAcceptanceChart();
             renderLanguageChart();
+            renderLanguageAcceptanceChart();
             renderFeatureChart();
             renderModelChart();
         }
@@ -1068,6 +1204,72 @@
         }
 
 
+        function renderAcceptanceRateChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const dailyRates = sortedDays.map(day => {
+                const d = byDay[day];
+                return d.generations > 0 ? (d.acceptances / d.generations) * 100 : null;
+            });
+
+            // 7-day moving average
+            const movingAvg = sortedDays.map((_, i) => {
+                const win = dailyRates.slice(Math.max(0, i - 6), i + 1).filter(r => r !== null);
+                if (win.length === 0) return null;
+                return win.reduce((a, b) => a + b, 0) / win.length;
+            });
+
+            const ctx = document.getElementById('acceptanceRateChart');
+            if (state.charts.acceptanceRate) state.charts.acceptanceRate.destroy();
+
+            const baseOpts = getChartOptions('Acceptance rate trend');
+            state.charts.acceptanceRate = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDays,
+                    datasets: [
+                        {
+                            label: 'Daily Rate',
+                            data: dailyRates,
+                            borderColor: 'rgba(129, 140, 248, 0.45)',
+                            backgroundColor: 'rgba(129, 140, 248, 0.08)',
+                            tension: 0.3,
+                            pointRadius: 2,
+                            fill: true,
+                            spanGaps: false
+                        },
+                        {
+                            label: '7-Day Avg',
+                            data: movingAvg,
+                            borderColor: '#818cf8',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderWidth: 2.5,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    ...baseOpts,
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#334155' },
+                            min: 0,
+                            title: { display: true, text: 'Acceptance Rate (%)', color: '#94a3b8', font: { size: 11 } }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' }
+                        }
+                    }
+                }
+            });
+        }
+
+
         function renderTopUsersChart() {
             const { byUser } = state.aggregatedData;
             const users = Object.entries(byUser)
@@ -1104,9 +1306,316 @@
         }
 
 
+        function renderEfficiencyMatrix() {
+            const { byUser } = state.aggregatedData;
+            const points = Object.entries(byUser)
+                .filter(([_, data]) => data.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([name, data]) => ({
+                    x: data.generations,
+                    y: (data.acceptances / data.generations) * 100,
+                    label: name
+                }));
+
+            const ctx = document.getElementById('efficiencyMatrix');
+            if (state.charts.efficiency) state.charts.efficiency.destroy();
+
+            state.charts.efficiency = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Users',
+                        data: points,
+                        backgroundColor: points.map(p => {
+                            if (p.y >= CONFIG.HIGH_ACCEPTANCE_THRESHOLD * 100) return 'rgba(16, 185, 129, 0.7)';
+                            if (p.y < CONFIG.LOW_ACCEPTANCE_THRESHOLD * 100) return 'rgba(239, 68, 68, 0.7)';
+                            return 'rgba(129, 140, 248, 0.7)';
+                        }),
+                        pointRadius: 6,
+                        pointHoverRadius: 9
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: CONFIG.CHART_ANIMATION_DURATION },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const p = ctx.raw;
+                                    return `${p.label}: ${p.x.toLocaleString()} gens, ${p.y.toFixed(1)}% rate`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            title: { display: true, text: 'Total Generations', color: '#94a3b8', font: { size: 11 } }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#334155' },
+                            min: 0,
+                            title: { display: true, text: 'Acceptance Rate (%)', color: '#94a3b8', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function renderLoCTrendChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const ctx = document.getElementById('locTrendChart');
+            if (state.charts.locTrend) state.charts.locTrend.destroy();
+
+            const baseOpts = getChartOptions('Lines of code trend');
+            state.charts.locTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDays,
+                    datasets: [
+                        {
+                            label: 'Lines Added',
+                            data: sortedDays.map(day => byDay[day].linesAdded),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            pointRadius: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'Lines Deleted',
+                            data: sortedDays.map(day => byDay[day].linesDeleted),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                            tension: 0.4,
+                            pointRadius: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    ...baseOpts,
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            min: 0,
+                            title: { display: true, text: 'Lines of Code', color: '#94a3b8', font: { size: 11 } }
+                        },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+
+        function renderDailyActiveUsersChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const ctx = document.getElementById('dailyActiveUsersChart');
+            if (state.charts.dailyActiveUsers) state.charts.dailyActiveUsers.destroy();
+
+            const baseOpts = getChartOptions('Daily active users');
+            state.charts.dailyActiveUsers = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDays,
+                    datasets: [{
+                        label: 'Active Users',
+                        data: sortedDays.map(day => byDay[day].activeUsers),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...baseOpts,
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8', precision: 0 },
+                            grid: { color: '#334155' },
+                            min: 0,
+                            title: { display: true, text: 'Active Users', color: '#94a3b8', font: { size: 11 } }
+                        },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+
+        function renderTopUsersByLoCChart() {
+            const { byUser } = state.aggregatedData;
+            const users = Object.entries(byUser)
+                .map(([name, data]) => ({ name, linesAdded: data.linesAdded }))
+                .sort((a, b) => b.linesAdded - a.linesAdded)
+                .slice(0, CONFIG.MAX_TOP_USERS_SHOWN);
+
+            const ctx = document.getElementById('topUsersByLoCChart');
+            if (state.charts.topUsersByLoC) state.charts.topUsersByLoC.destroy();
+
+            state.charts.topUsersByLoC = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: users.map(u => u.name),
+                    datasets: [{
+                        label: 'Lines Added',
+                        data: users.map(u => u.linesAdded),
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Top users by lines added'),
+                    indexAxis: 'y'
+                }
+            });
+        }
+
+
+        function renderUserEngagementChart() {
+            const { byUser } = state.aggregatedData;
+            const daysActive = Object.values(byUser).map(u => u.days.size);
+
+            const ranges = [
+                { label: '1 day',     min: 1,  max: 1 },
+                { label: '2–5 days',  min: 2,  max: 5 },
+                { label: '6–10 days', min: 6,  max: 10 },
+                { label: '11–20',     min: 11, max: 20 },
+                { label: '21–30',     min: 21, max: 30 },
+                { label: '31+ days',  min: 31, max: Infinity }
+            ];
+
+            const distribution = ranges.map(r => ({
+                label: r.label,
+                count: daysActive.filter(d => d >= r.min && d <= r.max).length
+            })).filter(r => r.count > 0);
+
+            const ctx = document.getElementById('userEngagementChart');
+            if (state.charts.userEngagement) state.charts.userEngagement.destroy();
+
+            state.charts.userEngagement = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: distribution.map(r => r.label),
+                    datasets: [{
+                        label: 'Users',
+                        data: distribution.map(r => r.count),
+                        backgroundColor: distribution.map((_, i) => {
+                            const colors = ['#ef4444', '#f59e0b', '#818cf8', '#6366f1', '#10b981', '#059669'];
+                            return colors[i % colors.length];
+                        })
+                    }]
+                },
+                options: {
+                    ...getChartOptions('User engagement distribution'),
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8', precision: 0 },
+                            grid: { color: '#334155' },
+                            min: 0,
+                            title: { display: true, text: 'Number of Users', color: '#94a3b8', font: { size: 11 } }
+                        },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+
+        function renderIDEAcceptanceChart() {
+            const { byIDE } = state.aggregatedData;
+            const data = Object.entries(byIDE)
+                .filter(([_, v]) => v.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([ide, v]) => ({ ide, rate: (v.acceptances / v.generations) * 100 }))
+                .sort((a, b) => b.rate - a.rate);
+
+            const ctx = document.getElementById('ideAcceptanceChart');
+            if (state.charts.ideAcceptance) state.charts.ideAcceptance.destroy();
+
+            state.charts.ideAcceptance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.ide),
+                    datasets: [{
+                        label: 'Acceptance Rate (%)',
+                        data: data.map(d => d.rate),
+                        backgroundColor: data.map(d => {
+                            if (d.rate >= CONFIG.HIGH_ACCEPTANCE_THRESHOLD * 100) return 'rgba(16, 185, 129, 0.7)';
+                            if (d.rate < CONFIG.LOW_ACCEPTANCE_THRESHOLD * 100) return 'rgba(239, 68, 68, 0.7)';
+                            return 'rgba(129, 140, 248, 0.7)';
+                        })
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Acceptance rate by IDE'),
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#334155' },
+                            min: 0
+                        },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+
+        function renderLanguageAcceptanceChart() {
+            const { byLanguage } = state.aggregatedData;
+            const data = Object.entries(byLanguage)
+                .filter(([_, v]) => v.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([lang, v]) => ({ lang, rate: (v.acceptances / v.generations) * 100 }))
+                .sort((a, b) => b.rate - a.rate)
+                .slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
+
+            const ctx = document.getElementById('languageAcceptanceChart');
+            if (state.charts.languageAcceptance) state.charts.languageAcceptance.destroy();
+
+            state.charts.languageAcceptance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.lang),
+                    datasets: [{
+                        label: 'Acceptance Rate (%)',
+                        data: data.map(d => d.rate),
+                        backgroundColor: data.map(d => {
+                            if (d.rate >= CONFIG.HIGH_ACCEPTANCE_THRESHOLD * 100) return 'rgba(16, 185, 129, 0.7)';
+                            if (d.rate < CONFIG.LOW_ACCEPTANCE_THRESHOLD * 100) return 'rgba(239, 68, 68, 0.7)';
+                            return 'rgba(129, 140, 248, 0.7)';
+                        })
+                    }]
+                },
+                options: {
+                    ...getChartOptions('Acceptance rate by language'),
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#334155' },
+                            min: 0
+                        },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+
         function renderIDEChart() {
             const { byIDE } = state.aggregatedData;
-            const data = Object.entries(byIDE).sort((a, b) => b[1] - a[1]);
+            const data = Object.entries(byIDE).sort((a, b) => b[1].generations - a[1].generations);
 
             const ctx = document.getElementById('ideChart');
             if (state.charts.ide) state.charts.ide.destroy();
@@ -1116,7 +1625,7 @@
                 data: {
                     labels: data.map(([ide]) => ide),
                     datasets: [{
-                        data: data.map(([_, count]) => count),
+                        data: data.map(([_, v]) => v.generations),
                         backgroundColor: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
                     }]
                 },
@@ -1131,13 +1640,13 @@
 
         function renderLanguageChart() {
             const { byLanguage } = state.aggregatedData;
-            let data = Object.entries(byLanguage).sort((a, b) => b[1] - a[1]);
+            let data = Object.entries(byLanguage).sort((a, b) => b[1].generations - a[1].generations);
 
             // Group small languages into "Other"
             if (data.length > CONFIG.MAX_LANGUAGES_SHOWN) {
                 const top = data.slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
-                const other = data.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, count]) => sum + count, 0);
-                data = [...top, ['Other', other]];
+                const otherGens = data.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, v]) => sum + v.generations, 0);
+                data = [...top, ['Other', { generations: otherGens, acceptances: 0 }]];
             }
 
             const ctx = document.getElementById('languageChart');
@@ -1148,7 +1657,7 @@
                 data: {
                     labels: data.map(([lang]) => lang),
                     datasets: [{
-                        data: data.map(([_, count]) => count),
+                        data: data.map(([_, v]) => v.generations),
                         backgroundColor: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#14b8a6', '#6366f1']
                     }]
                 },
@@ -1163,7 +1672,7 @@
 
         function renderFeatureChart() {
             const { byFeature } = state.aggregatedData;
-            const data = Object.entries(byFeature).sort((a, b) => b[1] - a[1]);
+            const data = Object.entries(byFeature).sort((a, b) => b[1].generations - a[1].generations);
 
             const ctx = document.getElementById('featureChart');
             if (state.charts.feature) state.charts.feature.destroy();
@@ -1174,7 +1683,7 @@
                     labels: data.map(([feature]) => feature),
                     datasets: [{
                         label: 'Usage Count',
-                        data: data.map(([_, count]) => count),
+                        data: data.map(([_, v]) => v.generations),
                         backgroundColor: '#818cf8'
                     }]
                 },
@@ -1546,10 +2055,10 @@
 
         function exportIDEChart() {
             const { byIDE } = state.aggregatedData;
-            const data = Object.entries(byIDE).sort((a, b) => b[1] - a[1]);
+            const data = Object.entries(byIDE).sort((a, b) => b[1].generations - a[1].generations);
 
-            const headers = ['IDE', 'Generations'];
-            const rows = data.map(([ide, count]) => [ide, count].join(','));
+            const headers = ['IDE', 'Generations', 'Acceptances'];
+            const rows = data.map(([ide, v]) => [ide, v.generations, v.acceptances].join(','));
 
             const csv = [headers.join(','), ...rows].join('\n');
             downloadCSV('ide-market-share.csv', csv);
@@ -1557,14 +2066,14 @@
 
         function exportLanguageChart() {
             const { byLanguage } = state.aggregatedData;
-            const sorted = Object.entries(byLanguage).sort((a, b) => b[1] - a[1]);
+            const sorted = Object.entries(byLanguage).sort((a, b) => b[1].generations - a[1].generations);
             const topLanguages = sorted.slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
-            const otherCount = sorted.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, count]) => sum + count, 0);
+            const otherGens = sorted.slice(CONFIG.MAX_LANGUAGES_SHOWN).reduce((sum, [_, v]) => sum + v.generations, 0);
 
-            const headers = ['Language', 'Generations'];
-            const rows = topLanguages.map(([lang, count]) => [lang, count].join(','));
-            if (otherCount > 0) {
-                rows.push(['Other', otherCount].join(','));
+            const headers = ['Language', 'Generations', 'Acceptances'];
+            const rows = topLanguages.map(([lang, v]) => [lang, v.generations, v.acceptances].join(','));
+            if (otherGens > 0) {
+                rows.push(['Other', otherGens, ''].join(','));
             }
 
             const csv = [headers.join(','), ...rows].join('\n');
@@ -1573,10 +2082,10 @@
 
         function exportFeatureChart() {
             const { byFeature } = state.aggregatedData;
-            const data = Object.entries(byFeature).sort((a, b) => b[1] - a[1]);
+            const data = Object.entries(byFeature).sort((a, b) => b[1].generations - a[1].generations);
 
-            const headers = ['Feature', 'Usage Count'];
-            const rows = data.map(([feature, count]) => [feature, count].join(','));
+            const headers = ['Feature', 'Usage Count', 'Acceptances'];
+            const rows = data.map(([feature, v]) => [feature, v.generations, v.acceptances].join(','));
 
             const csv = [headers.join(','), ...rows].join('\n');
             downloadCSV('feature-usage.csv', csv);
@@ -1591,6 +2100,131 @@
 
             const csv = [headers.join(','), ...rows].join('\n');
             downloadCSV('model-distribution.csv', csv);
+        }
+
+        function exportAcceptanceRateChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const dailyRates = sortedDays.map(day => {
+                const d = byDay[day];
+                return d.generations > 0 ? (d.acceptances / d.generations) * 100 : null;
+            });
+            const movingAvg = sortedDays.map((_, i) => {
+                const win = dailyRates.slice(Math.max(0, i - 6), i + 1).filter(r => r !== null);
+                if (win.length === 0) return null;
+                return win.reduce((a, b) => a + b, 0) / win.length;
+            });
+
+            const headers = ['Date', 'Daily Acceptance Rate (%)', '7-Day Moving Average (%)'];
+            const rows = sortedDays.map((day, i) => [
+                day,
+                dailyRates[i] !== null ? dailyRates[i].toFixed(2) : '',
+                movingAvg[i] !== null ? movingAvg[i].toFixed(2) : ''
+            ].join(','));
+
+            downloadCSV('acceptance-rate-trend.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportEfficiencyChart() {
+            const { byUser } = state.aggregatedData;
+            const points = Object.entries(byUser)
+                .filter(([_, data]) => data.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([name, data]) => ({
+                    user: name,
+                    generations: data.generations,
+                    rate: (data.acceptances / data.generations) * 100
+                }))
+                .sort((a, b) => b.generations - a.generations);
+
+            const headers = ['User', 'Total Generations', 'Acceptance Rate (%)'];
+            const rows = points.map(p => [p.user, p.generations, p.rate.toFixed(2)].join(','));
+
+            downloadCSV('efficiency-matrix.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportLoCTrendChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const headers = ['Date', 'Lines Added', 'Lines Deleted'];
+            const rows = sortedDays.map(day => [
+                day, byDay[day].linesAdded, byDay[day].linesDeleted
+            ].join(','));
+
+            downloadCSV('loc-trend.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportDailyActiveUsersChart() {
+            const { byDay } = state.aggregatedData;
+            const sortedDays = Object.keys(byDay).sort();
+
+            const headers = ['Date', 'Active Users'];
+            const rows = sortedDays.map(day => [day, byDay[day].activeUsers].join(','));
+
+            downloadCSV('daily-active-users.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportTopUsersByLoCChart() {
+            const { byUser } = state.aggregatedData;
+            const users = Object.entries(byUser)
+                .map(([name, data]) => ({ name, linesAdded: data.linesAdded, linesDeleted: data.linesDeleted }))
+                .sort((a, b) => b.linesAdded - a.linesAdded)
+                .slice(0, CONFIG.MAX_TOP_USERS_SHOWN);
+
+            const headers = ['User', 'Lines Added', 'Lines Deleted', 'Net Lines'];
+            const rows = users.map(u => [u.name, u.linesAdded, u.linesDeleted, u.linesAdded - u.linesDeleted].join(','));
+
+            downloadCSV('top-users-by-loc.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportUserEngagementChart() {
+            const { byUser } = state.aggregatedData;
+            const ranges = [
+                { label: '1 day',     min: 1,  max: 1 },
+                { label: '2-5 days',  min: 2,  max: 5 },
+                { label: '6-10 days', min: 6,  max: 10 },
+                { label: '11-20',     min: 11, max: 20 },
+                { label: '21-30',     min: 21, max: 30 },
+                { label: '31+ days',  min: 31, max: Infinity }
+            ];
+            const daysActive = Object.values(byUser).map(u => u.days.size);
+            const distribution = ranges.map(r => ({
+                label: r.label,
+                count: daysActive.filter(d => d >= r.min && d <= r.max).length
+            }));
+
+            const headers = ['Days Active Range', 'User Count'];
+            const rows = distribution.map(r => [r.label, r.count].join(','));
+
+            downloadCSV('user-engagement.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportIDEAcceptanceChart() {
+            const { byIDE } = state.aggregatedData;
+            const data = Object.entries(byIDE)
+                .filter(([_, v]) => v.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([ide, v]) => ({ ide, generations: v.generations, rate: (v.acceptances / v.generations) * 100 }))
+                .sort((a, b) => b.rate - a.rate);
+
+            const headers = ['IDE', 'Total Generations', 'Acceptance Rate (%)'];
+            const rows = data.map(d => [d.ide, d.generations, d.rate.toFixed(2)].join(','));
+
+            downloadCSV('ide-acceptance-rate.csv', [headers.join(','), ...rows].join('\n'));
+        }
+
+        function exportLanguageAcceptanceChart() {
+            const { byLanguage } = state.aggregatedData;
+            const data = Object.entries(byLanguage)
+                .filter(([_, v]) => v.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(([lang, v]) => ({ lang, generations: v.generations, rate: (v.acceptances / v.generations) * 100 }))
+                .sort((a, b) => b.rate - a.rate)
+                .slice(0, CONFIG.MAX_LANGUAGES_SHOWN);
+
+            const headers = ['Language', 'Total Generations', 'Acceptance Rate (%)'];
+            const rows = data.map(d => [d.lang, d.generations, d.rate.toFixed(2)].join(','));
+
+            downloadCSV('language-acceptance-rate.csv', [headers.join(','), ...rows].join('\n'));
         }
 
         function exportTableData() {

@@ -90,27 +90,39 @@ const CONFIG = {
 - **Virtual scrolling simulation**: Table limited to first 500 rows for rendering performance
 - **Chart reuse**: Chart.js instances destroyed and recreated on filter changes to prevent memory leaks
 
-### Chart Architecture (9 Charts Total)
-1. **Activity Timeline** - Multi-line (generations, acceptances, chat) over time
-2. **Acceptance Rate Trend** - Area chart with 7-day moving average
-3. **Top Users by Generations** - Horizontal bar, color-coded by acceptance rate
-4. **Top Users by Acceptance** - Horizontal bar, filtered to min 50 generations
-5. **IDE Market Share** - Doughnut chart
-6. **Language Distribution** - Doughnut, top 10 + "Other"
-7. **Feature Usage** - Bar chart
-8. **User Efficiency Matrix** - Scatter plot (generations vs acceptance rate)
-9. **Model Distribution** - Pie chart
+### Chart Architecture (14 Charts Total)
+
+**Activity & Time section:**
+1. **Activity Timeline** - Dual-axis line chart (generations/chat on left, lines added/deleted on right)
+2. **Lines of Code Trend** - Line chart with lines added (green) and lines deleted (red)
+3. **Acceptance Rate Trend** - Line chart with daily rate + 7-day moving average
+4. **Daily Active Users** - Line chart showing unique active users per day
+
+**User Analysis section:**
+5. **Top Users by Generations** - Horizontal bar, color-coded by acceptance rate
+6. **Top Users by Lines Added** - Horizontal bar (alternative ranking)
+7. **User Efficiency Matrix** - Scatter plot (generations vs acceptance rate per user)
+8. **User Engagement Distribution** - Bar histogram of days-active per user
+
+**Tools & Languages section:**
+9. **IDE Market Share** - Doughnut chart
+10. **Acceptance Rate by IDE** - Horizontal bar (which editor drives best acceptance)
+11. **Language Distribution** - Doughnut, top 10 + "Other"
+12. **Acceptance Rate by Language** - Horizontal bar (which languages benefit most)
+13. **Feature Usage** - Bar chart
+14. **Model Distribution** - Pie chart
 
 All charts use consistent theming via `getChartOptions()` helper.
 
 ### Insights Engine
-Automated detection system (lines ~1950-2050) identifies:
+Automated detection system identifies:
 - **Power Users**: Top 10% by generations
 - **High Efficiency**: Top users by acceptance rate (>70%, min 50 gens)
-- **Low Acceptance Alerts**: Users <20% acceptance
 - **Quota Exceeded**: Days with >500 generations/user
 - **Week-over-Week Trends**: Activity change calculations
 - **Zero Acceptance Days**: Generations without any acceptances
+
+Note: Low Acceptance Alerts are intentionally omitted — ~94% of activity is agent mode which doesn't track acceptances, making low rates normal and non-actionable.
 
 ## Quick Reference for Development
 
