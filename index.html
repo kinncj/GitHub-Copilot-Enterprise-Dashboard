@@ -14,6 +14,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- html2canvas (HTML section → PNG export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -962,11 +965,17 @@
         </div>
 
         <!-- Insights Panel -->
-        <div class="card mb-6">
-            <h3 class="text-lg font-semibold mb-4" style="color:var(--text-1)">
-                <i data-lucide="lightbulb" class="inline w-5 h-5 mr-2" style="color:var(--green)"></i>
-                Insights & Anomalies
-            </h3>
+        <div id="insightsPanel" class="card mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold" style="color:var(--text-1)">
+                    <i data-lucide="lightbulb" class="inline w-5 h-5 mr-2" style="color:var(--green)"></i>
+                    Insights &amp; Anomalies
+                </h3>
+                <div style="display:flex;gap:0.4rem">
+                    <button onclick="exportInsightsCSV()" class="btn-secondary text-xs">CSV</button>
+                    <button onclick="exportSectionPNG('insightsPanel','insights.png')" class="btn-secondary text-xs">PNG</button>
+                </div>
+            </div>
             <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
@@ -1535,11 +1544,15 @@
                 </div>
             `;
 
-            const sectionLabel = (icon, title, sub) => `
+            const sectionLabel = (icon, title, sub, sectionId, csvFn) => `
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">
                     <i data-lucide="${icon}" style="width:14px;height:14px;color:var(--green)"></i>
                     <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-1)">${title}</span>
                     <span style="font-size:0.72rem;color:var(--text-2)">${sub}</span>
+                    <div style="margin-left:auto;display:flex;gap:0.4rem">
+                        ${csvFn ? `<button onclick="${csvFn}()" class="btn-secondary text-xs">CSV</button>` : ''}
+                        <button onclick="exportSectionPNG('${sectionId}','${sectionId}.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>`;
 
             // Feature adoption — count unique users per feature
@@ -1557,20 +1570,20 @@
 
             const container = document.getElementById('kpiCards');
             container.innerHTML = `
-                <div>
-                    ${sectionLabel('zap', 'Copilot Activity', '— prompts, completions &amp; usage')}
+                <div id="kpiSection_activity">
+                    ${sectionLabel('zap', 'Copilot Activity', '— prompts, completions &amp; usage', 'kpiSection_activity', 'exportActivityKpiCSV')}
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         ${activityKpis.map(kpi => renderKpiCard(kpi)).join('')}
                     </div>
                 </div>
-                <div>
-                    ${sectionLabel('file-code', 'Lines of Code', '— written output &amp; estimated value')}
+                <div id="kpiSection_loc">
+                    ${sectionLabel('file-code', 'Lines of Code', '— written output &amp; estimated value', 'kpiSection_loc', 'exportLocKpiCSV')}
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                         ${locKpis.map(kpi => renderKpiCard(kpi)).join('')}
                     </div>
                 </div>
-                <div>
-                    ${sectionLabel('layers', 'Feature Adoption', `— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode`)}
+                <div id="kpiSection_feature">
+                    ${sectionLabel('layers', 'Feature Adoption', `— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode`, 'kpiSection_feature', 'exportFeatureAdoptionCSV')}
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         ${featureOrder.filter(k => featureUserCount[k]).map(featureKey => {
                             const count = featureUserCount[featureKey] || 0;
@@ -2924,6 +2937,114 @@
             a.download = `copilot-report-${fromDate}-to-${toDate}.html`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // ============================================
+        // SECTION PNG EXPORT (html2canvas)
+        // ============================================
+        async function exportSectionPNG(elementId, filename) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (typeof html2canvas === 'undefined') { alert('html2canvas not loaded yet, please try again.'); return; }
+            const canvas = await html2canvas(el, {
+                backgroundColor: '#111111',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                // Expand clip so nothing is cut off
+                windowWidth: document.documentElement.scrollWidth,
+                windowHeight: document.documentElement.scrollHeight
+            });
+            const a = document.createElement('a');
+            a.download = filename;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        }
+
+        // ============================================
+        // KPI SECTION CSV EXPORTS
+        // ============================================
+        function exportActivityKpiCSV() {
+            const { byUser, byDay, byFeature } = state.aggregatedData;
+            const totalUsers       = Object.keys(byUser).length;
+            const totalGenerations = Object.values(byUser).reduce((s, u) => s + u.generations, 0);
+            const chatInteractions = (byFeature.chat?.generations || 0) + (byFeature.inline_chat?.generations || 0);
+            const activeDays       = Object.keys(byDay).length;
+            const rows = [
+                ['Metric', 'Value'],
+                ['Active Users', totalUsers],
+                ['Total Generations', totalGenerations],
+                ['Chat Interactions', chatInteractions],
+                ['Active Days', activeDays],
+            ];
+            downloadCSV('activity-kpis.csv', rows.map(r => r.join(',')).join('\n'));
+        }
+
+        function exportLocKpiCSV() {
+            const { byUser } = state.aggregatedData;
+            const config = getCurrentConfig();
+            const linesAdded   = Object.values(byUser).reduce((s, u) => s + u.linesAdded, 0);
+            const linesDeleted = Object.values(byUser).reduce((s, u) => s + u.linesDeleted, 0);
+            const netLines     = linesAdded - linesDeleted;
+            const valTotal     = ((linesAdded + linesDeleted) / config.MANUAL_LINES_PER_HOUR * config.BLENDED_RATE_PER_HOUR).toFixed(2);
+            const valAdded     = (linesAdded / config.MANUAL_LINES_PER_HOUR * config.BLENDED_RATE_PER_HOUR).toFixed(2);
+            const valNet       = (netLines   / config.MANUAL_LINES_PER_HOUR * config.BLENDED_RATE_PER_HOUR).toFixed(2);
+            const rows = [
+                ['Metric', 'Value', 'Formula'],
+                ['Lines Added',             linesAdded,   'loc_added_sum'],
+                ['Lines Deleted',           linesDeleted, 'loc_deleted_sum'],
+                ['Net Lines',               netLines,     'Lines Added - Lines Deleted'],
+                ['Value (Total Changed)',   '$' + valTotal, `(Lines Added + Deleted) / ${config.MANUAL_LINES_PER_HOUR} * ${config.BLENDED_RATE_PER_HOUR}`],
+                ['Value (Lines Added)',     '$' + valAdded, `Lines Added / ${config.MANUAL_LINES_PER_HOUR} * ${config.BLENDED_RATE_PER_HOUR}`],
+                ['Value (Net Lines)',       '$' + valNet,   `Net Lines / ${config.MANUAL_LINES_PER_HOUR} * ${config.BLENDED_RATE_PER_HOUR}`],
+            ];
+            downloadCSV('loc-kpis.csv', rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n'));
+        }
+
+        function exportFeatureAdoptionCSV() {
+            const { byUser } = state.aggregatedData;
+            const totalUsers = Object.keys(byUser).length;
+            const featureUserCount = {};
+            Object.values(byUser).forEach(u => {
+                (u.features || new Set()).forEach(f => { featureUserCount[f] = (featureUserCount[f] || 0) + 1; });
+            });
+            const rows = [['Feature Key', 'Label', 'User Count', 'Percentage']];
+            Object.entries(featureUserCount)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([key, count]) => {
+                    const pct = totalUsers > 0 ? (count / totalUsers * 100).toFixed(1) : '0.0';
+                    rows.push([key, humanizeFeature(key).label, count, pct + '%']);
+                });
+            downloadCSV('feature-adoption.csv', rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n'));
+        }
+
+        function exportInsightsCSV() {
+            const { byUser } = state.aggregatedData;
+            const userArray = Object.entries(byUser).map(([name, data]) => ({ name, ...data }));
+            const rows = [['Category', 'Detail']];
+
+            // Power users
+            const sorted = [...userArray].sort((a, b) => b.generations - a.generations);
+            const threshold = sorted[Math.floor(sorted.length * CONFIG.POWER_USER_PERCENTILE)]?.generations || 0;
+            sorted.filter(u => u.generations >= threshold).slice(0, 10)
+                  .forEach(u => rows.push(['Power User', `${u.name} — ${u.generations} generations`]));
+
+            // High efficiency
+            userArray.filter(u => u.generations >= CONFIG.MIN_GENERATIONS_FOR_RATE)
+                .map(u => ({ ...u, rate: u.acceptances / u.generations }))
+                .filter(u => u.rate >= CONFIG.HIGH_ACCEPTANCE_THRESHOLD)
+                .sort((a, b) => b.rate - a.rate).slice(0, 10)
+                .forEach(u => rows.push(['High Efficiency', `${u.name} — ${(u.rate * 100).toFixed(1)}% acceptance`]));
+
+            // Quota exceeded
+            state.filteredData.filter(r => r.code_generation_activity_count > CONFIG.DAILY_GENERATION_QUOTA).slice(0, 20)
+                .forEach(r => rows.push(['Quota Exceeded', `${r.user_login} on ${r.day} (${r.code_generation_activity_count} generations)`]));
+
+            // Zero acceptance
+            const zeroAcc = state.filteredData.filter(r => r.code_generation_activity_count > 0 && r.code_acceptance_activity_count === 0).length;
+            if (zeroAcc > 0) rows.push(['Zero Acceptance Days', `${zeroAcc} user-days with generations but no acceptances`]);
+
+            downloadCSV('insights.csv', rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n'));
         }
 
         // ============================================
