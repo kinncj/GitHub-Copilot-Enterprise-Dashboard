@@ -33,7 +33,7 @@ tests/unit/
     filtering/
       engine.test.js      # filterRecords, quickRangeDates, extractFilterOptions
     insights/
-      engine.test.js      # generateInsights (all 5 insight types)
+      engine.test.js      # generateInsights (all 6 insight types)
     export/
       csv.test.js         # all buildXxxCSV functions
   common/
@@ -66,7 +66,7 @@ graph TD
         E[dashboard.spec.js\nupload · filters · export]
     end
 
-    subgraph Unit["Unit — Vitest"]
+    subgraph Unit["Unit — Vitest (95 tests)"]
         U1[parser · merger · aggregator]
         U2[filtering engine]
         U3[insights engine]

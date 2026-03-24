@@ -57,7 +57,7 @@ The `.github/workflows/ci.yml` workflow runs on push to `main` and `refactor`:
 ```mermaid
 flowchart LR
     push["push / PR"] --> install["npm ci"]
-    install --> unit["vitest run\n93 unit tests"]
+    install --> unit["vitest run\n95 unit tests"]
     unit --> build["vite build"]
     build --> playwright["playwright install chromium"]
     playwright --> e2e["playwright test\n18 e2e tests"]

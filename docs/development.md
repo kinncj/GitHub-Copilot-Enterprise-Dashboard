@@ -45,7 +45,7 @@ app/
       export/      # ExportMenu
       glossary/    # MetricsGlossary
       config/      # ValueConfig
-      shared/      # SectionDivider
+      shared/      # SectionDivider, Footer
     charts/        # Chart.js components (one file per chart)
       hooks/       # useChart.js lifecycle hook
     styles/        # global.css (Tailwind + design tokens)
@@ -82,6 +82,19 @@ if (myInsight.length > 0) {
 }
 ```
 
+If you use an icon key that isn't already in `InsightCard.jsx`, register it there:
+
+```javascript
+// app/presentation/components/insights/InsightCard.jsx
+import { ..., MyIcon } from 'lucide-react';
+const icons = {
+  // ... existing entries ...
+  'my-icon': MyIcon,
+};
+```
+
+Current registered icons: `star`, `trending-up`, `trending-down`, `alert-circle`, `x-circle`, `award`.
+
 Then add a test in `tests/unit/domain/insights/engine.test.js`:
 
 ```javascript
@@ -93,7 +106,7 @@ it('flags my condition', () => {
 });
 ```
 
-No presentation code changes needed — `InsightsPanel` renders whatever `generateInsights` returns.
+No other presentation code changes needed — `InsightsPanel` renders whatever `generateInsights` returns.
 
 ---
 
@@ -199,10 +212,16 @@ Interactive filter controls use [Mantine v8](https://mantine.dev). The provider 
 | `DatePickerInput type="range"` | Date range filter | `value={[from, to]}`, `onChange([from, to])`, `numberOfColumns={1}`, `popoverProps={{ withinPortal: true, width: 300 }}` |
 | `Select` | User / IDE / Language filters | `data={options}`, `searchable`, `clearable`, `comboboxProps={{ withinPortal: true }}` |
 
+### Dark / light mode
+
+The app ships with dark mode as default (`defaultColorScheme="dark"` in `MantineProvider`). A toggle button in the header and upload screen switches between modes using `useMantineColorScheme()`. The user's preference persists in localStorage automatically via Mantine's color scheme manager.
+
+Color scheme-aware chart colors are handled by `getChartColors()` in `app/presentation/charts/chartOptions.js`, which reads `data-mantine-color-scheme` from the document root. Charts rebuild on scheme change via a `MutationObserver` in `useChart.js`.
+
 ### CSS override approach
 
 Mantine v8 uses CSS modules with hashed class names. Override styles via:
-1. CSS variable overrides in `global.css` under `[data-mantine-color-scheme="dark"]` — for colors, backgrounds, borders
+1. CSS variable overrides in `global.css` under `[data-mantine-color-scheme="dark"]` and `[data-mantine-color-scheme="light"]` blocks — for colors, backgrounds, borders
 2. Class-based overrides targeting stable semantic class names like `.mantine-Input-input`, `.mantine-DatePickerInput-day`, `.mantine-Combobox-option`
 
 Do not pass pseudo-selector styles (e.g. `'&:focus': {...}`) in component `styles` props — React will log warnings. Use global CSS instead.

@@ -72,6 +72,7 @@ Files are parsed once and stored in `rawData`. Every filter change re-runs `filt
 graph TD
     main["app/main.jsx\n(MantineProvider)"] --> App["App.jsx"]
     App --> CTX["AppContext.Provider\n(useAppState)"]
+    App --> Footer["Footer (fixed, always visible)"]
     CTX --> Upload["UploadZone"]
     CTX --> Progress["ProgressBar"]
     CTX --> Dashboard["Dashboard"]
@@ -86,7 +87,7 @@ graph TD
     Dashboard --> DataTable
 ```
 
-`App` renders one of three top-level views based on state: `UploadZone` (no data), `ProgressBar` (loading), or `Dashboard` (data loaded).
+`App` renders one of three top-level views based on state: `UploadZone` (no data), `ProgressBar` (loading), or `Dashboard` (data loaded). `Footer` is always rendered regardless of view — it sits outside the conditional logic in `App.jsx`.
 
 ---
 
@@ -95,8 +96,12 @@ graph TD
 Interactive filter controls use [Mantine v8](https://mantine.dev):
 
 - `FilterBar` uses `DatePickerInput type="range"` (a single calendar popover where the user clicks start date then end date) and `Select` (searchable, clearable dropdowns) for User, IDE, and Language filters
-- `MantineProvider` is configured in `app/main.jsx` with `defaultColorScheme="dark"` and a custom green primary color — Mantine renders in a dark portal
-- CSS variable overrides in `app/presentation/styles/global.css` under `[data-mantine-color-scheme="dark"]` map design tokens to Mantine's theme system
+- `MantineProvider` is configured in `app/main.jsx` with `defaultColorScheme="dark"` and a custom green primary color
+- CSS variable overrides in `app/presentation/styles/global.css` under `[data-mantine-color-scheme="dark"]` and `[data-mantine-color-scheme="light"]` blocks map design tokens for both color schemes
+
+### Dark / light mode
+
+The header and upload screen both render a Sun/Moon toggle button using `useMantineColorScheme()` + `useComputedColorScheme('dark')`. The user's preference persists in localStorage automatically. Chart colors react to scheme changes via `getChartColors()` in `chartOptions.js`, which reads `data-mantine-color-scheme` from the document root. A `MutationObserver` in `useChart.js` watches for attribute changes and triggers chart rebuilds.
 
 ---
 

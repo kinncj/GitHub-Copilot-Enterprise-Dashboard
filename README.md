@@ -4,6 +4,7 @@ Browser-based analytics for GitHub Copilot Enterprise usage data.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/demo-live-success.svg)](https://kinncj.github.io/GitHub-Copilot-Enterprise-Dashboard/)
+[![Tests](https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard/actions/workflows/ci.yml)
 
 **Live:** [kinncj.github.io/GitHub-Copilot-Enterprise-Dashboard](https://kinncj.github.io/GitHub-Copilot-Enterprise-Dashboard/)
 
@@ -16,8 +17,8 @@ Upload one or more NDJSON exports from the GitHub Copilot Enterprise API. The da
 - **14 charts** — activity timelines, acceptance rate trends, user rankings, IDE/language/feature/model breakdowns
 - **KPI cards** — total users, generations, acceptance rate, lines of code, estimated value
 - **Feature adoption** — which Copilot features (Code Completion, Edit Mode, Chat · Agent, etc.) are used across the team
-- **Insights** — power users, high-efficiency users, weekly trend, quota alerts
-- **Data table** — filterable, sortable per-user/day records
+- **Insights** — power users, high-efficiency users, spotlight users (top code producers), weekly trend, quota alerts
+- **Data table** — per-user aggregated view (Days Active, Generations, Lines Added/Deleted/Net, Value Added/Deleted/Total), sortable, filterable
 - **Exports** — CSV and PNG per chart, consolidated NDJSON
 
 **Nothing leaves the browser.** No backend, no API calls, no tracking. Safe for enterprise usage data.
