@@ -167,6 +167,24 @@
             background: rgba(255,255,255,0.03);
         }
 
+        .export-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            text-align: left;
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-2);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+        .export-menu-item:hover { background: var(--surface-2); color: var(--text-1); }
+        .export-menu-sep { height: 1px; background: var(--border); margin: 0.25rem 0; }
+
         /* ── Badges ──────────────────────────────────────── */
         .badge {
             padding: 0.2rem 0.65rem;
@@ -453,10 +471,28 @@
                         <i data-lucide="plus" style="width:13px;height:13px"></i>
                         Add Files
                     </button>
-                    <button onclick="exportData()" class="btn-secondary">
-                        <i data-lucide="download" style="width:13px;height:13px"></i>
-                        Export CSV
-                    </button>
+                    <div style="position:relative">
+                        <button onclick="toggleExportMenu()" id="exportMenuTrigger" class="btn-secondary">
+                            <i data-lucide="download" style="width:13px;height:13px"></i>
+                            Export
+                            <i data-lucide="chevron-down" style="width:11px;height:11px"></i>
+                        </button>
+                        <div id="exportMenu" class="hidden" style="position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;z-index:200;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,0.6)">
+                            <button onclick="exportData();closeExportMenu()" class="export-menu-item">
+                                <i data-lucide="table-2" style="width:13px;height:13px;flex-shrink:0"></i>
+                                Export Data CSV
+                            </button>
+                            <button onclick="exportNDJSON();closeExportMenu()" class="export-menu-item">
+                                <i data-lucide="file-json" style="width:13px;height:13px;flex-shrink:0"></i>
+                                Export Consolidated NDJSON
+                            </button>
+                            <div class="export-menu-sep"></div>
+                            <button onclick="exportReport();closeExportMenu()" class="export-menu-item">
+                                <i data-lucide="file-text" style="width:13px;height:13px;flex-shrink:0"></i>
+                                Export Full Report (HTML)
+                            </button>
+                        </div>
+                    </div>
                     <button onclick="resetDashboard()" class="btn-secondary">
                         <i data-lucide="refresh-cw" style="width:13px;height:13px"></i>
                         Reset
@@ -671,7 +707,10 @@
                             <span class="ml-2" style="color:var(--text-2)">(right axis)</span>
                         </p>
                     </div>
-                    <button onclick="exportActivityChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportActivityChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('activity','activity-timeline.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="activityChart"></canvas>
@@ -688,7 +727,10 @@
                             <span style="color:#ef4444">— Deleted</span>
                         </p>
                     </div>
-                    <button onclick="exportLoCTrendChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportLoCTrendChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('locTrend','loc-trend.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="locTrendChart"></canvas>
@@ -707,7 +749,10 @@
                             <span style="color:#818cf8">— 7-day average</span>
                         </p>
                     </div>
-                    <button onclick="exportAcceptanceRateChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportAcceptanceRateChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('acceptanceRate','acceptance-rate.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="acceptanceRateChart"></canvas>
@@ -720,7 +765,10 @@
                         <h3 class="text-lg font-semibold">Daily Active Users</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Unique users with at least one activity record per calendar day</p>
                     </div>
-                    <button onclick="exportDailyActiveUsersChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportDailyActiveUsersChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('dailyActiveUsers','daily-active-users.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="dailyActiveUsersChart"></canvas>
@@ -740,7 +788,10 @@
                         <h3 class="text-lg font-semibold">Top 15 Users by Generations</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Copilot triggers per user — completions + prompts, <strong style="color:var(--text-1)">not lines of code</strong></p>
                     </div>
-                    <button onclick="exportTopUsersChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportTopUsersChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('topUsers','top-users.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="topUsersChart"></canvas>
@@ -753,7 +804,10 @@
                         <h3 class="text-lg font-semibold">Top 15 Users by Lines Added</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)"><code style="color:var(--green)">loc_added_sum</code> — code output volume, <strong style="color:var(--text-1)">not the same as generations</strong></p>
                     </div>
-                    <button onclick="exportTopUsersByLoCChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportTopUsersByLoCChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('topUsersByLoC','top-users-by-loc.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="topUsersByLoCChart"></canvas>
@@ -776,7 +830,10 @@
                             <span style="color:#ef4444">● &lt;20%</span>
                         </p>
                     </div>
-                    <button onclick="exportEfficiencyChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportEfficiencyChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('efficiency','efficiency-matrix.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="efficiencyMatrix"></canvas>
@@ -789,7 +846,10 @@
                         <h3 class="text-lg font-semibold">User Engagement Distribution</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Number of users by days active</p>
                     </div>
-                    <button onclick="exportUserEngagementChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportUserEngagementChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('userEngagement','user-engagement.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container-large">
                     <canvas id="userEngagementChart"></canvas>
@@ -809,7 +869,10 @@
                         <h3 class="text-lg font-semibold">IDE Market Share</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of total generations by editor (<code style="color:var(--green)">totals_by_ide</code>)</p>
                     </div>
-                    <button onclick="exportIDEChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportIDEChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('ide','ide-market-share.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="ideChart"></canvas>
@@ -822,7 +885,10 @@
                         <h3 class="text-lg font-semibold">Language Distribution</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of generations by programming language (<code style="color:var(--green)">totals_by_language_feature</code>)</p>
                     </div>
-                    <button onclick="exportLanguageChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportLanguageChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('language','language-distribution.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="languageChart"></canvas>
@@ -835,7 +901,10 @@
                         <h3 class="text-lg font-semibold">Feature Usage</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Generations by Copilot feature: code_completion, chat, inline_chat, agent</p>
                     </div>
-                    <button onclick="exportFeatureChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportFeatureChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('feature','feature-usage.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="featureChart"></canvas>
@@ -850,7 +919,10 @@
                         <h3 class="text-lg font-semibold">Acceptance Rate by IDE</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 completions — agent mode skews rates low; low % ≠ low value</p>
                     </div>
-                    <button onclick="exportIDEAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportIDEAcceptanceChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('ideAcceptance','ide-acceptance.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="ideAcceptanceChart"></canvas>
@@ -863,7 +935,10 @@
                         <h3 class="text-lg font-semibold">Acceptance Rate by Language</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 completions — agent mode skews rates low; low % ≠ low value</p>
                     </div>
-                    <button onclick="exportLanguageAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportLanguageAcceptanceChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('languageAcceptance','language-acceptance.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="languageAcceptanceChart"></canvas>
@@ -876,7 +951,10 @@
                         <h3 class="text-lg font-semibold">Model Distribution</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of generations by AI model (<code style="color:var(--green)">totals_by_model_feature</code>)</p>
                     </div>
-                    <button onclick="exportModelChart()" class="btn-secondary text-xs">Export CSV</button>
+                    <div style="display:flex;gap:0.4rem">
+                        <button onclick="exportModelChart()" class="btn-secondary text-xs">CSV</button>
+                        <button onclick="exportChartPNG('model','model-distribution.png')" class="btn-secondary text-xs">PNG</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="modelChart"></canvas>
@@ -2561,6 +2639,179 @@
         }
 
         // ============================================
+        // EXPORT DROPDOWN
+        // ============================================
+        function toggleExportMenu() {
+            document.getElementById('exportMenu').classList.toggle('hidden');
+        }
+        function closeExportMenu() {
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+
+        // ============================================
+        // NDJSON EXPORT
+        // ============================================
+        function exportNDJSON() {
+            const lines = state.rawData.map(r => JSON.stringify(r));
+            const blob = new Blob([lines.join('\n')], { type: 'application/x-ndjson' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'copilot-consolidated.ndjson';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================
+        // CHART PNG EXPORT
+        // ============================================
+        function exportChartPNG(chartKey, filename) {
+            const chart = state.charts[chartKey];
+            if (!chart) return;
+            // Composite onto a dark background canvas so the PNG isn't transparent
+            const src = chart.canvas;
+            const out = document.createElement('canvas');
+            out.width = src.width;
+            out.height = src.height;
+            const ctx = out.getContext('2d');
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(0, 0, out.width, out.height);
+            ctx.drawImage(src, 0, 0);
+            const url = out.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        // ============================================
+        // FULL HTML REPORT
+        // ============================================
+        function exportReport() {
+            const { byDay, byUser, byIDE, byLanguage, byFeature, byModel } = state.aggregatedData;
+            const config = getCurrentConfig();
+
+            // Capture all charts as base64 PNGs
+            const chartMap = [
+                ['activity',         'Activity Timeline'],
+                ['locTrend',         'Lines of Code Trend'],
+                ['acceptanceRate',   'Acceptance Rate Trend'],
+                ['dailyActiveUsers', 'Daily Active Users'],
+                ['topUsers',         'Top Users by Generations'],
+                ['topUsersByLoC',    'Top Users by Lines Added'],
+                ['efficiency',       'User Efficiency Matrix'],
+                ['userEngagement',   'User Engagement Distribution'],
+                ['ide',              'IDE Market Share'],
+                ['ideAcceptance',    'Acceptance Rate by IDE'],
+                ['language',         'Language Distribution'],
+                ['languageAcceptance','Acceptance Rate by Language'],
+                ['feature',          'Feature Usage'],
+                ['model',            'Model Distribution'],
+            ];
+
+            const chartSections = chartMap.map(([key, title]) => {
+                const chart = state.charts[key];
+                if (!chart) return '';
+                const src = chart.canvas;
+                const out = document.createElement('canvas');
+                out.width = src.width; out.height = src.height;
+                const ctx = out.getContext('2d');
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(0, 0, out.width, out.height);
+                ctx.drawImage(src, 0, 0);
+                return `<div class="chart-item"><h3>${title}</h3><img src="${out.toDataURL('image/png')}" alt="${title}"></div>`;
+            }).filter(Boolean).join('');
+
+            // Summary numbers
+            const totalUsers = Object.keys(byUser).length;
+            const totalGens  = Object.values(byUser).reduce((s, u) => s + u.generations, 0);
+            const totalLines = Object.values(byUser).reduce((s, u) => s + u.linesAdded, 0);
+            const allDates   = state.rawData.map(r => r.day).sort();
+            const fromDate   = allDates[0] || '';
+            const toDate     = allDates[allDates.length - 1] || '';
+
+            // Build all-users table rows (no 500-row cap)
+            const hoursPerLine = 1 / config.MANUAL_LINES_PER_HOUR;
+            const userRows = Object.entries(byUser)
+                .sort((a, b) => b[1].generations - a[1].generations)
+                .map(([user, d]) => {
+                    const valueAdded = d.linesAdded * hoursPerLine * config.BLENDED_RATE_PER_HOUR;
+                    const net = d.linesAdded - d.linesDeleted;
+                    return `<tr>
+                        <td>${user}</td>
+                        <td>${d.activeDays}</td>
+                        <td>${d.generations.toLocaleString()}</td>
+                        <td>${d.linesAdded.toLocaleString()}</td>
+                        <td>${d.linesDeleted.toLocaleString()}</td>
+                        <td>${net.toLocaleString()}</td>
+                        <td>$${valueAdded.toFixed(2)}</td>
+                    </tr>`;
+                }).join('');
+
+            const generatedAt = new Date().toLocaleString();
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Copilot Analytics Report — ${fromDate} to ${toDate}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #080808; color: #f5f5f5; padding: 2.5rem; line-height: 1.5; }
+  h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+  .meta { color: rgba(255,255,255,0.4); font-size: 0.82rem; margin-bottom: 2.5rem; }
+  .section { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 0.5rem; }
+  .kpi { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.38); margin-bottom: 0.5rem; }
+  .kpi-value { font-size: 1.8rem; font-weight: 700; color: #00C896; letter-spacing: -0.02em; }
+  .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  .chart-item { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.25rem; }
+  .chart-item h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; color: rgba(255,255,255,0.7); }
+  .chart-item img { width: 100%; height: auto; border-radius: 6px; display: block; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  th { padding: 0.55rem 0.75rem; background: #1a1a1a; color: rgba(255,255,255,0.38); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  @media print { body { background: #fff; color: #000; padding: 1rem; } .kpi { background: #f8f8f8; border-color: #ddd; } .chart-item { background: #f8f8f8; border-color: #ddd; } th { background: #f0f0f0; } }
+</style>
+</head>
+<body>
+<h1>GitHub Copilot Analytics</h1>
+<div class="meta">Generated ${generatedAt} &nbsp;·&nbsp; ${fromDate} to ${toDate} &nbsp;·&nbsp; ${totalUsers.toLocaleString()} users &nbsp;·&nbsp; ${state.rawData.length.toLocaleString()} records${state.loadedFiles.length > 1 ? ' &nbsp;·&nbsp; ' + state.loadedFiles.length + ' files merged' : ''}</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Users</div><div class="kpi-value">${totalUsers.toLocaleString()}</div></div>
+  <div class="kpi"><div class="kpi-label">Total Generations</div><div class="kpi-value">${totalGens.toLocaleString()}</div></div>
+  <div class="kpi"><div class="kpi-label">Lines Added</div><div class="kpi-value">${totalLines.toLocaleString()}</div></div>
+  <div class="kpi"><div class="kpi-label">Date Range</div><div class="kpi-value" style="font-size:1rem;padding-top:0.3rem">${fromDate}<br>${toDate}</div></div>
+</div>
+
+<div class="section">Charts</div>
+<div class="charts">${chartSections}</div>
+
+<div class="section">All Users (${Object.keys(byUser).length})</div>
+<table>
+  <thead>
+    <tr>
+      <th>User</th><th>Days Active</th><th>Generations</th>
+      <th>Lines Added</th><th>Lines Deleted</th><th>Net Lines</th><th>Est. Value</th>
+    </tr>
+  </thead>
+  <tbody>${userRows}</tbody>
+</table>
+</body>
+</html>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `copilot-report-${fromDate}-to-${toDate}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================
         // INDIVIDUAL EXPORT FUNCTIONS
         // ============================================
         function downloadCSV(filename, csvContent) {
@@ -2847,6 +3098,16 @@
             loadConfiguration();
             setupUpload();
             lucide.createIcons();
+
+            // Close export dropdown when clicking outside it
+            document.addEventListener('click', (e) => {
+                const trigger = document.getElementById('exportMenuTrigger');
+                const menu    = document.getElementById('exportMenu');
+                if (!menu || !trigger) return;
+                if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>
