@@ -58,6 +58,11 @@ coverage/
 # AGPLv3 License
 LICENSE
 
+# Screenshots / debug images
+*.png
+*.jpg
+*.jpeg
+
 # Sample / test data — never commit
 *.ndjson
 sample.*

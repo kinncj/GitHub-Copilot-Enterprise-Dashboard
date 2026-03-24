@@ -47,12 +47,15 @@ function aggregated(overrides = {}) {
 }
 
 describe('buildDataCSV', () => {
-  it('includes header row', () => {
+  it('includes header row with correct columns', () => {
     const csv = buildDataCSV([record()], valueConfig);
-    const lines = csv.split('\n');
-    expect(lines[0]).toContain('User');
-    expect(lines[0]).toContain('Generations');
-    expect(lines[0]).toContain('Accept Rate');
+    const header = csv.split('\n')[0];
+    expect(header).toContain('User');
+    expect(header).toContain('Days Active');
+    expect(header).toContain('Generations');
+    expect(header).toContain('Net Lines');
+    expect(header).toContain('Value Added');
+    expect(header).toContain('Net Value');
   });
 
   it('has one data row per user', () => {
@@ -64,8 +67,24 @@ describe('buildDataCSV', () => {
   it('computes value columns correctly', () => {
     const r = record({ loc_added_sum: 300, loc_deleted_sum: 0 });
     const csv = buildDataCSV([r], { MANUAL_LINES_PER_HOUR: 30, BLENDED_RATE_PER_HOUR: 90 });
-    // 300/30*90 = 900
+    // value added: 300/30*90 = 900; net = 900
     expect(csv).toContain('900.00');
+  });
+
+  it('tracks days active correctly', () => {
+    const csv = buildDataCSV([record(), record({ day: '2025-01-02' })], valueConfig);
+    // alice has 2 records on different days → Days Active = 2
+    expect(csv).toContain('alice,2,');
+  });
+
+  it('sorts by net lines descending', () => {
+    const records = [
+      record({ user_login: 'alice', loc_added_sum: 100, loc_deleted_sum: 90 }), // net 10
+      record({ user_login: 'bob',   loc_added_sum: 300, loc_deleted_sum: 0  }), // net 300
+    ];
+    const lines = buildDataCSV(records, valueConfig).split('\n');
+    expect(lines[1]).toContain('bob');
+    expect(lines[2]).toContain('alice');
   });
 
   it('handles empty records array', () => {

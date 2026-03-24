@@ -196,6 +196,48 @@ The real GitHub Copilot Enterprise export format (as of late 2025):
 
 ---
 
+## Aggregation Model
+
+Data passes through two distinct aggregation stages. Understanding where each happens is important when adding new features.
+
+### Stage 1 — `aggregateData()` (domain layer)
+
+Runs once per filter change. Produces `AggregatedData` used by all charts and KPI cards.
+
+```
+filteredData (CopilotRecord[])
+  └─ byUser   { [login]: { generations, acceptances, linesAdded, linesDeleted, activeTime, days, features } }
+  └─ byDay    { [YYYY-MM-DD]: { generations, chatCount, linesAdded, linesDeleted, activeUsers } }
+  └─ byIDE    { [ide]: { generations, acceptances } }
+  └─ byLanguage { [lang]: { generations } }
+  └─ byFeature  { [feature]: { generations, acceptances } }
+  └─ byModel    { [model]: { generations } }
+```
+
+This is **the single source of truth** for all charts. Components read from `useApp().aggregatedData`, never re-aggregate themselves.
+
+### Stage 2 — Component-level aggregation (DataTable)
+
+`DataTable` re-aggregates `filteredData` (not `aggregatedData`) independently so it can track `days` as a `Set` for the Days Active column and compute value columns on the fly using the current `valueConfig`. This is intentional — `aggregatedData.byUser` doesn't carry `valueConfig`-dependent values.
+
+### What is aggregated vs raw
+
+| View | Aggregation | Granularity |
+|------|-------------|-------------|
+| KPI cards | `aggregateData()` → `byUser` / `byDay` | Period totals |
+| All charts | `aggregateData()` → relevant slice | Period totals |
+| Insights | `aggregateData()` + `filteredRecords` | Period totals + per-day checks |
+| Data Explorer table | Component-level `useMemo` | Per user, selected period |
+| Header "Export CSV" | `buildRawRecordsCSV` — **no aggregation** | Per user per day |
+| Table "CSV" button | `buildDataCSV` — aggregated | Per user, selected period |
+| "Export NDJSON" | `buildNDJSON(rawData)` — **all data, no filter** | Raw records |
+
+### Merge strategy (deduplication)
+
+GitHub Copilot Enterprise exports use 28-day rolling windows. Uploading two overlapping exports creates duplicate `user_login + day` records. `mergeRecords()` deduplicates by taking `Math.max` for all numeric fields — same day = same source data, so max is always correct. Nested arrays (`totals_by_ide`, etc.) keep the first-seen copy.
+
+---
+
 ## SOLID in Practice
 
 | Principle | Where it shows up |

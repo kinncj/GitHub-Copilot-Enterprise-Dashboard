@@ -44,23 +44,25 @@ export function buildRawRecordsCSV(records, valueConfig) {
  */
 export function buildDataCSV(records, valueConfig) {
   const { MANUAL_LINES_PER_HOUR, BLENDED_RATE_PER_HOUR } = valueConfig;
-  const headers = ['User', 'Generations', 'Acceptances', 'Accept Rate', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Net Value'];
+  const headers = ['User', 'Days Active', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Net Value'];
 
   const byUser = {};
   for (const r of records) {
-    if (!byUser[r.user_login]) byUser[r.user_login] = { gens: 0, accepts: 0, linesAdded: 0, linesDeleted: 0 };
+    if (!byUser[r.user_login]) byUser[r.user_login] = { days: new Set(), gens: 0, linesAdded: 0, linesDeleted: 0 };
+    byUser[r.user_login].days.add(r.day);
     byUser[r.user_login].gens       += r.code_generation_activity_count;
-    byUser[r.user_login].accepts    += r.code_acceptance_activity_count;
     byUser[r.user_login].linesAdded += r.loc_added_sum;
     byUser[r.user_login].linesDeleted += r.loc_deleted_sum;
   }
 
-  const rows = Object.entries(byUser).map(([user, d]) => {
-    const net        = d.linesAdded - d.linesDeleted;
-    const acceptRate = d.gens > 0 ? ((d.accepts / d.gens) * 100).toFixed(1) + '%' : '—';
-    const netValue   = ((net / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR).toFixed(2);
-    return [user, d.gens, d.accepts, acceptRate, d.linesAdded, d.linesDeleted, net, netValue];
-  });
+  const rate = (v) => ((v / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR).toFixed(2);
+
+  const rows = Object.entries(byUser)
+    .sort((a, b) => (b[1].linesAdded - b[1].linesDeleted) - (a[1].linesAdded - a[1].linesDeleted))
+    .map(([user, d]) => {
+      const net = d.linesAdded - d.linesDeleted;
+      return [user, d.days.size, d.gens, d.linesAdded, d.linesDeleted, net, rate(d.linesAdded), rate(d.linesDeleted), rate(net)];
+    });
 
   return buildCSV(headers, rows);
 }

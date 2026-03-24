@@ -58,7 +58,8 @@ test.describe('KPI cards', () => {
 
   test('KPI section headings are visible', async ({ page }) => {
     await expect(page.getByText('Activity', { exact: true })).toBeVisible();
-    await expect(page.getByText('Lines of Code', { exact: true })).toBeVisible();
+    // Use .first() — "Lines of Code" also appears as a table column header
+    await expect(page.getByText('Lines of Code', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Feature Adoption', { exact: true })).toBeVisible();
   });
 
@@ -167,8 +168,8 @@ test.describe('Data Explorer table', () => {
 
   test('table rows are visible after upload', async ({ page }) => {
     const rows = page.getByRole('table').getByRole('row');
-    // header row + 2 user rows (alice and bob, aggregated across days)
-    await expect(rows).toHaveCount(3);
+    // 2 header rows (group labels + column names) + 2 user rows (alice and bob)
+    await expect(rows).toHaveCount(4);
   });
 
   test('table shows both users', async ({ page }) => {
