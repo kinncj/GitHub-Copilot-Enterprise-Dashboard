@@ -1,7 +1,7 @@
 import React from 'react';
 import { useChart } from './hooks/useChart.js';
 import { ChartCard } from './ChartCard.jsx';
-import { getChartDefaults } from './chartOptions.js';
+import { getChartDefaults, getChartColors } from './chartOptions.js';
 import { buildActivityChartCSV } from '../../domain/export/csv.js';
 import { triggerDownload } from '../../../common/utils/download.js';
 import { deepMerge } from './utils.js';
@@ -12,6 +12,7 @@ export function ActivityTimeline({ aggregatedData }) {
   const { canvasRef, chartRef } = useChart([JSON.stringify(byDay)], () => {
     const labels = Object.keys(byDay).sort();
     const defaults = getChartDefaults();
+    const c = getChartColors();
 
     return {
       type: 'line',
@@ -63,8 +64,8 @@ export function ActivityTimeline({ aggregatedData }) {
       options: deepMerge(defaults, {
         plugins: { legend: { display: true } },
         scales: {
-          y: { ...defaults.scales.y, position: 'left', title: { display: true, text: 'Activity', color: 'rgba(255,255,255,0.3)', font: { size: 10 } } },
-          y1: { ...defaults.scales.y, position: 'right', grid: { drawOnChartArea: false, color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'Lines', color: 'rgba(255,255,255,0.3)', font: { size: 10 } } }
+          y: { ...defaults.scales.y, position: 'left', title: { display: true, text: 'Activity', color: c.axisTitle, font: { size: 10 } } },
+          y1: { ...defaults.scales.y, position: 'right', grid: { drawOnChartArea: false, color: c.grid }, title: { display: true, text: 'Lines', color: c.axisTitle, font: { size: 10 } } }
         }
       })
     };

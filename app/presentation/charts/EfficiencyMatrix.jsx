@@ -1,7 +1,7 @@
 import React from 'react';
 import { useChart } from './hooks/useChart.js';
 import { ChartCard } from './ChartCard.jsx';
-import { getChartDefaults } from './chartOptions.js';
+import { getChartDefaults, getChartColors } from './chartOptions.js';
 import { CONFIG } from '../../domain/config/constants.js';
 import { triggerDownload } from '../../../common/utils/download.js';
 
@@ -18,6 +18,7 @@ export function EfficiencyMatrix({ aggregatedData }) {
       }));
 
     const defaults = getChartDefaults();
+    const c = getChartColors();
 
     return {
       type: 'scatter',
@@ -44,8 +45,8 @@ export function EfficiencyMatrix({ aggregatedData }) {
           }
         },
         scales: {
-          x: { ...defaults.scales.x, title: { display: true, text: 'Generations', color: 'rgba(255,255,255,0.3)', font: { size: 10 } } },
-          y: { ...defaults.scales.y, title: { display: true, text: 'Acceptance Rate %', color: 'rgba(255,255,255,0.3)', font: { size: 10 } }, min: 0, max: 100 }
+          x: { ...defaults.scales.x, title: { display: true, text: 'Generations', color: c.axisTitle, font: { size: 10 } } },
+          y: { ...defaults.scales.y, title: { display: true, text: 'Acceptance Rate %', color: c.axisTitle, font: { size: 10 } }, min: 0, max: 100 }
         }
       }
     };

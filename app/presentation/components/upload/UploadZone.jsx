@@ -1,11 +1,15 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, FilePlus } from 'lucide-react';
+import { UploadCloud, FilePlus, Sun, Moon } from 'lucide-react';
+import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useApp } from '../../context/AppContext.jsx';
 
 export function UploadZone() {
   const { loadFiles } = useApp();
   const fileInputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
+  const { setColorScheme } = useMantineColorScheme();
+  const colorScheme = useComputedColorScheme('dark');
+  const toggleScheme = () => setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
 
   const handleFiles = files => {
     const valid = [...files].filter(f => f.name.endsWith('.ndjson') || f.name.endsWith('.json'));
@@ -15,13 +19,16 @@ export function UploadZone() {
   return (
     <div className="min-h-screen flex flex-col" style={{ position: 'relative', zIndex: 1 }}>
       {/* top nav */}
-      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:50,height:'52px',borderBottom:'1px solid var(--border)',background:'rgba(8,8,8,0.82)',backdropFilter:'blur(20px)',display:'flex',alignItems:'center',padding:'0 1.5rem' }}>
+      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:50,height:'52px',borderBottom:'1px solid var(--border)',background:'var(--nav-bg)',backdropFilter:'blur(20px)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 1.5rem' }}>
         <div style={{ display:'flex',alignItems:'center',gap:'0.5rem' }}>
           <div style={{ width:'28px',height:'28px',borderRadius:'8px',background:'var(--green-glow)',border:'1px solid rgba(0,200,150,0.2)',display:'flex',alignItems:'center',justifyContent:'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C896" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </div>
           <span style={{ fontSize:'0.875rem',fontWeight:600,letterSpacing:'-0.015em',color:'var(--text-1)' }}>Copilot Analytics</span>
         </div>
+        <button className="btn-secondary" onClick={toggleScheme} aria-label="Toggle theme" style={{ padding: '0.45rem 0.6rem' }}>
+          {colorScheme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+        </button>
       </nav>
 
       {/* hero */}

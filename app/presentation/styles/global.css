@@ -26,6 +26,7 @@
     --c-red:       #ef4444;
     --c-blue:      #60a5fa;
     --c-purple:    #a78bfa;
+    --nav-bg:      rgba(8,8,8,0.82);
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
@@ -165,6 +166,37 @@ select option { background: var(--surface-2); color: var(--text-1); }
 .dash-nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.25rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
 .upload-brand { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: clamp(2.8rem, 7vw, 5rem); line-height: 1.04; letter-spacing: -0.02em; color: var(--text-1); }
 .upload-brand em { font-style: italic; color: var(--green); }
+/* ── Light mode ───────────────────────────────────────────────────────────── */
+[data-mantine-color-scheme="light"] {
+    --bg:          #f8f8f8;
+    --surface:     #ffffff;
+    --surface-2:   #efefef;
+    --border:      rgba(0,0,0,0.08);
+    --border-2:    rgba(0,0,0,0.15);
+    --text-1:      #111111;
+    --text-2:      rgba(0,0,0,0.50);
+    --text-3:      rgba(0,0,0,0.30);
+    --text-inv:    #040404;
+    --green-glow:  rgba(0,200,150,0.10);
+    --nav-bg:      rgba(248,248,248,0.88);
+    --mantine-color-body:           var(--bg);
+    --mantine-color-default:        var(--surface);
+    --mantine-color-default-border: var(--border);
+    --mantine-color-text:           var(--text-1);
+    --mantine-color-dimmed:         var(--text-2);
+    --mantine-color-placeholder:    var(--text-2);
+}
+[data-mantine-color-scheme="light"] tbody tr:hover { background: rgba(0,0,0,0.025); }
+[data-mantine-color-scheme="light"] .btn-secondary:hover { background: rgba(0,0,0,0.04); color: var(--text-1); border-color: var(--border-2); }
+[data-mantine-color-scheme="light"] .mantine-Combobox-option:hover,
+[data-mantine-color-scheme="light"] .mantine-Combobox-option[data-combobox-active] { background: rgba(0,0,0,0.04) !important; color: var(--text-1) !important; }
+[data-mantine-color-scheme="light"] .mantine-Input-input { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text-1) !important; }
+[data-mantine-color-scheme="light"] .mantine-Combobox-dropdown,
+[data-mantine-color-scheme="light"] .mantine-Popover-dropdown { background: var(--surface) !important; border-color: var(--border-2) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important; }
+[data-mantine-color-scheme="light"] .mantine-Combobox-option { color: var(--text-2); }
+[data-mantine-color-scheme="light"] .mantine-DatePickerInput-day { color: var(--text-1) !important; }
+[data-mantine-color-scheme="light"] .mantine-DatePickerInput-day:hover:not([data-selected]):not([data-in-range]) { background: rgba(0,0,0,0.05) !important; }
+
 /* ── Mantine overrides ────────────────────────────────────────────────────── */
 [data-mantine-color-scheme="dark"] {
     --mantine-color-body:           var(--bg);

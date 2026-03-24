@@ -1,11 +1,15 @@
 import React, { useRef } from 'react';
-import { BarChart2, Plus, RefreshCw } from 'lucide-react';
+import { BarChart2, Plus, RefreshCw, Sun, Moon } from 'lucide-react';
+import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useApp } from '../../context/AppContext.jsx';
 import { ExportMenu } from '../export/ExportMenu.jsx';
 
 export function Header() {
   const { rawData, loadedFiles, loadFiles, resetData } = useApp();
   const fileInputRef = useRef(null);
+  const { setColorScheme } = useMantineColorScheme();
+  const colorScheme = useComputedColorScheme('dark');
+  const toggleScheme = () => setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
 
   const handleAddFiles = files => {
     const valid = [...files].filter(f => f.name.endsWith('.ndjson') || f.name.endsWith('.json'));
@@ -39,6 +43,9 @@ export function Header() {
           <ExportMenu />
           <button className="btn-secondary" onClick={resetData}>
             <RefreshCw size={13} /> Reset
+          </button>
+          <button className="btn-secondary" onClick={toggleScheme} aria-label="Toggle theme" style={{ padding: '0.45rem 0.6rem' }}>
+            {colorScheme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </button>
         </div>
       </div>
