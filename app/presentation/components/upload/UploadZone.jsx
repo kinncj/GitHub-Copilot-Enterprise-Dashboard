@@ -68,6 +68,16 @@ export function UploadZone() {
           </div>
         </div>
       </div>
+
+      <footer style={{ padding:'1.5rem', textAlign:'center', borderTop:'1px solid var(--border)' }}>
+        <p style={{ fontSize:'0.72rem', color:'var(--text-3)', letterSpacing:'0.02em' }}>
+          Copyright &copy; 2026{' '}
+          <a href="mailto:kinncj@protonmail.com" style={{ color:'var(--text-2)', textDecoration:'none' }}>
+            Kinn Coelho Juliao &lt;kinncj@protonmail.com&gt;
+          </a>
+          {' '}&mdash; AGPLv3
+        </p>
+      </footer>
     </div>
   );
 }

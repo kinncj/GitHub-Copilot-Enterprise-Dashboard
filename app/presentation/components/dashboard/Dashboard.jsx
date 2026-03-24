@@ -71,6 +71,16 @@ export function Dashboard() {
 
       <InsightsPanel />
       <DataTable />
+
+      <footer style={{ marginTop:'3rem', paddingTop:'1.5rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
+        <p style={{ fontSize:'0.72rem', color:'var(--text-3)', letterSpacing:'0.02em' }}>
+          Copyright &copy; 2026{' '}
+          <a href="mailto:kinncj@protonmail.com" style={{ color:'var(--text-2)', textDecoration:'none' }}>
+            Kinn Coelho Juliao &lt;kinncj@protonmail.com&gt;
+          </a>
+          {' '}&mdash; AGPLv3
+        </p>
+      </footer>
     </div>
   );
 }
