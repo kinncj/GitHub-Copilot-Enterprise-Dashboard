@@ -14,74 +14,111 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --slate-900: #0f172a;
-            --slate-800: #1e293b;
-            --slate-700: #334155;
-            --slate-400: #94a3b8;
-            --slate-50: #f8fafc;
-            --indigo-600: #4f46e5;
-            --indigo-500: #6366f1;
-            --indigo-400: #818cf8;
-            --emerald-500: #10b981;
-            --amber-500: #f59e0b;
-            --red-500: #ef4444;
-            --blue-500: #3b82f6;
+            /* Prometric Color System */
+            --navy:        #0D1B2A;
+            --navy-teal:   #1A4A5A;
+            --green:       #00C896;
+            --green-dark:  #00a87a;
+            --surface-1:   #ECEEF8;   /* card background  */
+            --surface-2:   #F4F6FB;   /* page background  */
+            --text-1:      #0D1B2A;   /* primary text     */
+            --text-2:      #4A5568;   /* secondary text   */
+            --text-inv:    #F5F7FA;   /* text on dark     */
+            --border:      #D0D5E8;
+            --amber:       #F6A623;
+            --red:         #E53E3E;
+            /* chart palette */
+            --c-indigo:    #818cf8;
+            --c-green:     #10b981;
+            --c-amber:     #f59e0b;
+            --c-red:       #ef4444;
+            --c-blue:      #3b82f6;
+            --c-purple:    #8b5cf6;
         }
 
         body {
-            background: linear-gradient(135deg, var(--slate-900) 0%, #1a1f35 100%);
-            color: var(--slate-50);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--surface-2);
+            color: var(--text-1);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
+        /* ── Cards ─────────────────────────────────────── */
         .card {
-            background: var(--slate-800);
-            border: 1px solid var(--slate-700);
-            border-radius: 12px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 12px rgba(13, 27, 42, 0.06);
         }
 
         .kpi-card {
-            background: linear-gradient(135deg, var(--slate-800) 0%, #2d3548 100%);
-            border: 1px solid var(--slate-700);
-            border-radius: 12px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
             padding: 1.5rem;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .kpi-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 24px rgba(13, 27, 42, 0.10);
         }
 
+        /* ── Upload zone ────────────────────────────────── */
         .upload-zone {
-            border: 3px dashed var(--slate-700);
-            border-radius: 16px;
-            background: var(--slate-800);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            background: #fff;
             transition: all 0.3s;
         }
 
         .upload-zone.drag-over {
-            border-color: var(--indigo-500);
-            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--green);
+            background: rgba(0, 200, 150, 0.05);
         }
 
+        /* ── Buttons ────────────────────────────────────── */
         .btn-primary {
-            background: var(--indigo-600);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            background: var(--green);
+            color: #fff;
+            padding: 0.65rem 1.5rem;
+            border-radius: 50px;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 2px 10px rgba(0, 200, 150, 0.28);
+            display: inline-flex;
+            align-items: center;
         }
 
         .btn-primary:hover {
-            background: var(--indigo-500);
+            background: var(--green-dark);
+            transform: scale(1.02);
         }
 
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-2);
+            padding: 0.3rem 0.85rem;
+            border-radius: 50px;
+            font-weight: 500;
+            border: 1.5px solid var(--border);
+            transition: border-color 0.2s, color 0.2s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--green);
+            color: var(--green-dark);
+        }
+
+        /* ── Badges ─────────────────────────────────────── */
         .badge {
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
@@ -89,127 +126,164 @@
             font-weight: 600;
         }
 
-        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--emerald-500); }
-        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--amber-500); }
-        .badge-error { background: rgba(239, 68, 68, 0.2); color: var(--red-500); }
-        .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--blue-500); }
+        .badge-success { background: rgba(0, 200, 150, 0.12);  color: #00a87a; }
+        .badge-warning { background: rgba(246, 166, 35, 0.15); color: #b07300; }
+        .badge-error   { background: rgba(229, 62, 62, 0.12);  color: #c53030; }
+        .badge-info    { background: rgba(59, 130, 246, 0.12); color: #2b6cb0; }
 
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
+        /* ── Charts ─────────────────────────────────────── */
+        .chart-container       { position: relative; height: 300px; }
+        .chart-container-large { position: relative; height: 400px; }
 
-        .chart-container-large {
-            height: 400px;
-        }
-
+        /* ── Progress bar ───────────────────────────────── */
         .progress-bar {
             height: 6px;
-            background: var(--slate-700);
+            background: var(--border);
             border-radius: 3px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--indigo-600), var(--indigo-400));
+            background: linear-gradient(90deg, var(--navy), var(--green));
             transition: width 0.3s;
         }
 
+        /* ── Table ──────────────────────────────────────── */
         .table-container {
             max-height: 600px;
             overflow: auto;
-            border-radius: 8px;
-            border: 1px solid var(--slate-700);
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         thead {
             position: sticky;
             top: 0;
-            background: var(--slate-800);
+            background: var(--navy);
             z-index: 10;
         }
 
         th {
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             text-align: left;
             font-weight: 600;
-            border-bottom: 2px solid var(--slate-700);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-inv);
+            border-bottom: 2px solid rgba(255,255,255,0.08);
             cursor: pointer;
             user-select: none;
         }
 
-        th:hover {
-            background: var(--slate-700);
-        }
+        th:hover { background: var(--navy-teal); }
 
         td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--slate-700);
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-2);
         }
 
-        tbody tr:hover {
-            background: rgba(99, 102, 241, 0.05);
+        tbody tr:hover { background: rgba(0, 200, 150, 0.04); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* ── Form inputs ────────────────────────────────── */
+        .filter-group { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+
+        select, input[type="date"], input[type="text"], input[type="number"] {
+            background: var(--surface-2);
+            border: 1.5px solid var(--border);
+            color: var(--text-1);
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
 
-        .filter-group {
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.15);
+        }
+
+        select option { background: #fff; color: var(--text-1); }
+
+        /* ── Section dividers ───────────────────────────── */
+        .section-header {
             display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
             align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            margin-top: 0.5rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
         }
 
-        select, input[type="date"], input[type="text"] {
-            background: var(--slate-700);
-            border: 1px solid var(--slate-600);
-            color: var(--slate-50);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+        .section-header span {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--navy);
         }
 
-        select option {
-            background: var(--slate-700);
-            color: var(--slate-50);
-            padding: 0.5rem;
+        .section-header i { color: var(--green) !important; }
+
+        /* ── Insight cards override ──────────────────────── */
+        #insightsContainer .card {
+            background: var(--surface-1);
         }
 
-        select option:checked,
-        select option:hover {
-            background: var(--slate-600);
-            color: var(--slate-50);
+        /* ── Filter panel on navy background ────────────── */
+        .filters-panel select,
+        .filters-panel input[type="date"],
+        .filters-panel input[type="text"] {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.18);
+            color: var(--text-inv);
+        }
+        .filters-panel select:focus,
+        .filters-panel input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(0,200,150,0.22);
+        }
+        .filters-panel select option {
+            background: var(--navy);
+            color: var(--text-inv);
         }
 
+        /* ── Misc ───────────────────────────────────────── */
         .hidden { display: none; }
-
-        .sparkline {
-            width: 100%;
-            height: 40px;
-        }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50%       { opacity: 0.5; }
         }
-
-        .loading {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
+        .loading { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body class="p-4">
     <!-- Upload Zone (Empty State) -->
-    <div id="uploadContainer" class="min-h-screen flex items-center justify-center">
+    <div id="uploadContainer" class="min-h-screen flex flex-col items-center justify-center">
+        <!-- Nav banner -->
+        <div class="w-full max-w-2xl mb-6 rounded-2xl overflow-hidden" style="background:linear-gradient(135deg,#0D1B2A 0%,#1A4A5A 100%)">
+            <div class="px-8 py-5 flex items-center gap-3">
+                <i data-lucide="bar-chart-2" class="w-6 h-6" style="color:#00C896"></i>
+                <span class="text-lg font-bold" style="color:#F5F7FA">GitHub Copilot Enterprise Analytics</span>
+            </div>
+        </div>
         <div class="upload-zone p-12 text-center max-w-2xl w-full">
             <div class="mb-6">
-                <i data-lucide="upload-cloud" class="mx-auto w-20 h-20 text-slate-400"></i>
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-2" style="background:rgba(0,200,150,0.1)">
+                    <i data-lucide="upload-cloud" class="w-10 h-10" style="color:#00C896"></i>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold mb-4">GitHub Copilot Enterprise Analytics</h1>
-            <p class="text-slate-400 mb-8">Upload your NDJSON file to visualize Copilot usage data</p>
+            <h2 class="text-2xl font-bold mb-2" style="color:#0D1B2A">Upload your usage data</h2>
+            <p class="mb-8" style="color:#4A5568">Drop an NDJSON export from GitHub Copilot Enterprise to get started</p>
 
             <input type="file" id="fileInput" accept=".ndjson,.json" class="hidden">
             <button onclick="document.getElementById('fileInput').click()" class="btn-primary">
@@ -217,11 +291,11 @@
                 Select NDJSON File
             </button>
 
-            <p class="text-sm text-slate-500 mt-4">or drag and drop your file here</p>
+            <p class="text-sm mt-4" style="color:#4A5568">or drag and drop your file here</p>
 
-            <div class="mt-8 text-left bg-slate-900 p-4 rounded-lg">
-                <p class="text-xs text-slate-400 mb-2">Supported format:</p>
-                <code class="text-xs text-emerald-400">
+            <div class="mt-8 text-left p-4 rounded-xl" style="background:#F4F6FB;border:1px solid #D0D5E8">
+                <p class="text-xs font-semibold mb-2" style="color:#4A5568">Supported format:</p>
+                <code class="text-xs" style="color:#00a87a">
                     {"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150,...}
                 </code>
             </div>
@@ -229,11 +303,11 @@
     </div>
 
     <!-- Progress Indicator -->
-    <div id="progressContainer" class="hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 p-4">
+    <div id="progressContainer" class="hidden fixed top-0 left-0 right-0 z-50 p-4" style="background:#0D1B2A">
         <div class="max-w-4xl mx-auto">
             <div class="flex justify-between mb-2">
-                <span class="text-sm">Processing NDJSON file...</span>
-                <span class="text-sm" id="progressText">0%</span>
+                <span class="text-sm" style="color:var(--text-inv)">Processing NDJSON file...</span>
+                <span class="text-sm" id="progressText" style="color:var(--green)">0%</span>
             </div>
             <div class="progress-bar">
                 <div id="progressFill" class="progress-fill" style="width: 0%"></div>
@@ -245,39 +319,45 @@
     <div id="dashboard" class="hidden max-w-7xl mx-auto">
         <!-- Header -->
         <header class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-3xl font-bold">Copilot Analytics Dashboard</h1>
-                <div class="flex gap-2">
-                    <button onclick="exportData()" class="btn-primary text-sm">
-                        <i data-lucide="download" class="inline w-4 h-4 mr-1"></i>
-                        Export CSV
-                    </button>
-                    <button onclick="resetDashboard()" class="btn-primary text-sm bg-slate-700">
-                        <i data-lucide="refresh-cw" class="inline w-4 h-4 mr-1"></i>
-                        Reset
-                    </button>
+            <!-- Brand banner -->
+            <div class="rounded-2xl overflow-hidden mb-6" style="background:linear-gradient(135deg,#0D1B2A 0%,#1A4A5A 100%)">
+                <div class="px-8 py-5 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6" style="color:#00C896"></i>
+                        <span class="text-xl font-bold" style="color:#F5F7FA">GitHub Copilot Enterprise Analytics</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportData()" class="btn-primary text-sm">
+                            <i data-lucide="download" class="inline w-4 h-4 mr-1"></i>
+                            Export CSV
+                        </button>
+                        <button onclick="resetDashboard()" class="btn-secondary text-sm" style="color:rgba(245,247,250,0.85);border-color:rgba(255,255,255,0.25)">
+                            <i data-lucide="refresh-cw" class="inline w-4 h-4 mr-1"></i>
+                            Reset
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Global Filters -->
-            <div class="card bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700">
-                <div class="flex items-center gap-2 mb-5 pb-4 border-b border-slate-700/50">
-                    <i data-lucide="filter" class="w-5 h-5 text-indigo-400"></i>
-                    <h2 class="text-lg font-semibold text-slate-200">Filters</h2>
+            <div class="card filters-panel" style="background:var(--navy);border-color:var(--navy-teal)">
+                <div class="flex items-center gap-2 mb-5 pb-4" style="border-bottom:1px solid rgba(255,255,255,0.1)">
+                    <i data-lucide="filter" class="w-5 h-5" style="color:var(--green)"></i>
+                    <h2 class="text-lg font-semibold" style="color:var(--text-inv)">Filters</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
                     <!-- Date Range -->
                     <div class="md:col-span-2">
-                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <label class="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mb-2" style="color:rgba(245,247,250,0.75)">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5" style="color:var(--green)"></i>
                             Date Range
                         </label>
                         <div class="grid grid-cols-2 gap-2 mb-2">
                             <input type="date" id="dateFrom" onchange="applyFilters()" class="h-10 text-sm px-3">
                             <input type="date" id="dateTo" onchange="applyFilters()" class="h-10 text-sm px-3">
                         </div>
-                        <select id="quickRange" onchange="applyQuickRange()" class="w-full h-9 text-xs bg-slate-700/50 border-slate-600 px-2">
+                        <select id="quickRange" onchange="applyQuickRange()" class="w-full h-9 text-xs px-2">
                             <option value="">Custom Range</option>
                             <option value="7">Last 7 days</option>
                             <option value="30" selected>Last 30 days</option>
@@ -287,8 +367,8 @@
 
                     <!-- User Filter -->
                     <div>
-                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
-                            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i>
+                        <label class="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mb-2" style="color:rgba(245,247,250,0.75)">
+                            <i data-lucide="user" class="w-3.5 h-3.5" style="color:var(--green)"></i>
                             User
                         </label>
                         <select id="userFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
@@ -298,8 +378,8 @@
 
                     <!-- IDE Filter -->
                     <div>
-                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
-                            <i data-lucide="code-2" class="w-3.5 h-3.5 text-green-400"></i>
+                        <label class="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mb-2" style="color:rgba(245,247,250,0.75)">
+                            <i data-lucide="code-2" class="w-3.5 h-3.5" style="color:var(--green)"></i>
                             IDE
                         </label>
                         <select id="ideFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
@@ -309,8 +389,8 @@
 
                     <!-- Language Filter -->
                     <div>
-                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 mb-2">
-                            <i data-lucide="file-code" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <label class="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mb-2" style="color:rgba(245,247,250,0.75)">
+                            <i data-lucide="file-code" class="w-3.5 h-3.5" style="color:var(--green)"></i>
                             Language
                         </label>
                         <select id="languageFilter" onchange="applyFilters()" class="w-full h-10 text-sm px-3">
@@ -320,8 +400,8 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="mt-4 pt-4 border-t border-slate-700/50 flex justify-end">
-                    <button onclick="clearFilters()" class="btn-primary text-sm bg-slate-700/80 hover:bg-slate-600 border border-slate-600 h-9 px-4">
+                <div class="mt-4 pt-4 flex justify-end" style="border-top:1px solid rgba(255,255,255,0.1)">
+                    <button onclick="clearFilters()" class="btn-secondary text-sm h-9 px-4" style="color:rgba(245,247,250,0.85);border-color:rgba(255,255,255,0.25)">
                         <i data-lucide="x-circle" class="inline w-3.5 h-3.5 mr-1.5"></i>
                         Clear All Filters
                     </button>
@@ -333,24 +413,24 @@
         <div id="kpiCards" class="space-y-6 mb-8"></div>
 
         <!-- Configuration Info -->
-        <div class="card mb-6 bg-slate-800/50 border border-slate-700">
+        <div class="card mb-6" style="background:var(--surface-1)">
             <div class="flex items-start gap-3">
-                <i data-lucide="settings" class="w-5 h-5 text-blue-400 mt-1"></i>
+                <i data-lucide="settings" class="w-5 h-5 mt-1" style="color:var(--green)"></i>
                 <div class="flex-1">
-                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Value Calculation Configuration</h3>
+                    <h3 class="text-sm font-semibold mb-3" style="color:var(--navy)">Value Calculation Configuration</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex items-center gap-3 text-sm">
-                            <div class="w-48 text-slate-400">Manual Lines Per Hour:</div>
-                            <input type="number" id="configManualRate" value="30" min="1" max="1000" class="w-20 h-8 px-2 text-sm font-mono font-semibold bg-slate-700 text-slate-100 border border-slate-600 rounded" oninput="updateConfiguration()">
-                            <div class="text-xs text-slate-500">lines/hour</div>
+                            <div class="w-48" style="color:var(--text-2)">Manual Lines Per Hour:</div>
+                            <input type="number" id="configManualRate" value="30" min="1" max="1000" class="w-20 h-8 px-2 text-sm font-mono font-semibold rounded" oninput="updateConfiguration()">
+                            <div class="text-xs" style="color:var(--text-2)">lines/hour</div>
                         </div>
                         <div class="flex items-center gap-3 text-sm">
-                            <div class="w-48 text-slate-400">Blended Rate Per Hour:</div>
+                            <div class="w-48" style="color:var(--text-2)">Blended Rate Per Hour:</div>
                             <div class="flex items-center gap-1">
-                                <span class="text-slate-400">$</span>
-                                <input type="number" id="configBlendedRate" value="90" min="1" max="10000" class="w-20 h-8 px-2 text-sm font-mono font-semibold bg-slate-700 text-slate-100 border border-slate-600 rounded" oninput="updateConfiguration()">
+                                <span style="color:var(--text-2)">$</span>
+                                <input type="number" id="configBlendedRate" value="90" min="1" max="10000" class="w-20 h-8 px-2 text-sm font-mono font-semibold rounded" oninput="updateConfiguration()">
                             </div>
-                            <div class="text-xs text-slate-500">per developer hour</div>
+                            <div class="text-xs" style="color:var(--text-2)">per developer hour</div>
                         </div>
                     </div>
                 </div>
@@ -358,22 +438,22 @@
         </div>
 
         <!-- ── Activity & Time ─────────────────────────────────────── -->
-        <div class="flex items-center gap-2 mb-4 mt-2">
-            <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
-            <span class="text-sm font-semibold text-indigo-400 uppercase tracking-wide">Activity &amp; Time</span>
+        <div class="flex items-center gap-2 mb-4 mt-2 pb-2" style="border-bottom:2px solid var(--border)">
+            <i data-lucide="activity" class="w-4 h-4" style="color:var(--green)"></i>
+            <span class="text-sm font-bold uppercase tracking-wide" style="color:var(--navy)">Activity &amp; Time</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Activity Timeline</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">
                             <span style="color:#818cf8">— Generations / Chat</span>
-                            <span class="mx-2 text-slate-600">|</span>
+                            <span class="mx-2" style="color:var(--border)">|</span>
                             <span style="color:#10b981">- - Lines Added</span>
-                            <span class="mx-1 text-slate-600">/</span>
+                            <span class="mx-1" style="color:var(--border)">/</span>
                             <span style="color:#ef4444">- - Lines Deleted</span>
-                            <span class="ml-2 text-slate-600">(right axis)</span>
+                            <span class="ml-2" style="color:var(--text-2)">(right axis)</span>
                         </p>
                     </div>
                     <button onclick="exportActivityChart()" class="btn-secondary text-xs">Export CSV</button>
@@ -387,9 +467,9 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Lines of Code Trend</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">
                             <span style="color:#10b981">— Added</span>
-                            <span class="mx-2 text-slate-600">|</span>
+                            <span class="mx-2" style="color:var(--border)">|</span>
                             <span style="color:#ef4444">— Deleted</span>
                         </p>
                     </div>
@@ -406,9 +486,9 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Acceptance Rate Trend</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">
                             <span style="color:rgba(129,140,248,0.5)">— Daily rate</span>
-                            <span class="mx-2 text-slate-600">|</span>
+                            <span class="mx-2" style="color:var(--border)">|</span>
                             <span style="color:#818cf8">— 7-day average</span>
                         </p>
                     </div>
@@ -431,9 +511,9 @@
         </div>
 
         <!-- ── User Analysis ──────────────────────────────────────── -->
-        <div class="flex items-center gap-2 mb-4 mt-2">
-            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
-            <span class="text-sm font-semibold text-emerald-400 uppercase tracking-wide">User Analysis</span>
+        <div class="flex items-center gap-2 mb-4 mt-2 pb-2" style="border-bottom:2px solid var(--border)">
+            <i data-lucide="users" class="w-4 h-4" style="color:var(--green)"></i>
+            <span class="text-sm font-bold uppercase tracking-wide" style="color:var(--navy)">User Analysis</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card">
@@ -462,11 +542,11 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">User Efficiency Matrix</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">
                             <span style="color:#10b981">● ≥70% acceptance</span>
-                            <span class="mx-2 text-slate-600">|</span>
+                            <span class="mx-2" style="color:var(--border)">|</span>
                             <span style="color:#818cf8">● normal</span>
-                            <span class="mx-2 text-slate-600">|</span>
+                            <span class="mx-2" style="color:var(--border)">|</span>
                             <span style="color:#ef4444">● &lt;20%</span>
                         </p>
                     </div>
@@ -481,7 +561,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">User Engagement Distribution</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Number of users by days active</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Number of users by days active</p>
                     </div>
                     <button onclick="exportUserEngagementChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -492,9 +572,9 @@
         </div>
 
         <!-- ── Tools & Languages ──────────────────────────────────── -->
-        <div class="flex items-center gap-2 mb-4 mt-2">
-            <i data-lucide="code-2" class="w-4 h-4 text-amber-400"></i>
-            <span class="text-sm font-semibold text-amber-400 uppercase tracking-wide">Tools &amp; Languages</span>
+        <div class="flex items-center gap-2 mb-4 mt-2 pb-2" style="border-bottom:2px solid var(--border)">
+            <i data-lucide="code-2" class="w-4 h-4" style="color:var(--green)"></i>
+            <span class="text-sm font-bold uppercase tracking-wide" style="color:var(--navy)">Tools &amp; Languages</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div class="card">
@@ -533,7 +613,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Acceptance Rate by IDE</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Min. 50 generations</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 generations</p>
                     </div>
                     <button onclick="exportIDEAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -546,7 +626,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Acceptance Rate by Language</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Min. 50 generations</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 generations</p>
                     </div>
                     <button onclick="exportLanguageAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -568,8 +648,8 @@
 
         <!-- Insights Panel -->
         <div class="card mb-6">
-            <h3 class="text-lg font-semibold mb-4">
-                <i data-lucide="lightbulb" class="inline w-5 h-5 mr-2"></i>
+            <h3 class="text-lg font-semibold mb-4" style="color:var(--navy)">
+                <i data-lucide="lightbulb" class="inline w-5 h-5 mr-2" style="color:var(--green)"></i>
                 Insights & Anomalies
             </h3>
             <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -590,9 +670,9 @@
                         <tr>
                             <th rowspan="2" onclick="sortTable('user')" style="vertical-align:bottom">User <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
                             <th rowspan="2" onclick="sortTable('days')" style="vertical-align:bottom">Days Active <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
-                            <th style="text-align:center;color:#818cf8;background:rgba(99,102,241,0.12);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #334155;padding:0.4rem 1rem">⚡ Copilot Activity</th>
-                            <th colspan="3" style="text-align:center;color:#10b981;background:rgba(16,185,129,0.08);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #334155;padding:0.4rem 1rem">Lines of Code</th>
-                            <th colspan="3" style="text-align:center;color:#3b82f6;background:rgba(59,130,246,0.08);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #334155;padding:0.4rem 1rem">Estimated Value</th>
+                            <th style="text-align:center;color:#00C896;background:rgba(0,200,150,0.12);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);padding:0.4rem 1rem">⚡ Copilot Activity</th>
+                            <th colspan="3" style="text-align:center;color:#00C896;background:rgba(0,200,150,0.08);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);padding:0.4rem 1rem">Lines of Code</th>
+                            <th colspan="3" style="text-align:center;color:#00C896;background:rgba(0,200,150,0.05);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);padding:0.4rem 1rem">Estimated Value</th>
                         </tr>
                         <tr>
                             <th onclick="sortTable('generations')" style="background:rgba(99,102,241,0.06)">Generations <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
@@ -1069,35 +1149,35 @@
             const renderKpiCard = (kpi, accentColor) => `
                 <div class="kpi-card" style="border-left: 3px solid ${accentColor}">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-sm text-slate-400">${kpi.label}</span>
+                        <span class="text-sm" style="color:var(--text-2)">${kpi.label}</span>
                         <i data-lucide="${kpi.icon}" class="w-5 h-5 text-${kpi.color}-500"></i>
                     </div>
-                    ${kpi.description ? `<div class="text-xs text-slate-400 mb-2">${kpi.description}</div>` : ''}
-                    <div class="text-3xl font-bold">${kpi.value}</div>
-                    ${kpi.subtitle ? `<div class="text-xs text-slate-500 mt-1">${kpi.subtitle}</div>` : ''}
+                    ${kpi.description ? `<div class="text-xs mb-2" style="color:var(--text-2)">${kpi.description}</div>` : ''}
+                    <div class="text-3xl font-bold" style="color:var(--navy)">${kpi.value}</div>
+                    ${kpi.subtitle ? `<div class="text-xs mt-1" style="color:var(--text-2)">${kpi.subtitle}</div>` : ''}
                 </div>
             `;
 
             const container = document.getElementById('kpiCards');
             container.innerHTML = `
                 <div>
-                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #334155">
-                        <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i>
-                        <span class="text-sm font-semibold text-indigo-400 uppercase tracking-wide">Copilot Activity</span>
-                        <span class="text-xs text-slate-500">— prompts, completions &amp; usage</span>
+                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:2px solid #D0D5E8">
+                        <i data-lucide="zap" class="w-4 h-4" style="color:#00C896"></i>
+                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#0D1B2A">Copilot Activity</span>
+                        <span class="text-xs" style="color:#4A5568">— prompts, completions &amp; usage</span>
                     </div>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        ${activityKpis.map(kpi => renderKpiCard(kpi, '#818cf8')).join('')}
+                        ${activityKpis.map(kpi => renderKpiCard(kpi, '#00C896')).join('')}
                     </div>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #334155">
-                        <i data-lucide="file-code" class="w-4 h-4 text-emerald-400"></i>
-                        <span class="text-sm font-semibold text-emerald-400 uppercase tracking-wide">Lines of Code</span>
-                        <span class="text-xs text-slate-500">— written output &amp; estimated value</span>
+                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:2px solid #D0D5E8">
+                        <i data-lucide="file-code" class="w-4 h-4" style="color:#00C896"></i>
+                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#0D1B2A">Lines of Code</span>
+                        <span class="text-xs" style="color:#4A5568">— written output &amp; estimated value</span>
                     </div>
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                        ${locKpis.map(kpi => renderKpiCard(kpi, '#10b981')).join('')}
+                        ${locKpis.map(kpi => renderKpiCard(kpi, '#00C896')).join('')}
                     </div>
                 </div>
             `;
@@ -1183,20 +1263,20 @@
                         yActivity: {
                             type: 'linear',
                             position: 'left',
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568' },
+                            grid: { color: '#D0D5E8' },
                             title: { display: true, text: 'Generations / Chat', color: '#818cf8', font: { size: 11 } }
                         },
                         yLines: {
                             type: 'linear',
                             position: 'right',
-                            ticks: { color: '#94a3b8' },
+                            ticks: { color: '#4A5568' },
                             grid: { drawOnChartArea: false },
                             title: { display: true, text: 'Lines of Code', color: '#10b981', font: { size: 11 } }
                         },
                         x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' }
+                            ticks: { color: '#4A5568' },
+                            grid: { color: '#D0D5E8' }
                         }
                     }
                 }
@@ -1255,14 +1335,14 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#D0D5E8' },
                             min: 0,
-                            title: { display: true, text: 'Acceptance Rate (%)', color: '#94a3b8', font: { size: 11 } }
+                            title: { display: true, text: 'Acceptance Rate (%)', color: '#4A5568', font: { size: 11 } }
                         },
                         x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' }
+                            ticks: { color: '#4A5568' },
+                            grid: { color: '#D0D5E8' }
                         }
                     }
                 }
@@ -1351,15 +1431,15 @@
                     },
                     scales: {
                         x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            title: { display: true, text: 'Total Generations', color: '#94a3b8', font: { size: 11 } }
+                            ticks: { color: '#4A5568' },
+                            grid: { color: '#D0D5E8' },
+                            title: { display: true, text: 'Total Generations', color: '#4A5568', font: { size: 11 } }
                         },
                         y: {
-                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#D0D5E8' },
                             min: 0,
-                            title: { display: true, text: 'Acceptance Rate (%)', color: '#94a3b8', font: { size: 11 } }
+                            title: { display: true, text: 'Acceptance Rate (%)', color: '#4A5568', font: { size: 11 } }
                         }
                     }
                 }
@@ -1404,12 +1484,12 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568' },
+                            grid: { color: '#D0D5E8' },
                             min: 0,
-                            title: { display: true, text: 'Lines of Code', color: '#94a3b8', font: { size: 11 } }
+                            title: { display: true, text: 'Lines of Code', color: '#4A5568', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        x: { ticks: { color: '#4A5568' }, grid: { color: '#D0D5E8' } }
                     }
                 }
             });
@@ -1442,12 +1522,12 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#94a3b8', precision: 0 },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', precision: 0 },
+                            grid: { color: '#D0D5E8' },
                             min: 0,
-                            title: { display: true, text: 'Active Users', color: '#94a3b8', font: { size: 11 } }
+                            title: { display: true, text: 'Active Users', color: '#4A5568', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        x: { ticks: { color: '#4A5568' }, grid: { color: '#D0D5E8' } }
                     }
                 }
             });
@@ -1520,12 +1600,12 @@
                     ...getChartOptions('User engagement distribution'),
                     scales: {
                         y: {
-                            ticks: { color: '#94a3b8', precision: 0 },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', precision: 0 },
+                            grid: { color: '#D0D5E8' },
                             min: 0,
-                            title: { display: true, text: 'Number of Users', color: '#94a3b8', font: { size: 11 } }
+                            title: { display: true, text: 'Number of Users', color: '#4A5568', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        x: { ticks: { color: '#4A5568' }, grid: { color: '#D0D5E8' } }
                     }
                 }
             });
@@ -1561,11 +1641,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#D0D5E8' },
                             min: 0
                         },
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        y: { ticks: { color: '#4A5568' }, grid: { color: '#D0D5E8' } }
                     }
                 }
             });
@@ -1602,11 +1682,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#94a3b8', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: '#334155' },
+                            ticks: { color: '#4A5568', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: '#D0D5E8' },
                             min: 0
                         },
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        y: { ticks: { color: '#4A5568' }, grid: { color: '#D0D5E8' } }
                     }
                 }
             });
@@ -1632,7 +1712,7 @@
                 options: {
                     ...getChartOptions('IDE usage'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                        legend: { position: 'bottom', labels: { color: '#4A5568' } }
                     }
                 }
             });
@@ -1664,7 +1744,7 @@
                 options: {
                     ...getChartOptions('Language distribution'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                        legend: { position: 'bottom', labels: { color: '#4A5568', font: { size: 10 } } }
                     }
                 }
             });
@@ -1711,7 +1791,7 @@
                 options: {
                     ...getChartOptions('Model distribution'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                        legend: { position: 'bottom', labels: { color: '#4A5568' } }
                     }
                 }
             });
@@ -1723,17 +1803,17 @@
                 maintainAspectRatio: false,
                 animation: { duration: CONFIG.CHART_ANIMATION_DURATION },
                 plugins: {
-                    legend: { labels: { color: '#94a3b8' } },
+                    legend: { labels: { color: '#4A5568' } },
                     title: { display: false }
                 },
                 scales: {
                     y: {
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: '#334155' }
+                        ticks: { color: '#4A5568' },
+                        grid: { color: '#D0D5E8' }
                     },
                     x: {
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: '#334155' }
+                        ticks: { color: '#4A5568' },
+                        grid: { color: '#D0D5E8' }
                     }
                 }
             };
@@ -1838,7 +1918,7 @@
                         <i data-lucide="${insight.icon}" class="w-5 h-5 text-${insight.type === 'success' ? 'emerald' : insight.type === 'warning' ? 'amber' : insight.type === 'error' ? 'red' : 'blue'}-500 flex-shrink-0 mt-1"></i>
                         <div>
                             <h4 class="font-semibold mb-1">${insight.title}</h4>
-                            <p class="text-sm text-slate-400">${insight.content}</p>
+                            <p class="text-sm" style="color:var(--text-2)">${insight.content}</p>
                         </div>
                     </div>
                 </div>
@@ -1920,7 +2000,7 @@
             const rows = tableData.slice(0, CONFIG.TABLE_PAGE_SIZE * 5).map(row => `
                 <tr>
                     <td><strong>${row.user}</strong></td>
-                    <td class="text-slate-400">${row.days}</td>
+                    <td style="color:var(--text-2)">${row.days}</td>
                     <td>${formatNumber(row.generations)}</td>
                     <td class="text-emerald-400">${formatNumber(row.linesAdded)}</td>
                     <td class="text-red-400">${formatNumber(row.linesDeleted)}</td>
@@ -1936,7 +2016,7 @@
             if (tableData.length > CONFIG.TABLE_PAGE_SIZE * 5) {
                 tbody.innerHTML += `
                     <tr>
-                        <td colspan="9" class="text-center text-slate-400">
+                        <td colspan="9" class="text-center" style="color:var(--text-2)">
                             Showing first ${CONFIG.TABLE_PAGE_SIZE * 5} of ${tableData.length} rows
                         </td>
                     </tr>
