@@ -52,6 +52,8 @@ coverage/
 
 # Test
 /test-results/
+/playwright-report/
+/.playwright-mcp/
 
 # AGPLv3 License
 LICENSE
