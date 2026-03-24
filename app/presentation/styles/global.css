@@ -199,10 +199,27 @@ select option { background: var(--surface-2); color: var(--text-1); }
 .mantine-Combobox-option:hover,
 .mantine-Combobox-option[data-combobox-active] { background: rgba(255,255,255,0.05) !important; color: var(--text-1) !important; }
 .mantine-Combobox-option[data-combobox-selected] { background: rgba(0,200,150,0.12) !important; color: var(--green) !important; }
-/* DatePicker day highlights */
-.mantine-DatePickerInput-day[data-selected],
-.mantine-MonthLevel-day[data-selected] { background: var(--green) !important; color: #040404 !important; }
-.mantine-DatePickerInput-day[data-today] { border-color: var(--green) !important; }
+/* Calendar days — Mantine v8 uses mantine-DatePickerInput-day */
+.mantine-DatePickerInput-day {
+    color: var(--text-1) !important;
+    border-radius: 6px !important;
+    font-size: 0.8rem !important;
+}
+.mantine-DatePickerInput-day:hover:not([data-selected]):not([data-in-range]) {
+    background: rgba(255,255,255,0.06) !important;
+}
+.mantine-DatePickerInput-day[data-today] { border: 1px solid rgba(0,200,150,0.6) !important; }
+.mantine-DatePickerInput-day[data-selected] { background: var(--green) !important; color: #040404 !important; font-weight: 700 !important; border-radius: 6px !important; }
+.mantine-DatePickerInput-day[data-in-range]  { background: rgba(0,200,150,0.13) !important; color: var(--green) !important; border-radius: 0 !important; }
+.mantine-DatePickerInput-day[data-first-in-range] { border-radius: 6px 0 0 6px !important; }
+.mantine-DatePickerInput-day[data-last-in-range]  { border-radius: 0 6px 6px 0 !important; }
+/* Calendar header (nav buttons + month/year labels) */
+.mantine-DatePickerInput-calendarHeader button,
+.mantine-PickerControl-pickerControl { color: var(--text-1) !important; }
+.mantine-DatePickerInput-calendarHeader button:hover,
+.mantine-PickerControl-pickerControl:hover { background: rgba(255,255,255,0.06) !important; }
+/* Weekday labels */
+.mantine-DatePickerInput-weekday { color: var(--text-2) !important; font-size: 0.7rem !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.06em !important; }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up   { animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }

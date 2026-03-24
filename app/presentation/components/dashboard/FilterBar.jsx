@@ -1,6 +1,6 @@
 import React from 'react';
 import { Select } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
+import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
 import { useApp } from '../../context/AppContext.jsx';
 import { quickRangeDates } from '../../../domain/filtering/engine.js';
@@ -53,27 +53,25 @@ export function FilterBar() {
     <div className="card mb-6">
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
 
-        {/* Date From */}
+        {/* Date range picker */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={LABEL_STYLE}>From</span>
-          <DateInput
-            value={dateFromValue}
-            onChange={d => setFilter('dateFrom', d ? dayjs(d).format('YYYY-MM-DD') : null)}
-            placeholder="Pick date"
+          <span style={LABEL_STYLE}>Date Range</span>
+          <DatePickerInput
+            type="range"
+            value={[dateFromValue, dateToValue]}
+            onChange={([from, to]) => {
+              setFilters(prev => ({
+                ...prev,
+                dateFrom: from ? dayjs(from).format('YYYY-MM-DD') : null,
+                dateTo: to ? dayjs(to).format('YYYY-MM-DD') : null,
+              }));
+            }}
+            placeholder="Pick date range"
             clearable
-            popoverProps={{ withinPortal: true }}
-          />
-        </div>
-
-        {/* Date To */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={LABEL_STYLE}>To</span>
-          <DateInput
-            value={dateToValue}
-            onChange={d => setFilter('dateTo', d ? dayjs(d).format('YYYY-MM-DD') : null)}
-            placeholder="Pick date"
-            clearable
-            popoverProps={{ withinPortal: true }}
+            numberOfColumns={1}
+            popoverProps={{ withinPortal: true, width: 300 }}
+            style={{ minWidth: '240px' }}
+            aria-label="Date Range"
           />
         </div>
 

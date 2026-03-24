@@ -76,6 +76,20 @@ test.describe('Filters', () => {
     await waitForDashboard(page);
   });
 
+  test('date range picker is visible', async ({ page }) => {
+    // DatePickerInput type="range" renders a single input for the whole range
+    await expect(page.getByRole('button', { name: /Date Range|Pick date range/ }).or(
+      page.locator('[aria-label="Date Range"]')
+    ).first()).toBeVisible();
+  });
+
+  test('date range picker opens a calendar on click', async ({ page }) => {
+    const rangeInput = page.locator('[aria-label="Date Range"]');
+    await rangeInput.click();
+    // Calendar should show month navigation
+    await expect(page.getByRole('button', { name: /January|February|March|April|May|June|July|August|September|October|November|December/ }).first()).toBeVisible();
+  });
+
   test('user filter input is populated with options', async ({ page }) => {
     // Mantine Select renders an <input role="textbox"> — click to open dropdown, then check options
     const userInput = page.getByRole('textbox', { name: 'All Users' });
