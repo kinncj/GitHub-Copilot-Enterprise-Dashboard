@@ -402,13 +402,13 @@
                     <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:1.25rem">
                         <i data-lucide="upload-cloud" style="width:24px;height:24px;color:var(--green)"></i>
                     </div>
-                    <p style="font-size:0.9rem;font-weight:500;color:var(--text-1);margin-bottom:0.35rem">Drop your NDJSON file here</p>
-                    <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:1.5rem">or click to browse</p>
+                    <p style="font-size:0.9rem;font-weight:500;color:var(--text-1);margin-bottom:0.35rem">Drop one or more NDJSON files here</p>
+                    <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:1.5rem">Combine multiple 28-day exports for a longer date range</p>
 
-                    <input type="file" id="fileInput" accept=".ndjson,.json" class="hidden">
+                    <input type="file" id="fileInput" accept=".ndjson,.json" multiple class="hidden">
                     <button onclick="document.getElementById('fileInput').click()" class="btn-primary">
                         <i data-lucide="file-plus" style="width:15px;height:15px"></i>
-                        Select File
+                        Select Files
                     </button>
                 </div>
 
@@ -425,7 +425,7 @@
     <div id="progressContainer" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:0.6rem 1.5rem;background:rgba(8,8,8,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)">
         <div style="max-width:1280px;margin:0 auto">
             <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
-                <span style="font-size:0.8rem;color:var(--text-2)">Processing NDJSON…</span>
+                <span id="progressLabel" style="font-size:0.8rem;color:var(--text-2)">Processing NDJSON…</span>
                 <span id="progressText" style="font-size:0.8rem;font-weight:600;color:var(--green)">0%</span>
             </div>
             <div class="progress-bar">
@@ -447,7 +447,12 @@
                     <span style="font-size:0.95rem;font-weight:600;letter-spacing:-0.018em;color:var(--text-1)">Copilot Analytics</span>
                     <span style="font-size:0.68rem;font-weight:600;padding:0.15rem 0.6rem;border-radius:9999px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);letter-spacing:0.04em;text-transform:uppercase">Enterprise</span>
                 </div>
-                <div style="display:flex;gap:0.5rem">
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <span id="filesIndicator" style="font-size:0.75rem;color:var(--text-2);margin-right:0.25rem"></span>
+                    <button onclick="document.getElementById('fileInput').click()" class="btn-secondary">
+                        <i data-lucide="plus" style="width:13px;height:13px"></i>
+                        Add Files
+                    </button>
                     <button onclick="exportData()" class="btn-secondary">
                         <i data-lucide="download" style="width:13px;height:13px"></i>
                         Export CSV
@@ -994,6 +999,7 @@
         // ============================================
         const state = {
             rawData: [],
+            loadedFiles: [],      // { name, records } — one entry per uploaded file
             filteredData: [],
             aggregatedData: {},
             charts: {},
@@ -1029,36 +1035,50 @@
             uploadZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadZone.classList.remove('drag-over');
-                const file = e.dataTransfer.files[0];
-                if (file) handleFile(file);
+                const files = [...e.dataTransfer.files].filter(f => f.name.endsWith('.ndjson') || f.name.endsWith('.json'));
+                if (files.length) handleFiles(files, false);
             });
 
             fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) handleFile(file);
+                const files = [...e.target.files];
+                // append=true when dashboard is already visible (user clicked "Add Files")
+                const append = !document.getElementById('dashboard').classList.contains('hidden');
+                if (files.length) handleFiles(files, append);
+                e.target.value = ''; // reset so same file can be re-selected
             });
         }
 
-        async function handleFile(file) {
-            // Check file size
-            const sizeMB = file.size / (1024 * 1024);
-            if (sizeMB > CONFIG.MAX_FILE_SIZE_MB) {
-                alert(`Warning: File size is ${sizeMB.toFixed(1)}MB. Processing may be slow.`);
-            }
-
-            // Show progress
+        async function handleFiles(files, append = false) {
             document.getElementById('uploadContainer').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('progressContainer').classList.remove('hidden');
 
-            try {
-                const text = await file.text();
-                await parseNDJSON(text);
+            if (!append) {
+                state.rawData = [];
+                state.loadedFiles = [];
+            }
 
-                // Hide progress, show dashboard
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    // Update progress label with current file name
+                    document.getElementById('progressLabel').textContent =
+                        files.length > 1
+                            ? `File ${i + 1} of ${files.length}: ${file.name}`
+                            : file.name;
+
+                    const countBefore = state.rawData.length;
+                    const text = await file.text();
+                    await parseNDJSON(text);
+                    state.loadedFiles.push({ name: file.name, records: state.rawData.length - countBefore });
+                }
+
+                // Merge: same user_login + day can appear in overlapping exports
+                mergeRawData();
+
                 document.getElementById('progressContainer').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-
-                // Initialize dashboard
                 initializeDashboard();
             } catch (error) {
                 alert('Error parsing file: ' + error.message);
@@ -1066,23 +1086,18 @@
             }
         }
 
+        // Accumulates into state.rawData — caller is responsible for dedup when done
         async function parseNDJSON(text) {
             const lines = text.split('\n').filter(line => line.trim());
             const total = lines.length;
             let parsed = 0;
-            let errors = 0;
 
-            state.rawData = [];
-
-            // Process in chunks to avoid blocking UI
             for (let i = 0; i < lines.length; i += CONFIG.CHUNK_SIZE) {
                 const chunk = lines.slice(i, i + CONFIG.CHUNK_SIZE);
 
                 for (const line of chunk) {
                     try {
                         const record = JSON.parse(line);
-
-                        // Validate and normalize
                         if (record.user_login && record.day) {
                             state.rawData.push({
                                 user_login: record.user_login,
@@ -1100,32 +1115,58 @@
                                 model: record.model || 'unknown'
                             });
                         }
-                    } catch (e) {
-                        errors++;
-                    }
+                    } catch (e) { /* skip malformed lines */ }
                     parsed++;
                 }
 
-                // Update progress
                 const progress = (parsed / total) * 100;
                 document.getElementById('progressFill').style.width = progress + '%';
                 document.getElementById('progressText').textContent = Math.round(progress) + '%';
 
-                // Yield to browser
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
+        }
 
+        function mergeRawData() {
+            // Group by user_login + day. When two exports overlap, merge numerics
+            // by taking Math.max (same day's data should be identical; max is safe)
+            // and keep existing nested arrays (totals_by_* should also be identical).
+            const byKey = new Map();
+            for (const r of state.rawData) {
+                const key = r.user_login + '|' + r.day;
+                if (!byKey.has(key)) {
+                    byKey.set(key, { ...r });
+                    continue;
+                }
+                const e = byKey.get(key);
+                e.code_generation_activity_count  = Math.max(e.code_generation_activity_count  || 0, r.code_generation_activity_count  || 0);
+                e.code_acceptance_activity_count  = Math.max(e.code_acceptance_activity_count  || 0, r.code_acceptance_activity_count  || 0);
+                e.loc_added_sum                   = Math.max(e.loc_added_sum                   || 0, r.loc_added_sum                   || 0);
+                e.loc_deleted_sum                 = Math.max(e.loc_deleted_sum                 || 0, r.loc_deleted_sum                 || 0);
+                e.active_time_minutes             = Math.max(e.active_time_minutes             || 0, r.active_time_minutes             || 0);
+                // nested arrays: keep existing (same day = same breakdown)
+            }
+            state.rawData = [...byKey.values()];
         }
 
         // ============================================
         // DASHBOARD INITIALIZATION
         // ============================================
         function initializeDashboard() {
+            // Update loaded files indicator
+            const ind = document.getElementById('filesIndicator');
+            if (ind && state.loadedFiles.length > 0) {
+                const allDates = state.rawData.map(r => r.day).sort();
+                const rangeText = allDates.length
+                    ? `${allDates[0]} – ${allDates[allDates.length - 1]}`
+                    : '';
+                ind.textContent = `${state.loadedFiles.length} file${state.loadedFiles.length > 1 ? 's' : ''} · ${state.rawData.length.toLocaleString()} records${rangeText ? ' · ' + rangeText : ''}`;
+            }
+
             // Set default date range
             const dates = state.rawData.map(r => new Date(r.day));
             const maxDate = new Date(Math.max(...dates));
-            const minDate = new Date(maxDate);
-            minDate.setDate(minDate.getDate() - 30);
+            const minDate = new Date(Math.min(...dates));
 
             document.getElementById('dateFrom').value = minDate.toISOString().split('T')[0];
             document.getElementById('dateTo').value = maxDate.toISOString().split('T')[0];
@@ -2782,8 +2823,11 @@
 
         function resetDashboard() {
             state.rawData = [];
+            state.loadedFiles = [];
             state.filteredData = [];
             state.aggregatedData = {};
+            const ind = document.getElementById('filesIndicator');
+            if (ind) ind.textContent = '';
 
             // Destroy all charts
             Object.values(state.charts).forEach(chart => chart.destroy());
