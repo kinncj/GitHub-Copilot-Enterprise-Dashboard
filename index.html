@@ -580,6 +580,45 @@
                 A user with 500 generations and 8,000 lines is writing large files with few prompts.
                 Neither pattern is better — they reflect different working styles.
             </p>
+
+            <!-- Feature mode explainer -->
+            <div class="mt-4 pt-4" style="border-top:1px solid var(--border)">
+                <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="layers" class="w-4 h-4" style="color:var(--green)"></i>
+                    <span class="text-sm font-semibold" style="color:var(--text-1)">Feature Modes — what each one means</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2" style="font-size:0.75rem;line-height:1.6">
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Code Completion</span>
+                        <span style="color:var(--text-2)"> — passive inline suggestions (grey ghost text). Zero clicks required; Copilot predicts as you type.</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Edit Mode</span>
+                        <span style="color:var(--text-2)"> — you describe a change in plain English; Copilot edits across multiple files at once. You review a diff before accepting.</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Agent Mode</span>
+                        <span style="color:var(--text-2)"> — like Edit Mode but autonomous: Copilot plans, runs commands, reads errors, and iterates until the task is done. Least human intervention.</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Inline Chat</span>
+                        <span style="color:var(--text-2)"> — press ⌘I inside the editor to ask a focused question or request an edit without opening the sidebar.</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Chat · Ask</span>
+                        <span style="color:var(--text-2)"> — question-and-answer mode in the chat panel. Copilot responds but does not modify files automatically.</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" style="color:var(--text-1)">Chat · Agent / Plan</span>
+                        <span style="color:var(--text-2)"> — agent or planning mode accessed through the chat panel rather than the editor toolbar. Same autonomy as Agent Mode, different entry point.</span>
+                    </div>
+                </div>
+                <p class="text-xs mt-3" style="color:var(--text-2)">
+                    <strong style="color:var(--text-1)">Rule of thumb:</strong> Code Completion = fastest, least effort.
+                    Inline Chat = targeted questions. Edit Mode = multi-file rewrites with a review step.
+                    Agent Mode = hands-off automation. The more agentic the mode, the fewer acceptances are recorded — which is why a low acceptance rate is normal.
+                </p>
+            </div>
         </div>
 
         <!-- Configuration Info -->
@@ -1385,20 +1424,17 @@
                 </div>`;
 
             // Feature adoption — count unique users per feature
-            const featureMeta = {
-                code_completion: { label: 'Code Completion', icon: 'code-2',        desc: 'Inline AI suggestions accepted as you type' },
-                chat:            { label: 'Chat',            icon: 'message-square', desc: 'Copilot Chat panel conversations' },
-                inline_chat:     { label: 'Inline Chat',     icon: 'message-circle', desc: 'Ask / inline chat inside the editor' },
-                agent:           { label: 'Agent Mode',      icon: 'bot',            desc: 'Agentic multi-step tasks' }
-            };
             const featureUserCount = {};
             Object.values(byUser).forEach(u => {
                 (u.features || new Set()).forEach(f => {
                     featureUserCount[f] = (featureUserCount[f] || 0) + 1;
                 });
             });
-            const featureOrder = ['code_completion', 'chat', 'inline_chat', 'agent'];
-            Object.keys(featureUserCount).forEach(f => { if (!featureOrder.includes(f)) featureOrder.push(f); });
+            // Preferred display order; anything else appended alphabetically
+            const featureOrder = ['code_completion', 'agent_edit', 'agent', 'chat_panel_ask_mode',
+                                  'chat_panel_agent_mode', 'chat_panel_plan_mode', 'chat_inline',
+                                  'inline_chat', 'chat', 'chat_panel_custom_mode', 'chat_panel_unknown_mode'];
+            Object.keys(featureUserCount).sort().forEach(f => { if (!featureOrder.includes(f)) featureOrder.push(f); });
 
             const container = document.getElementById('kpiCards');
             container.innerHTML = `
@@ -1417,10 +1453,10 @@
                 <div>
                     ${sectionLabel('layers', 'Feature Adoption', `— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode`)}
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        ${featureOrder.map(featureKey => {
+                        ${featureOrder.filter(k => featureUserCount[k]).map(featureKey => {
                             const count = featureUserCount[featureKey] || 0;
                             const pct = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
-                            const meta = featureMeta[featureKey] || { label: featureKey, icon: 'activity', desc: '' };
+                            const meta = humanizeFeature(featureKey);
                             const accent = pct > 60 ? 'var(--green)' : pct > 25 ? 'var(--c-green)' : 'var(--text-2)';
                             return `
                                 <div class="kpi-card">
@@ -2036,14 +2072,31 @@
             state.charts.feature = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.map(([feature]) => feature),
+                    labels: data.map(([key]) => humanizeFeature(key).short),
                     datasets: [{
-                        label: 'Usage Count',
+                        label: 'Generations',
                         data: data.map(([_, v]) => v.generations),
                         backgroundColor: '#818cf8'
                     }]
                 },
-                options: getChartOptions('Feature usage breakdown')
+                options: {
+                    ...getChartOptions('Feature usage breakdown'),
+                    plugins: {
+                        ...getChartOptions().plugins,
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const key = data[items[0].dataIndex][0];
+                                    return humanizeFeature(key).label;
+                                },
+                                afterBody: (items) => {
+                                    const key = data[items[0].dataIndex][0];
+                                    return humanizeFeature(key).desc;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -2367,6 +2420,91 @@
         // ============================================
         // UTILITIES
         // ============================================
+
+        // Human-readable labels and descriptions for every Copilot feature key
+        // that can appear in totals_by_feature.
+        const FEATURE_LABELS = {
+            // ── Inline completions ───────────────────────────
+            code_completion: {
+                label: 'Code Completion',
+                short: 'Completions',
+                icon: 'code-2',
+                desc: 'Inline suggestions accepted while typing — the classic "grey ghost text" experience.'
+            },
+            // ── Chat panel modes (new panel-based UI) ────────
+            chat_panel_agent_mode: {
+                label: 'Chat · Agent',
+                short: 'Agent',
+                icon: 'bot',
+                desc: 'Agent mode via the chat panel — Copilot plans and executes multi-step tasks autonomously.'
+            },
+            chat_panel_ask_mode: {
+                label: 'Chat · Ask',
+                short: 'Ask',
+                icon: 'message-square',
+                desc: 'Ask mode in the chat panel — question-and-answer about code, no edits applied automatically.'
+            },
+            chat_panel_plan_mode: {
+                label: 'Chat · Plan',
+                short: 'Plan',
+                icon: 'list-checks',
+                desc: 'Plan mode in the chat panel — Copilot outlines a step-by-step plan before making changes.'
+            },
+            chat_panel_custom_mode: {
+                label: 'Chat · Custom',
+                short: 'Custom',
+                icon: 'sliders-horizontal',
+                desc: 'Custom-instructions mode — user-defined system prompts shape how the chat panel responds.'
+            },
+            chat_panel_unknown_mode: {
+                label: 'Chat · Other',
+                short: 'Other chat',
+                icon: 'help-circle',
+                desc: 'Chat panel interactions with an unrecognised mode flag — may include beta or preview features.'
+            },
+            // ── Edit & Agent (editor-level) ──────────────────
+            agent_edit: {
+                label: 'Edit Mode',
+                short: 'Edits',
+                icon: 'pencil-line',
+                desc: 'Copilot Edits — AI applies targeted changes across multiple files from a single instruction.'
+            },
+            agent: {
+                label: 'Agent Mode',
+                short: 'Agent',
+                icon: 'cpu',
+                desc: 'Agentic mode — Copilot autonomously reads, edits and runs code to complete an open-ended task.'
+            },
+            // ── Inline chat (editor shortcut) ────────────────
+            chat_inline: {
+                label: 'Inline Chat',
+                short: 'Inline',
+                icon: 'message-circle',
+                desc: 'Inline chat (⌘I / Ctrl+I) — ask Copilot a question or request an edit directly inside the editor.'
+            },
+            inline_chat: {
+                label: 'Inline Chat',
+                short: 'Inline',
+                icon: 'message-circle',
+                desc: 'Inline chat opened inside the editor — ask questions or request edits without leaving the file.'
+            },
+            // ── Legacy / general chat ────────────────────────
+            chat: {
+                label: 'Copilot Chat',
+                short: 'Chat',
+                icon: 'messages-square',
+                desc: 'General Copilot Chat conversations — questions, explanations, refactoring, and code generation.'
+            }
+        };
+
+        // Returns human-readable metadata for a feature key.
+        // Falls back to a capitalised, underscore-stripped version for unknown keys.
+        function humanizeFeature(key) {
+            if (FEATURE_LABELS[key]) return FEATURE_LABELS[key];
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return { label, short: label, icon: 'activity', desc: `Raw feature key: ${key}` };
+        }
+
         function formatNumber(num) {
             if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';

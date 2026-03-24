@@ -56,4 +56,8 @@ coverage/
 # AGPLv3 License
 LICENSE
 
-.playwright-mcp/
+# Sample / test data — never commit
+*.ndjson
+sample.*
+.playwright-mcp/*.ndjson
+*.json.ndjson
