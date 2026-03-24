@@ -234,6 +234,45 @@
             background: var(--surface-2);
         }
 
+        /* ── Info tooltips ──────────────────────────────── */
+        .info-tip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: help;
+            color: var(--text-2);
+            flex-shrink: 0;
+        }
+        .info-tip:hover { color: var(--green); }
+        .info-tip .tip-body {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            width: 240px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-1);
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.71rem;
+            line-height: 1.6;
+            z-index: 100;
+            transition: opacity 0.15s;
+            pointer-events: none;
+            font-weight: 400;
+            text-align: left;
+        }
+        .info-tip:hover .tip-body { visibility: visible; opacity: 1; }
+
+        /* ── Glossary / disclaimer panel ─────────────── */
+        .glossary-item {
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            background: var(--surface-2);
+        }
+
         /* ── Misc ───────────────────────────────────────── */
         .hidden { display: none; }
 
@@ -390,6 +429,56 @@
         <!-- KPI Cards -->
         <div id="kpiCards" class="space-y-6 mb-8"></div>
 
+        <!-- Metrics Glossary -->
+        <div class="card mb-6" style="border-left:3px solid var(--green)">
+            <div class="flex items-center gap-2 mb-4">
+                <i data-lucide="book-open" class="w-4 h-4" style="color:var(--green)"></i>
+                <h3 class="text-sm font-bold uppercase tracking-wide" style="color:var(--text-1)">Understanding Your Metrics</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glossary-item">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="zap" class="w-4 h-4" style="color:var(--green)"></i>
+                        <span class="text-sm font-semibold" style="color:var(--text-1)">Generations</span>
+                    </div>
+                    <p class="text-xs leading-relaxed" style="color:var(--text-2)">
+                        How many times Copilot was <strong style="color:var(--text-1)">triggered</strong> — code completions,
+                        inline suggestions, and agent mode prompts. Measures <strong style="color:var(--text-1)">usage intensity</strong>,
+                        not how much code was produced. Used by: Power Users insight, Activity Timeline, Top Users by Generations.
+                    </p>
+                </div>
+                <div class="glossary-item">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="file-code" class="w-4 h-4" style="color:#34d399"></i>
+                        <span class="text-sm font-semibold" style="color:var(--text-1)">Lines of Code</span>
+                    </div>
+                    <p class="text-xs leading-relaxed" style="color:var(--text-2)">
+                        Actual code <strong style="color:var(--text-1)">written or deleted</strong>
+                        (<code style="color:var(--green)">loc_added_sum</code> / <code style="color:var(--green)">loc_deleted_sum</code>).
+                        Measures output volume — varies by language, task type, and coding style.
+                        Used by: Top Users by Lines Added, LoC Trend, Value estimates.
+                    </p>
+                </div>
+                <div class="glossary-item">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="percent" class="w-4 h-4" style="color:#818cf8"></i>
+                        <span class="text-sm font-semibold" style="color:var(--text-1)">Acceptance Rate</span>
+                    </div>
+                    <p class="text-xs leading-relaxed" style="color:var(--text-2)">
+                        % of code completions that were <strong style="color:var(--text-1)">kept</strong>.
+                        ⚠ Treat with caution — ~94% of activity is agent mode, which does not record acceptances.
+                        A low rate is <strong style="color:var(--text-1)">not a red flag</strong>; it likely reflects agent usage, not rejected suggestions.
+                    </p>
+                </div>
+            </div>
+            <p class="text-xs mt-4 pt-3" style="color:var(--text-2);border-top:1px solid var(--border)">
+                <strong style="color:var(--text-1)">These metrics tell different stories.</strong>
+                A user with 5,000 generations and 200 lines is doing intensive chat/refactoring work.
+                A user with 500 generations and 8,000 lines is writing large files with few prompts.
+                Neither pattern is better — they reflect different working styles.
+            </p>
+        </div>
+
         <!-- Configuration Info -->
         <div class="card mb-6">
             <div class="flex items-start gap-3">
@@ -479,7 +568,10 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Daily Active Users</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Daily Active Users</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Unique users with at least one activity record per calendar day</p>
+                    </div>
                     <button onclick="exportDailyActiveUsersChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container-large">
@@ -496,7 +588,10 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Top 15 Users by Generations</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Top 15 Users by Generations</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Copilot triggers per user — completions + prompts, <strong style="color:var(--text-1)">not lines of code</strong></p>
+                    </div>
                     <button onclick="exportTopUsersChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container-large">
@@ -506,7 +601,10 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Top 15 Users by Lines Added</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Top 15 Users by Lines Added</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)"><code style="color:var(--green)">loc_added_sum</code> — code output volume, <strong style="color:var(--text-1)">not the same as generations</strong></p>
+                    </div>
                     <button onclick="exportTopUsersByLoCChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container-large">
@@ -521,10 +619,12 @@
                     <div>
                         <h3 class="text-lg font-semibold">User Efficiency Matrix</h3>
                         <p class="text-xs mt-0.5" style="color:var(--text-2)">
-                            <span style="color:#10b981">● ≥70% acceptance</span>
+                            X = generations, Y = acceptance rate — only users with ≥50 completions shown
                             <span class="mx-2" style="color:var(--border)">|</span>
+                            <span style="color:#10b981">● ≥70%</span>
+                            <span class="mx-1" style="color:var(--border)">·</span>
                             <span style="color:#818cf8">● normal</span>
-                            <span class="mx-2" style="color:var(--border)">|</span>
+                            <span class="mx-1" style="color:var(--border)">·</span>
                             <span style="color:#ef4444">● &lt;20%</span>
                         </p>
                     </div>
@@ -557,7 +657,10 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">IDE Market Share</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">IDE Market Share</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of total generations by editor (<code style="color:var(--green)">totals_by_ide</code>)</p>
+                    </div>
                     <button onclick="exportIDEChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container">
@@ -567,7 +670,10 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Language Distribution</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Language Distribution</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of generations by programming language (<code style="color:var(--green)">totals_by_language_feature</code>)</p>
+                    </div>
                     <button onclick="exportLanguageChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container">
@@ -577,7 +683,10 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Feature Usage</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Feature Usage</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Generations by Copilot feature: code_completion, chat, inline_chat, agent</p>
+                    </div>
                     <button onclick="exportFeatureChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container">
@@ -591,7 +700,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Acceptance Rate by IDE</h3>
-                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 generations</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 completions — agent mode skews rates low; low % ≠ low value</p>
                     </div>
                     <button onclick="exportIDEAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -604,7 +713,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h3 class="text-lg font-semibold">Acceptance Rate by Language</h3>
-                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 generations</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Min. 50 completions — agent mode skews rates low; low % ≠ low value</p>
                     </div>
                     <button onclick="exportLanguageAcceptanceChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
@@ -615,7 +724,10 @@
 
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Model Distribution</h3>
+                    <div>
+                        <h3 class="text-lg font-semibold">Model Distribution</h3>
+                        <p class="text-xs mt-0.5" style="color:var(--text-2)">Share of generations by AI model (<code style="color:var(--green)">totals_by_model_feature</code>)</p>
+                    </div>
                     <button onclick="exportModelChart()" class="btn-secondary text-xs">Export CSV</button>
                 </div>
                 <div class="chart-container">
@@ -987,7 +1099,8 @@
                         linesAdded: 0,
                         linesDeleted: 0,
                         activeTime: 0,
-                        days: new Set()
+                        days: new Set(),
+                        features: new Set()
                     };
                 }
                 const user = byUser[record.user_login];
@@ -997,6 +1110,11 @@
                 user.linesDeleted += record.loc_deleted_sum;
                 user.activeTime += record.active_time_minutes;
                 user.days.add(record.day);
+                record.totals_by_feature.forEach(f => {
+                    if ((f.code_generation_activity_count || 0) > 0 || (f.count || 0) > 0) {
+                        user.features.add(f.feature);
+                    }
+                });
             });
 
             // By day
@@ -1110,31 +1228,68 @@
             const valueNetLines = hoursSavedNetLines * config.BLENDED_RATE_PER_HOUR;
 
             const activityKpis = [
-                { label: 'Active Users', value: totalUsers, icon: 'users', color: 'indigo' },
-                { label: 'Total Generations', value: formatNumber(totalGenerations), icon: 'zap', color: 'yellow' },
-                { label: 'Chat Interactions', value: formatNumber(chatInteractions), icon: 'message-square', color: 'pink' },
-                { label: 'Active Days', value: activeDays, icon: 'calendar', color: 'orange' }
+                { label: 'Active Users', value: totalUsers, icon: 'users', color: 'indigo',
+                  tooltip: 'Unique user_login values with at least one activity record in the selected period.' },
+                { label: 'Total Generations', value: formatNumber(totalGenerations), icon: 'zap', color: 'yellow',
+                  tooltip: 'Sum of code_generation_activity_count — every Copilot trigger: completions, inline suggestions, and agent mode prompts. This is NOT lines of code.' },
+                { label: 'Chat Interactions', value: formatNumber(chatInteractions), icon: 'message-square', color: 'pink',
+                  tooltip: 'Messages sent via Copilot Chat and inline chat (totals_by_feature where feature = chat or inline_chat). Counted separately from code completions.' },
+                { label: 'Active Days', value: activeDays, icon: 'calendar', color: 'orange',
+                  tooltip: 'Number of distinct calendar days on which at least one user had any Copilot activity in the filtered dataset.' }
             ];
 
             const locKpis = [
-                { label: 'Lines Added', value: formatNumber(totalLinesAdded), icon: 'plus', color: 'emerald' },
-                { label: 'Net Lines', value: formatNumber(netLines), icon: 'git-commit', color: 'purple' },
-                { label: 'Value (Total Changed)', value: '$' + formatNumber(Math.round(valueTotal)), icon: 'dollar-sign', color: 'green', subtitle: 'Added + Deleted • ' + formatNumber(Math.round(hoursSavedTotal)) + ' hrs', description: `(Lines added + Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` },
-                { label: 'Value (Lines Added)', value: '$' + formatNumber(Math.round(valueLinesAdded)), icon: 'plus-circle', color: 'emerald', subtitle: 'New code only • ' + formatNumber(Math.round(hoursSavedLinesAdded)) + ' hrs', description: `Lines added ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` },
-                { label: 'Value (Net Lines)', value: '$' + formatNumber(Math.round(valueNetLines)), icon: 'trending-up', color: 'blue', subtitle: 'After deletions • ' + formatNumber(Math.round(hoursSavedNetLines)) + ' hrs', description: `(Lines added - Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr` }
+                { label: 'Lines Added', value: formatNumber(totalLinesAdded), icon: 'plus', color: 'emerald',
+                  tooltip: 'Sum of loc_added_sum — lines of code written with Copilot assistance. Varies by language and task; Python scripts produce far fewer lines than Java boilerplate.' },
+                { label: 'Net Lines', value: formatNumber(netLines), icon: 'git-commit', color: 'purple',
+                  tooltip: '(Lines added − lines deleted). Can be negative during refactoring sprints where Copilot helped remove more code than it wrote. Negative is not bad.' },
+                { label: 'Value (Total Changed)', value: '$' + formatNumber(Math.round(valueTotal)), icon: 'dollar-sign', color: 'green',
+                  subtitle: 'Added + Deleted • ' + formatNumber(Math.round(hoursSavedTotal)) + ' hrs',
+                  description: `(Lines added + Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr`,
+                  tooltip: 'GitHub\'s standard method. Counts both adding and deleting as saved effort, since both require developer time. Adjust the rates in the config below.' },
+                { label: 'Value (Lines Added)', value: '$' + formatNumber(Math.round(valueLinesAdded)), icon: 'plus-circle', color: 'emerald',
+                  subtitle: 'New code only • ' + formatNumber(Math.round(hoursSavedLinesAdded)) + ' hrs',
+                  description: `Lines added ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr`,
+                  tooltip: 'Conservative: only new lines count. Does not credit time saved by refactoring or deletions.' },
+                { label: 'Value (Net Lines)', value: '$' + formatNumber(Math.round(valueNetLines)), icon: 'trending-up', color: 'blue',
+                  subtitle: 'After deletions • ' + formatNumber(Math.round(hoursSavedNetLines)) + ' hrs',
+                  description: `(Lines added - Lines deleted) ÷ ${config.MANUAL_LINES_PER_HOUR} × $${config.BLENDED_RATE_PER_HOUR}/hr`,
+                  tooltip: 'Most conservative: penalises sessions where deletion outpaced addition. Use this as your lower-bound estimate.' }
             ];
+
+            const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
 
             const renderKpiCard = (kpi, accentColor) => `
                 <div class="kpi-card" style="border-left: 3px solid ${accentColor}">
                     <div class="flex justify-between items-start mb-2">
                         <span class="text-sm" style="color:var(--text-2)">${kpi.label}</span>
-                        <i data-lucide="${kpi.icon}" class="w-5 h-5 text-${kpi.color}-500"></i>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="${kpi.icon}" class="w-4 h-4 text-${kpi.color}-500"></i>
+                            ${kpi.tooltip ? `<span class="info-tip">${infoIcon}<span class="tip-body">${kpi.tooltip}</span></span>` : ''}
+                        </div>
                     </div>
                     ${kpi.description ? `<div class="text-xs mb-2" style="color:var(--text-2)">${kpi.description}</div>` : ''}
                     <div class="text-3xl font-bold" style="color:var(--text-1)">${kpi.value}</div>
                     ${kpi.subtitle ? `<div class="text-xs mt-1" style="color:var(--text-2)">${kpi.subtitle}</div>` : ''}
                 </div>
             `;
+
+            // Feature adoption — count unique users per feature
+            const featureMeta = {
+                code_completion: { label: 'Code Completion', icon: 'code-2',        desc: 'Inline AI suggestions accepted as you type' },
+                chat:            { label: 'Chat',            icon: 'message-square', desc: 'Copilot Chat panel conversations' },
+                inline_chat:     { label: 'Inline Chat',     icon: 'message-circle', desc: 'Ask / Inline chat directly inside the editor' },
+                agent:           { label: 'Agent Mode',      icon: 'bot',            desc: 'Agentic multi-step tasks (Copilot Workspace / agent mode)' }
+            };
+            const featureUserCount = {};
+            Object.values(byUser).forEach(u => {
+                (u.features || new Set()).forEach(f => {
+                    featureUserCount[f] = (featureUserCount[f] || 0) + 1;
+                });
+            });
+            const featureOrder = ['code_completion', 'chat', 'inline_chat', 'agent'];
+            // include any unlisted features found in the data
+            Object.keys(featureUserCount).forEach(f => { if (!featureOrder.includes(f)) featureOrder.push(f); });
 
             const container = document.getElementById('kpiCards');
             container.innerHTML = `
@@ -1156,6 +1311,36 @@
                     </div>
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                         ${locKpis.map(kpi => renderKpiCard(kpi, '#00C896')).join('')}
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #1e3e3a">
+                        <i data-lucide="layers" class="w-4 h-4" style="color:#00C896"></i>
+                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#e2f0ee">Feature Adoption</span>
+                        <span class="text-xs" style="color:#5a8a80">— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode</span>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${featureOrder.map(featureKey => {
+                            const count = featureUserCount[featureKey] || 0;
+                            const pct = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
+                            const meta = featureMeta[featureKey] || { label: featureKey, icon: 'activity', desc: '' };
+                            const barColor = pct > 60 ? '#00C896' : pct > 30 ? '#34d399' : '#5a8a80';
+                            return `
+                                <div class="kpi-card" style="border-left:3px solid ${barColor}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-sm" style="color:var(--text-2)">${meta.label}</span>
+                                        <i data-lucide="${meta.icon}" class="w-4 h-4" style="color:${barColor}"></i>
+                                    </div>
+                                    <div class="flex items-end gap-2">
+                                        <span class="text-3xl font-bold" style="color:var(--text-1)">${pct}%</span>
+                                        <span class="text-sm mb-1" style="color:var(--text-2)">${count} user${count !== 1 ? 's' : ''}</span>
+                                    </div>
+                                    <div class="mt-2 h-1 rounded-full" style="background:var(--border)">
+                                        <div class="h-1 rounded-full" style="width:${pct}%;background:${barColor};transition:width 0.6s ease"></div>
+                                    </div>
+                                    <div class="text-xs mt-1.5" style="color:var(--text-2)">${meta.desc}</div>
+                                </div>`;
+                        }).join('')}
                     </div>
                 </div>
             `;
@@ -1358,7 +1543,15 @@
                 },
                 options: {
                     ...getChartOptions('Top users by activity'),
-                    indexAxis: 'y'
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: { color: '#5a8a80' },
+                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            title: { display: true, text: 'Generations (Copilot triggers — NOT lines of code)', color: '#5a8a80', font: { size: 10 } }
+                        },
+                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                    }
                 }
             });
         }
@@ -1534,7 +1727,15 @@
                 },
                 options: {
                     ...getChartOptions('Top users by lines added'),
-                    indexAxis: 'y'
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: { color: '#5a8a80' },
+                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            title: { display: true, text: 'Lines of Code Added (loc_added_sum — NOT generations)', color: '#5a8a80', font: { size: 10 } }
+                        },
+                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                    }
                 }
             });
         }
@@ -1813,9 +2014,10 @@
             if (powerUsers.length > 0) {
                 insights.push({
                     title: 'Power Users',
+                    subtitle: `Top 10% by generations (Copilot triggers) — not lines of code`,
                     type: 'success',
                     icon: 'star',
-                    content: powerUsers.map(u => `${u.name} (${formatNumber(u.generations)})`).join(', ')
+                    content: powerUsers.map(u => `${u.name} (${formatNumber(u.generations)} gens)`).join(', ')
                 });
             }
 
@@ -1830,6 +2032,7 @@
             if (highEfficiency.length > 0) {
                 insights.push({
                     title: 'High Efficiency Users',
+                    subtitle: `≥70% acceptance rate with ≥${CONFIG.MIN_GENERATIONS_FOR_RATE} completions — excludes agent mode which doesn't track acceptances`,
                     type: 'success',
                     icon: 'trending-up',
                     content: highEfficiency.map(u => `${u.name} (${(u.rate * 100).toFixed(1)}%)`).join(', ')
@@ -1849,6 +2052,7 @@
             if (quotaExceeded.length > 0) {
                 insights.push({
                     title: 'Daily Quota Exceeded',
+                    subtitle: `Days where a single user exceeded ${CONFIG.DAILY_GENERATION_QUOTA} generations — adjust threshold in CONFIG`,
                     type: 'error',
                     icon: 'alert-circle',
                     content: quotaExceeded.join(', ')
@@ -1868,6 +2072,7 @@
 
                 insights.push({
                     title: 'Week-over-Week Trend',
+                    subtitle: `Comparing most recent 7 days vs prior 7 days, by total generations`,
                     type: change > 0 ? 'success' : change < -10 ? 'warning' : 'info',
                     icon: change > 0 ? 'trending-up' : 'trending-down',
                     content: `${change > 0 ? '+' : ''}${change.toFixed(1)}% change in generations`
@@ -1882,6 +2087,7 @@
             if (zeroAcceptance > 0) {
                 insights.push({
                     title: 'Zero Acceptance Days',
+                    subtitle: `Expected in agent mode — these records are not necessarily a concern`,
                     type: 'warning',
                     icon: 'x-circle',
                     content: `${zeroAcceptance} user-days with generations but no acceptances`
@@ -1895,8 +2101,9 @@
                     <div class="flex items-start gap-3">
                         <i data-lucide="${insight.icon}" class="w-5 h-5 text-${insight.type === 'success' ? 'emerald' : insight.type === 'warning' ? 'amber' : insight.type === 'error' ? 'red' : 'blue'}-500 flex-shrink-0 mt-1"></i>
                         <div>
-                            <h4 class="font-semibold mb-1">${insight.title}</h4>
-                            <p class="text-sm" style="color:var(--text-2)">${insight.content}</p>
+                            <h4 class="font-semibold mb-0.5">${insight.title}</h4>
+                            ${insight.subtitle ? `<p class="text-xs mb-1.5" style="color:var(--text-2);font-style:italic">${insight.subtitle}</p>` : ''}
+                            <p class="text-sm" style="color:var(--text-1)">${insight.content}</p>
                         </div>
                     </div>
                 </div>
