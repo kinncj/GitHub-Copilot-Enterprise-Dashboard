@@ -1,0 +1,24 @@
+{
+  "name": "github-copilot-enterprise-dashboard",
+  "version": "1.0.0",
+  "description": "Analytics dashboard for GitHub Copilot Enterprise usage data",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:all": "vitest run && playwright test",
+    "lint": "eslint app common tests --ext .js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "eslint": "^8.57.0",
+    "vite": "^5.1.0",
+    "vitest": "^1.2.0"
+  }
+}
