@@ -14,142 +14,196 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
     <style>
+        /* ── Design tokens ──────────────────────────────── */
         :root {
-            --bg:          #0c1e1c;   /* page background   */
-            --surface:     #112a27;   /* card surface      */
-            --surface-2:   #162f2c;   /* raised / thead    */
-            --border:      #1e3e3a;   /* card borders      */
+            --bg:          #080808;
+            --surface:     #111111;
+            --surface-2:   #1a1a1a;
+            --border:      rgba(255,255,255,0.07);
+            --border-2:    rgba(255,255,255,0.14);
             --green:       #00C896;
-            --green-dark:  #00a87a;
-            --text-1:      #e2f0ee;   /* primary text      */
-            --text-2:      #5a8a80;   /* secondary / muted */
-            --text-inv:    #0c1e1c;   /* text on green bg  */
-            --amber:       #fbbf24;
-            --red:         #f87171;
+            --green-dark:  #009e78;
+            --green-glow:  rgba(0,200,150,0.08);
+            --text-1:      #f5f5f5;
+            --text-2:      rgba(255,255,255,0.38);
+            --text-3:      rgba(255,255,255,0.18);
+            --text-inv:    #040404;
+            --amber:       #f59e0b;
+            --red:         #ef4444;
+            --r:           14px;
+            --r-sm:        8px;
+            --r-xl:        22px;
             /* chart palette */
             --c-indigo:    #818cf8;
             --c-green:     #34d399;
-            --c-amber:     #fbbf24;
-            --c-red:       #f87171;
+            --c-amber:     #f59e0b;
+            --c-red:       #ef4444;
             --c-blue:      #60a5fa;
             --c-purple:    #a78bfa;
         }
 
+        /* ── Base ───────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
             background: var(--bg);
             color: var(--text-1);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
         }
 
-        /* ── Cards ─────────────────────────────────────── */
+        /* Ambient top glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 320px;
+            background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(0,200,150,0.07) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Cards ──────────────────────────────────────── */
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: var(--r);
             padding: 1.5rem;
         }
 
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.5rem;
-            transition: transform 0.2s, border-color 0.2s;
+            border-radius: var(--r);
+            padding: 1.5rem 1.75rem;
+            transition: border-color 0.25s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background: radial-gradient(ellipse at 30% -20%, rgba(0,200,150,0.1) 0%, transparent 65%);
+            transition: opacity 0.35s;
+            pointer-events: none;
         }
 
         .kpi-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 200, 150, 0.35);
+            border-color: var(--border-2);
+            transform: translateY(-1px);
         }
+        .kpi-card:hover::after { opacity: 1; }
 
-        /* ── Upload zone ────────────────────────────────── */
+        /* ── Upload zone ─────────────────────────────────── */
         .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
             background: var(--surface);
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% -20%, rgba(0,200,150,0.06) 0%, transparent 65%);
+            pointer-events: none;
         }
 
         .upload-zone.drag-over {
-            border-color: var(--green);
-            background: rgba(0, 200, 150, 0.05);
+            border-color: rgba(0,200,150,0.5);
+            background: rgba(0,200,150,0.03);
         }
 
-        /* ── Buttons ────────────────────────────────────── */
+        /* ── Buttons ─────────────────────────────────────── */
         .btn-primary {
             background: var(--green);
             color: var(--text-inv);
-            padding: 0.65rem 1.5rem;
-            border-radius: 50px;
+            padding: 0.55rem 1.4rem;
+            border-radius: 9999px;
             font-weight: 600;
-            transition: background 0.2s, transform 0.15s;
+            font-size: 0.875rem;
+            letter-spacing: -0.01em;
+            transition: opacity 0.15s, transform 0.15s;
             display: inline-flex;
             align-items: center;
+            gap: 0.4rem;
+            border: none;
+            cursor: pointer;
         }
 
-        .btn-primary:hover {
-            background: var(--green-dark);
-            transform: scale(1.02);
-        }
+        .btn-primary:hover { opacity: 0.85; transform: scale(1.02); }
 
         .btn-secondary {
             background: transparent;
             color: var(--text-2);
-            padding: 0.3rem 0.85rem;
-            border-radius: 50px;
+            padding: 0.45rem 0.9rem;
+            border-radius: 9999px;
             font-weight: 500;
-            border: 1.5px solid var(--border);
-            transition: border-color 0.2s, color 0.2s;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
             display: inline-flex;
             align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
         }
 
         .btn-secondary:hover {
-            border-color: var(--green);
-            color: var(--green);
+            border-color: var(--border-2);
+            color: var(--text-1);
+            background: rgba(255,255,255,0.03);
         }
 
-        /* ── Badges ─────────────────────────────────────── */
+        /* ── Badges ──────────────────────────────────────── */
         .badge {
-            padding: 0.25rem 0.75rem;
+            padding: 0.2rem 0.65rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
+            letter-spacing: 0.02em;
         }
 
-        .badge-success { background: rgba(0, 200, 150, 0.12);  color: var(--green); }
-        .badge-warning { background: rgba(251, 191, 36, 0.12); color: var(--amber); }
-        .badge-error   { background: rgba(248, 113, 113, 0.12); color: var(--red); }
-        .badge-info    { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
+        .badge-success { background: rgba(0,200,150,0.1);   color: var(--green); }
+        .badge-warning { background: rgba(245,158,11,0.1);  color: var(--amber); }
+        .badge-error   { background: rgba(239,68,68,0.1);   color: var(--red); }
+        .badge-info    { background: rgba(96,165,250,0.1);  color: #60a5fa; }
 
-        /* ── Charts ─────────────────────────────────────── */
+        /* ── Charts ──────────────────────────────────────── */
         .chart-container       { position: relative; height: 300px; }
         .chart-container-large { position: relative; height: 400px; }
 
-        /* ── Progress bar ───────────────────────────────── */
+        /* ── Progress bar ─────────────────────────────────── */
         .progress-bar {
-            height: 6px;
+            height: 2px;
             background: var(--border);
-            border-radius: 3px;
+            border-radius: 9999px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--surface-2), var(--green));
+            background: var(--green);
             transition: width 0.3s;
         }
 
-        /* ── Table ──────────────────────────────────────── */
+        /* ── Table ───────────────────────────────────────── */
         .table-container {
             max-height: 600px;
             overflow: auto;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
         }
 
@@ -163,52 +217,53 @@
         }
 
         th {
-            padding: 0.85rem 1rem;
+            padding: 0.75rem 1rem;
             text-align: left;
             font-weight: 600;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             color: var(--text-2);
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             user-select: none;
         }
 
-        th:hover { color: var(--green); }
+        th:hover { color: var(--text-1); }
 
         td {
-            padding: 0.7rem 1rem;
+            padding: 0.65rem 1rem;
             border-bottom: 1px solid var(--border);
-            font-size: 0.875rem;
+            font-size: 0.855rem;
             color: var(--text-2);
         }
 
-        tbody tr:hover { background: rgba(0, 200, 150, 0.04); }
+        tbody tr:hover { background: rgba(255,255,255,0.025); }
         tbody tr:last-child td { border-bottom: none; }
 
-        /* ── Form inputs ────────────────────────────────── */
+        /* ── Form inputs ─────────────────────────────────── */
         .filter-group { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
 
         select, input[type="date"], input[type="text"], input[type="number"] {
             background: var(--bg);
-            border: 1.5px solid var(--border);
+            border: 1px solid var(--border);
             color: var(--text-1);
             padding: 0.45rem 0.9rem;
-            border-radius: 8px;
+            border-radius: var(--r-sm);
             transition: border-color 0.2s, box-shadow 0.2s;
             font-family: inherit;
+            font-size: 0.875rem;
         }
 
         select:focus, input:focus {
             outline: none;
-            border-color: var(--green);
-            box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.12);
+            border-color: rgba(0,200,150,0.5);
+            box-shadow: 0 0 0 2px rgba(0,200,150,0.08);
         }
 
-        select option { background: var(--surface); color: var(--text-1); }
+        select option { background: var(--surface-2); color: var(--text-1); }
 
-        /* ── Section dividers ───────────────────────────── */
+        /* ── Section headers ─────────────────────────────── */
         .section-header {
             display: flex;
             align-items: center;
@@ -220,139 +275,187 @@
         }
 
         .section-header span {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             color: var(--text-2);
         }
 
         .section-header i { color: var(--green) !important; }
 
-        /* ── Insight cards override ──────────────────────── */
-        #insightsContainer .card {
-            background: var(--surface-2);
-        }
+        /* ── Insight cards ───────────────────────────────── */
+        #insightsContainer .card { background: var(--surface-2); }
 
-        /* ── Info tooltips ──────────────────────────────── */
+        /* ── Info tooltips ───────────────────────────────── */
         .info-tip {
             position: relative;
             display: inline-flex;
             align-items: center;
             cursor: help;
-            color: var(--text-2);
+            color: var(--text-3);
             flex-shrink: 0;
         }
-        .info-tip:hover { color: var(--green); }
+        .info-tip:hover { color: var(--text-2); }
         .info-tip .tip-body {
             visibility: hidden;
             opacity: 0;
             position: absolute;
             bottom: calc(100% + 8px);
             right: 0;
-            width: 240px;
+            width: 260px;
             background: var(--surface-2);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-2);
             color: var(--text-1);
-            padding: 0.6rem 0.8rem;
+            padding: 0.7rem 0.9rem;
             border-radius: 10px;
-            font-size: 0.71rem;
-            line-height: 1.6;
+            font-size: 0.7rem;
+            line-height: 1.65;
             z-index: 100;
             transition: opacity 0.15s;
             pointer-events: none;
             font-weight: 400;
             text-align: left;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
         }
         .info-tip:hover .tip-body { visibility: visible; opacity: 1; }
 
-        /* ── Glossary / disclaimer panel ─────────────── */
+        /* ── Glossary panel ──────────────────────────────── */
         .glossary-item {
-            padding: 0.85rem 1rem;
-            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            border-radius: var(--r-sm);
             background: var(--surface-2);
+            border: 1px solid var(--border);
         }
 
-        /* ── Misc ───────────────────────────────────────── */
-        .hidden { display: none; }
+        /* ── Dashboard nav bar ───────────────────────────── */
+        .dash-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Upload page typography ──────────────────────── */
+        .upload-brand {
+            font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+            font-size: clamp(2.8rem, 7vw, 5rem);
+            line-height: 1.04;
+            letter-spacing: -0.02em;
+            color: var(--text-1);
+        }
+
+        .upload-brand em {
+            font-style: italic;
+            color: var(--green);
+        }
+
+        /* ── Animations ──────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up   { animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .fade-up-2 { animation-delay: 0.09s; }
+        .fade-up-3 { animation-delay: 0.17s; }
+        .fade-up-4 { animation-delay: 0.25s; }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50%       { opacity: 0.5; }
+            50%       { opacity: 0.45; }
         }
-        .loading { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .loading { animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        /* ── Misc ────────────────────────────────────────── */
+        .hidden { display: none; }
     </style>
 </head>
-<body class="p-4">
+<body>
     <!-- Upload Zone (Empty State) -->
-    <div id="uploadContainer" class="min-h-screen flex flex-col items-center justify-center">
-        <!-- Nav banner -->
-        <div class="w-full max-w-2xl mb-6 rounded-2xl overflow-hidden" style="background:linear-gradient(135deg,#0c2622 0%,#0f3530 100%)">
-            <div class="px-8 py-5 flex items-center gap-3">
-                <i data-lucide="bar-chart-2" class="w-6 h-6" style="color:#00C896"></i>
-                <span class="text-lg font-bold" style="color:var(--text-1)">GitHub Copilot Enterprise Analytics</span>
-            </div>
-        </div>
-        <div class="upload-zone p-12 text-center max-w-2xl w-full">
-            <div class="mb-6">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-2" style="background:rgba(0,200,150,0.1)">
-                    <i data-lucide="upload-cloud" class="w-10 h-10" style="color:#00C896"></i>
+    <div id="uploadContainer" class="min-h-screen flex flex-col" style="position:relative;z-index:1">
+        <!-- Minimal top nav -->
+        <nav style="position:fixed;top:0;left:0;right:0;z-index:50;height:52px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.82);backdrop-filter:blur(20px);display:flex;align-items:center;padding:0 1.5rem">
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                <div style="width:28px;height:28px;border-radius:8px;background:var(--green-glow);border:1px solid rgba(0,200,150,0.2);display:flex;align-items:center;justify-content:center">
+                    <i data-lucide="bar-chart-2" style="width:14px;height:14px;color:var(--green)"></i>
                 </div>
+                <span style="font-size:0.875rem;font-weight:600;letter-spacing:-0.015em;color:var(--text-1)">Copilot Analytics</span>
             </div>
-            <h2 class="text-2xl font-bold mb-2" style="color:var(--text-1)">Upload your usage data</h2>
-            <p class="mb-8" style="color:var(--text-2)">Drop an NDJSON export from GitHub Copilot Enterprise to get started</p>
+        </nav>
 
-            <input type="file" id="fileInput" accept=".ndjson,.json" class="hidden">
-            <button onclick="document.getElementById('fileInput').click()" class="btn-primary">
-                <i data-lucide="file-plus" class="inline w-5 h-5 mr-2"></i>
-                Select NDJSON File
-            </button>
+        <!-- Hero content -->
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 1.5rem 3rem">
+            <div style="width:100%;max-width:480px">
+                <!-- Headline -->
+                <h1 class="upload-brand fade-up" style="margin-bottom:1.25rem">
+                    Understand your<br>team's <em>Copilot</em><br>usage.
+                </h1>
+                <p class="fade-up fade-up-2" style="color:var(--text-2);font-size:1rem;line-height:1.65;margin-bottom:2.5rem">
+                    Upload a GitHub Copilot Enterprise NDJSON export<br>to explore team activity, feature adoption, and ROI.
+                </p>
 
-            <p class="text-sm mt-4" style="color:var(--text-2)">or drag and drop your file here</p>
+                <!-- Upload box -->
+                <div class="upload-zone fade-up fade-up-3" style="padding:2.5rem 2rem;text-align:center">
+                    <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:1.25rem">
+                        <i data-lucide="upload-cloud" style="width:24px;height:24px;color:var(--green)"></i>
+                    </div>
+                    <p style="font-size:0.9rem;font-weight:500;color:var(--text-1);margin-bottom:0.35rem">Drop your NDJSON file here</p>
+                    <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:1.5rem">or click to browse</p>
 
-            <div class="mt-8 text-left p-4 rounded-xl" style="background:var(--surface-2);border:1px solid var(--border)">
-                <p class="text-xs font-semibold mb-2" style="color:var(--text-2)">Supported format:</p>
-                <code class="text-xs" style="color:var(--green)">
-                    {"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150,...}
-                </code>
+                    <input type="file" id="fileInput" accept=".ndjson,.json" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="btn-primary">
+                        <i data-lucide="file-plus" style="width:15px;height:15px"></i>
+                        Select File
+                    </button>
+                </div>
+
+                <!-- Format hint -->
+                <div class="fade-up fade-up-4" style="margin-top:1rem;padding:0.9rem 1.1rem;border-radius:10px;background:var(--surface);border:1px solid var(--border)">
+                    <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-3);margin-bottom:0.4rem">Expected format</p>
+                    <code style="font-size:0.73rem;font-family:ui-monospace,monospace;color:var(--green);word-break:break-all">{"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150,...}</code>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Progress Indicator -->
-    <div id="progressContainer" class="hidden fixed top-0 left-0 right-0 z-50 p-4" style="background:var(--surface-2)">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex justify-between mb-2">
-                <span class="text-sm" style="color:var(--text-1)">Processing NDJSON file...</span>
-                <span class="text-sm" id="progressText" style="color:var(--green)">0%</span>
+    <div id="progressContainer" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:50;padding:0.6rem 1.5rem;background:rgba(8,8,8,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)">
+        <div style="max-width:1280px;margin:0 auto">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+                <span style="font-size:0.8rem;color:var(--text-2)">Processing NDJSON…</span>
+                <span id="progressText" style="font-size:0.8rem;font-weight:600;color:var(--green)">0%</span>
             </div>
             <div class="progress-bar">
-                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                <div id="progressFill" class="progress-fill" style="width:0%"></div>
             </div>
         </div>
     </div>
 
     <!-- Main Dashboard -->
-    <div id="dashboard" class="hidden max-w-7xl mx-auto">
+    <div id="dashboard" class="hidden" style="position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:1.5rem 1.5rem 3rem">
         <!-- Header -->
         <header class="mb-8">
-            <!-- Brand banner -->
-            <div class="rounded-2xl overflow-hidden mb-6" style="background:linear-gradient(135deg,#0c2622 0%,#0f3530 100%)">
-                <div class="px-8 py-5 flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="bar-chart-2" class="w-6 h-6" style="color:#00C896"></i>
-                        <span class="text-xl font-bold" style="color:var(--text-1)">GitHub Copilot Enterprise Analytics</span>
+            <!-- Clean nav bar -->
+            <div class="dash-nav">
+                <div style="display:flex;align-items:center;gap:0.6rem">
+                    <div style="width:32px;height:32px;border-radius:9px;background:var(--green-glow);border:1px solid rgba(0,200,150,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i data-lucide="bar-chart-2" style="width:15px;height:15px;color:var(--green)"></i>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="exportData()" class="btn-primary text-sm">
-                            <i data-lucide="download" class="inline w-4 h-4 mr-1"></i>
-                            Export CSV
-                        </button>
-                        <button onclick="resetDashboard()" class="btn-secondary text-sm" style="color:var(--text-1);border-color:rgba(255,255,255,0.2)">
-                            <i data-lucide="refresh-cw" class="inline w-4 h-4 mr-1"></i>
-                            Reset
-                        </button>
-                    </div>
+                    <span style="font-size:0.95rem;font-weight:600;letter-spacing:-0.018em;color:var(--text-1)">Copilot Analytics</span>
+                    <span style="font-size:0.68rem;font-weight:600;padding:0.15rem 0.6rem;border-radius:9999px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);letter-spacing:0.04em;text-transform:uppercase">Enterprise</span>
+                </div>
+                <div style="display:flex;gap:0.5rem">
+                    <button onclick="exportData()" class="btn-secondary">
+                        <i data-lucide="download" style="width:13px;height:13px"></i>
+                        Export CSV
+                    </button>
+                    <button onclick="resetDashboard()" class="btn-secondary">
+                        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i>
+                        Reset
+                    </button>
                 </div>
             </div>
 
@@ -760,9 +863,9 @@
                         <tr>
                             <th rowspan="2" onclick="sortTable('user')" style="vertical-align:bottom">User <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
                             <th rowspan="2" onclick="sortTable('days')" style="vertical-align:bottom">Days Active <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
-                            <th style="text-align:center;color:#00C896;background:rgba(0,200,150,0.08);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #1e3e3a;padding:0.4rem 1rem">⚡ Copilot Activity</th>
-                            <th colspan="3" style="text-align:center;color:#5a8a80;background:rgba(255,255,255,0.02);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #1e3e3a;padding:0.4rem 1rem">Lines of Code</th>
-                            <th colspan="3" style="text-align:center;color:#5a8a80;background:rgba(255,255,255,0.02);font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid #1e3e3a;padding:0.4rem 1rem">Estimated Value</th>
+                            <th style="text-align:center;color:var(--green);background:rgba(0,200,150,0.06);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--border);padding:0.4rem 1rem">⚡ Copilot Activity</th>
+                            <th colspan="3" style="text-align:center;color:var(--text-2);background:rgba(255,255,255,0.015);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--border);padding:0.4rem 1rem">Lines of Code</th>
+                            <th colspan="3" style="text-align:center;color:var(--text-2);background:rgba(255,255,255,0.015);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--border);padding:0.4rem 1rem">Estimated Value</th>
                         </tr>
                         <tr>
                             <th onclick="sortTable('generations')" style="background:rgba(99,102,241,0.06)">Generations <i data-lucide="arrow-up-down" class="inline w-4 h-4"></i></th>
@@ -1257,29 +1360,36 @@
                   tooltip: 'Most conservative: penalises sessions where deletion outpaced addition. Use this as your lower-bound estimate.' }
             ];
 
-            const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
+            const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
 
-            const renderKpiCard = (kpi, accentColor) => `
-                <div class="kpi-card" style="border-left: 3px solid ${accentColor}">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-sm" style="color:var(--text-2)">${kpi.label}</span>
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="${kpi.icon}" class="w-4 h-4 text-${kpi.color}-500"></i>
+            const renderKpiCard = (kpi) => `
+                <div class="kpi-card">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem">
+                        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-2)">${kpi.label}</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem">
+                            <i data-lucide="${kpi.icon}" style="width:14px;height:14px;color:var(--text-3)"></i>
                             ${kpi.tooltip ? `<span class="info-tip">${infoIcon}<span class="tip-body">${kpi.tooltip}</span></span>` : ''}
                         </div>
                     </div>
-                    ${kpi.description ? `<div class="text-xs mb-2" style="color:var(--text-2)">${kpi.description}</div>` : ''}
-                    <div class="text-3xl font-bold" style="color:var(--text-1)">${kpi.value}</div>
-                    ${kpi.subtitle ? `<div class="text-xs mt-1" style="color:var(--text-2)">${kpi.subtitle}</div>` : ''}
+                    ${kpi.description ? `<div style="font-size:0.68rem;margin-bottom:0.5rem;color:var(--text-2)">${kpi.description}</div>` : ''}
+                    <div style="font-size:2rem;font-weight:700;letter-spacing:-0.03em;color:var(--text-1);line-height:1.1">${kpi.value}</div>
+                    ${kpi.subtitle ? `<div style="font-size:0.72rem;margin-top:0.4rem;color:var(--text-2)">${kpi.subtitle}</div>` : ''}
                 </div>
             `;
+
+            const sectionLabel = (icon, title, sub) => `
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">
+                    <i data-lucide="${icon}" style="width:14px;height:14px;color:var(--green)"></i>
+                    <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-1)">${title}</span>
+                    <span style="font-size:0.72rem;color:var(--text-2)">${sub}</span>
+                </div>`;
 
             // Feature adoption — count unique users per feature
             const featureMeta = {
                 code_completion: { label: 'Code Completion', icon: 'code-2',        desc: 'Inline AI suggestions accepted as you type' },
                 chat:            { label: 'Chat',            icon: 'message-square', desc: 'Copilot Chat panel conversations' },
-                inline_chat:     { label: 'Inline Chat',     icon: 'message-circle', desc: 'Ask / Inline chat directly inside the editor' },
-                agent:           { label: 'Agent Mode',      icon: 'bot',            desc: 'Agentic multi-step tasks (Copilot Workspace / agent mode)' }
+                inline_chat:     { label: 'Inline Chat',     icon: 'message-circle', desc: 'Ask / inline chat inside the editor' },
+                agent:           { label: 'Agent Mode',      icon: 'bot',            desc: 'Agentic multi-step tasks' }
             };
             const featureUserCount = {};
             Object.values(byUser).forEach(u => {
@@ -1288,57 +1398,44 @@
                 });
             });
             const featureOrder = ['code_completion', 'chat', 'inline_chat', 'agent'];
-            // include any unlisted features found in the data
             Object.keys(featureUserCount).forEach(f => { if (!featureOrder.includes(f)) featureOrder.push(f); });
 
             const container = document.getElementById('kpiCards');
             container.innerHTML = `
                 <div>
-                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #1e3e3a">
-                        <i data-lucide="zap" class="w-4 h-4" style="color:#00C896"></i>
-                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#e2f0ee">Copilot Activity</span>
-                        <span class="text-xs" style="color:#5a8a80">— prompts, completions &amp; usage</span>
-                    </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        ${activityKpis.map(kpi => renderKpiCard(kpi, '#00C896')).join('')}
+                    ${sectionLabel('zap', 'Copilot Activity', '— prompts, completions &amp; usage')}
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        ${activityKpis.map(kpi => renderKpiCard(kpi)).join('')}
                     </div>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #1e3e3a">
-                        <i data-lucide="file-code" class="w-4 h-4" style="color:#00C896"></i>
-                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#e2f0ee">Lines of Code</span>
-                        <span class="text-xs" style="color:#5a8a80">— written output &amp; estimated value</span>
-                    </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                        ${locKpis.map(kpi => renderKpiCard(kpi, '#00C896')).join('')}
+                    ${sectionLabel('file-code', 'Lines of Code', '— written output &amp; estimated value')}
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                        ${locKpis.map(kpi => renderKpiCard(kpi)).join('')}
                     </div>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 mb-3 pb-2" style="border-bottom:1px solid #1e3e3a">
-                        <i data-lucide="layers" class="w-4 h-4" style="color:#00C896"></i>
-                        <span class="text-sm font-bold uppercase tracking-wide" style="color:#e2f0ee">Feature Adoption</span>
-                        <span class="text-xs" style="color:#5a8a80">— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode</span>
-                    </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    ${sectionLabel('layers', 'Feature Adoption', `— of ${totalUsers} active user${totalUsers !== 1 ? 's' : ''}, how many used each mode`)}
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         ${featureOrder.map(featureKey => {
                             const count = featureUserCount[featureKey] || 0;
                             const pct = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
                             const meta = featureMeta[featureKey] || { label: featureKey, icon: 'activity', desc: '' };
-                            const barColor = pct > 60 ? '#00C896' : pct > 30 ? '#34d399' : '#5a8a80';
+                            const accent = pct > 60 ? 'var(--green)' : pct > 25 ? 'var(--c-green)' : 'var(--text-2)';
                             return `
-                                <div class="kpi-card" style="border-left:3px solid ${barColor}">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span class="text-sm" style="color:var(--text-2)">${meta.label}</span>
-                                        <i data-lucide="${meta.icon}" class="w-4 h-4" style="color:${barColor}"></i>
+                                <div class="kpi-card">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+                                        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-2)">${meta.label}</span>
+                                        <i data-lucide="${meta.icon}" style="width:13px;height:13px;color:var(--text-3)"></i>
                                     </div>
-                                    <div class="flex items-end gap-2">
-                                        <span class="text-3xl font-bold" style="color:var(--text-1)">${pct}%</span>
-                                        <span class="text-sm mb-1" style="color:var(--text-2)">${count} user${count !== 1 ? 's' : ''}</span>
+                                    <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.6rem">
+                                        <span style="font-size:2rem;font-weight:700;letter-spacing:-0.03em;color:${accent};line-height:1">${pct}%</span>
+                                        <span style="font-size:0.75rem;color:var(--text-2)">${count} user${count !== 1 ? 's' : ''}</span>
                                     </div>
-                                    <div class="mt-2 h-1 rounded-full" style="background:var(--border)">
-                                        <div class="h-1 rounded-full" style="width:${pct}%;background:${barColor};transition:width 0.6s ease"></div>
+                                    <div style="height:2px;background:var(--border);border-radius:9999px;overflow:hidden">
+                                        <div style="height:100%;width:${pct}%;background:${accent};transition:width 0.6s ease;border-radius:9999px"></div>
                                     </div>
-                                    <div class="text-xs mt-1.5" style="color:var(--text-2)">${meta.desc}</div>
+                                    <div style="font-size:0.7rem;margin-top:0.5rem;color:var(--text-2)">${meta.desc}</div>
                                 </div>`;
                         }).join('')}
                     </div>
@@ -1426,20 +1523,20 @@
                         yActivity: {
                             type: 'linear',
                             position: 'left',
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             title: { display: true, text: 'Generations / Chat', color: '#818cf8', font: { size: 11 } }
                         },
                         yLines: {
                             type: 'linear',
                             position: 'right',
-                            ticks: { color: '#5a8a80' },
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
                             grid: { drawOnChartArea: false },
                             title: { display: true, text: 'Lines of Code', color: '#10b981', font: { size: 11 } }
                         },
                         x: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' }
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' }
                         }
                     }
                 }
@@ -1498,14 +1595,14 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#5a8a80', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0,
-                            title: { display: true, text: 'Acceptance Rate (%)', color: '#5a8a80', font: { size: 11 } }
+                            title: { display: true, text: 'Acceptance Rate (%)', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         },
                         x: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' }
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' }
                         }
                     }
                 }
@@ -1546,11 +1643,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
-                            title: { display: true, text: 'Generations (Copilot triggers — NOT lines of code)', color: '#5a8a80', font: { size: 10 } }
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            title: { display: true, text: 'Generations (Copilot triggers — NOT lines of code)', color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
                         },
-                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        y: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1602,15 +1699,15 @@
                     },
                     scales: {
                         x: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
-                            title: { display: true, text: 'Total Generations', color: '#5a8a80', font: { size: 11 } }
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            title: { display: true, text: 'Total Generations', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         },
                         y: {
-                            ticks: { color: '#5a8a80', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0,
-                            title: { display: true, text: 'Acceptance Rate (%)', color: '#5a8a80', font: { size: 11 } }
+                            title: { display: true, text: 'Acceptance Rate (%)', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         }
                     }
                 }
@@ -1655,12 +1752,12 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0,
-                            title: { display: true, text: 'Lines of Code', color: '#5a8a80', font: { size: 11 } }
+                            title: { display: true, text: 'Lines of Code', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        x: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1693,12 +1790,12 @@
                     ...baseOpts,
                     scales: {
                         y: {
-                            ticks: { color: '#5a8a80', precision: 0 },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', precision: 0 },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0,
-                            title: { display: true, text: 'Active Users', color: '#5a8a80', font: { size: 11 } }
+                            title: { display: true, text: 'Active Users', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        x: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1730,11 +1827,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#5a8a80' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
-                            title: { display: true, text: 'Lines of Code Added (loc_added_sum — NOT generations)', color: '#5a8a80', font: { size: 10 } }
+                            ticks: { color: 'rgba(255,255,255,0.3)' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            title: { display: true, text: 'Lines of Code Added (loc_added_sum — NOT generations)', color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
                         },
-                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        y: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1779,12 +1876,12 @@
                     ...getChartOptions('User engagement distribution'),
                     scales: {
                         y: {
-                            ticks: { color: '#5a8a80', precision: 0 },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', precision: 0 },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0,
-                            title: { display: true, text: 'Number of Users', color: '#5a8a80', font: { size: 11 } }
+                            title: { display: true, text: 'Number of Users', color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
                         },
-                        x: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        x: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1820,11 +1917,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#5a8a80', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0
                         },
-                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        y: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1861,11 +1958,11 @@
                     indexAxis: 'y',
                     scales: {
                         x: {
-                            ticks: { color: '#5a8a80', callback: v => v.toFixed(1) + '%' },
-                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: 'rgba(255,255,255,0.3)', callback: v => v.toFixed(1) + '%' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
                             min: 0
                         },
-                        y: { ticks: { color: '#5a8a80' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        y: { ticks: { color: 'rgba(255,255,255,0.3)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
                     }
                 }
             });
@@ -1891,7 +1988,7 @@
                 options: {
                     ...getChartOptions('IDE usage'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#5a8a80' } }
+                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.3)' } }
                     }
                 }
             });
@@ -1923,7 +2020,7 @@
                 options: {
                     ...getChartOptions('Language distribution'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#5a8a80', font: { size: 10 } } }
+                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } } }
                     }
                 }
             });
@@ -1970,7 +2067,7 @@
                 options: {
                     ...getChartOptions('Model distribution'),
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#5a8a80' } }
+                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.3)' } }
                     }
                 }
             });
@@ -1982,17 +2079,19 @@
                 maintainAspectRatio: false,
                 animation: { duration: CONFIG.CHART_ANIMATION_DURATION },
                 plugins: {
-                    legend: { labels: { color: '#5a8a80' } },
+                    legend: { labels: { color: 'rgba(255,255,255,0.32)', font: { size: 11, family: 'Inter' }, boxWidth: 10 } },
                     title: { display: false }
                 },
                 scales: {
                     y: {
-                        ticks: { color: '#5a8a80' },
-                        grid: { color: 'rgba(255,255,255,0.06)' }
+                        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                        border: { color: 'transparent' }
                     },
                     x: {
-                        ticks: { color: '#5a8a80' },
-                        grid: { color: 'rgba(255,255,255,0.06)' }
+                        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                        border: { color: 'transparent' }
                     }
                 }
             };
