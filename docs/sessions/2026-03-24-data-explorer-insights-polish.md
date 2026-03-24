@@ -19,47 +19,74 @@
   subtitle explains these are users where AI is visibly producing real output
 - Registered `Award` icon in `InsightCard.jsx` icon map
 
+### Value semantics fix
+- **Total Value** changed from `(linesAdded - linesDeleted) × rate` to `(linesAdded + linesDeleted) × rate`
+- Renamed "Net Value" → "Total Value" throughout (DataTable, KPI section, CSV export)
+- Both Value Added and Value Deleted now represent developer time saved — Copilot-assisted deletion
+  (refactors, dead code removal) is as valuable as writing new code
+- Total Value is always ≥ 0; column always rendered green
+
 ### Export separation
 - Header "Export" button now uses `buildRawRecordsCSV` (per-user per-day, no aggregation)
-- DataTable CSV button uses `buildDataCSV` (aggregated per user, matches table view)
+- DataTable CSV button uses `buildDataCSV` (aggregated per user, matches 9-column table view)
+- `buildDataCSV` updated to include Days Active and all three value columns (matched the table)
 - Added `buildRawRecordsCSV` to `app/domain/export/csv.js`
+
+### Documentation updates
+- `docs/architecture.md` — added full Aggregation Model section (two-stage diagram, raw vs aggregated
+  table, merge strategy), Footer in component tree, dark/light mode section
+- `docs/development.md` — Footer in project structure, dark/light mode section, icon registration guide
+- `docs/testing.md` — updated test counts (95 unit, 6 insight types)
+- `docs/deployment.md` — updated CI pipeline diagram (95 unit tests)
+- `README.md` — added CI test badge alongside AGPLv3 and demo badges; updated insights + table bullets
+
+### `docs/data.md` — new comprehensive data reference
+- Full NDJSON schema with field-by-field explanations
+- Key distinctions: `loc_suggested` vs `loc_added`, why `active_time_minutes` is always 0,
+  why acceptance rate doesn't apply to agent/chat mode
+- All feature keys with human labels and descriptions
+- Deduplication / merge strategy across overlapping 28-day exports
+- Two-stage aggregation model with a table showing which view uses which source
+- All 14 charts: type, data source, what to read from each
+- Data Explorer column-by-column breakdown
+- Inline "why generations ≠ lines added" explanation
+- Value calculation formula, both configurable parameters, defaults, and caveats
+- All 6 insight cards with exact thresholds and caveats
+- Export paths table
+- `docs/README.md` and main `README.md` updated to link `data.md` as first entry in doc tables
+
+### Other
+- Added `*.png`, `*.jpg`, `*.jpeg` to `.gitignore`
+- Deleted `docs/_config.yml` (unnecessary)
 
 ## Decisions made
 
-- Dropped the two-row flat header experiment (⚡ COPILOT ACTIVITY / LINES OF CODE / ESTIMATED VALUE
-  as centered labels above right-aligned sub-headers) — alignment was visually odd with mismatched
-  text justification. Reverted to `rowspan`/`colspan` approach matching the old HTML exactly.
-- Removed Acceptances and Accept Rate from Data Explorer — too many columns, and those metrics
-  live in the KPI section already. Nine-column layout is much more readable.
-- Spotlight Users uses `linesAdded` (not `netLines`) — "leveraging AI to add a lot of lines of code"
-  is the intent; net can be negative for legitimate refactors.
-- Power Users kept as-is (not removed) — still useful to see who is reaching for AI most often,
-  just needed a clearer label about what it actually means.
+- Dropped the two-row flat header experiment — alignment was visually odd. Reverted to `rowspan`/`colspan` matching old HTML.
+- Removed Acceptances and Accept Rate from Data Explorer — 9-column layout is much more readable.
+- Spotlight Users uses `linesAdded` (not `netLines`) — refactors can make netLines negative while real output is high.
+- Power Users kept as-is — still useful, just needed clearer label about what it means.
+- Total Value = added + deleted (not net) — deletion is equally valuable work; a negative net lines day is fine.
+- `buildRawRecordsCSV` introduced as a separate function so the header CSV and table CSV paths are independent.
 
 ## Fixes applied
 
-- `rowSpan` + `verticalAlign: bottom` on User/Days Active headers now correctly aligns their text
-  with the second header row (Generations, Lines Added, etc.)
+- `rowSpan` + `verticalAlign: bottom` on User/Days Active headers correctly aligns with second header row
+- E2E test: `getByText('Lines of Code')` strict mode violation — added `.first()` (now appears in both KPI section and table header)
+- E2E test: row count `3 → 4` — two-row header means 4 rows total (2 header + 2 data)
+- Unit test: `buildDataCSV` header assertion `'Net Value'` → `'Total Value'`
 - Removed orphaned `SORT_COLS` constant that was defined but never used
-- Fixed `colSpan={11}` on the no-results row (now correctly `9` after column reduction)
-- Cleaned up temp files (`sample.ndjson`, `old_gh.html`) from project root after Playwright testing
 
 ## Unfinished / follow-up
 
-- **Screenshot PNGs in project root** — `current-state.png`, `dark-mode.png`, `dashboard-light*.png`,
-  `light-mode.png` are untracked. Either add to `.gitignore` or delete them.
-- **E2E tests** — `dashboard.spec.js` has a row count assertion (`toHaveCount(3)`) that still passes,
-  but the export dropdown test checks for "Export Data CSV" which was renamed to "Export Consolidated NDJSON"
-  in the UI — worth verifying e2e suite still fully passes with `make test-e2e`.
-- **Aggregation documentation** — `docs/architecture.md` aggregation model section was planned but
-  not written this session.
-- **Light mode chart fix** — was implemented (MutationObserver on color scheme, `getChartColors()`),
-  but no automated test covers it. Manual check recommended when switching themes.
-- **DataTable CSV** — `buildDataCSV` (aggregated per user) doesn't include Days Active or the Value
-  columns. Could be enhanced to match the full table layout.
+- **Light mode chart fix** — implemented (MutationObserver, `getChartColors()`), no automated test covers it. Manual check when switching themes.
+- **`active_time_minutes`** — absent from current API exports; defaults to 0. If GitHub adds it back, the parser already handles it — charts and KPIs would need new entries.
 
 ## Commits
 
+- `461b516` add docs/data.md — full reference for data points, charts, table, insights, value calc
+- `42229d6` update docs + README for session changes
+- `2bb4a01` treat deleted lines as positive value, not a cost
+- `0133693` fix tests, align CSV export with table, document aggregation model
 - `e1a8757` overhaul data explorer table + add Spotlight Users insight
 - `81feb31` aggregate data explorer by user, drop date column
 - `4a2dd6b` extract Footer component, make header and footer fixed/sticky
