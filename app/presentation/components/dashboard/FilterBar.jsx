@@ -1,6 +1,18 @@
 import React from 'react';
+import { Select } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
+import dayjs from 'dayjs';
 import { useApp } from '../../context/AppContext.jsx';
 import { quickRangeDates } from '../../../domain/filtering/engine.js';
+
+const LABEL_STYLE = {
+  fontSize: '0.68rem',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'var(--text-2)',
+  marginBottom: '0.25rem',
+};
 
 export function FilterBar() {
   const { filters, setFilters, filterOptions, rawData } = useApp();
@@ -17,37 +29,65 @@ export function FilterBar() {
     setFilters({
       dateFrom: allDates[0] || null,
       dateTo: allDates[allDates.length - 1] || null,
-      user: null, ide: null, language: null
+      user: null, ide: null, language: null,
     });
   };
 
+  const dateFromValue = filters.dateFrom ? dayjs(filters.dateFrom).toDate() : null;
+  const dateToValue = filters.dateTo ? dayjs(filters.dateTo).toDate() : null;
+
+  const userOptions = [
+    { value: '', label: 'All Users' },
+    ...filterOptions.users.map(u => ({ value: u, label: u })),
+  ];
+  const ideOptions = [
+    { value: '', label: 'All IDEs' },
+    ...filterOptions.ides.map(ide => ({ value: ide, label: ide })),
+  ];
+  const langOptions = [
+    { value: '', label: 'All Languages' },
+    ...filterOptions.languages.map(lang => ({ value: lang, label: lang })),
+  ];
+
   return (
     <div className="card mb-6">
-      <div style={{ display:'flex',flexWrap:'wrap',gap:'0.75rem',alignItems:'flex-end' }}>
-        {/* Date range */}
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>From</label>
-          <input
-            type="date"
-            value={filters.dateFrom || ''}
-            onChange={e => setFilter('dateFrom', e.target.value)}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+
+        {/* Date From */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={LABEL_STYLE}>From</span>
+          <DateInput
+            value={dateFromValue}
+            onChange={d => setFilter('dateFrom', d ? dayjs(d).format('YYYY-MM-DD') : null)}
+            placeholder="Pick date"
+            clearable
+            popoverProps={{ withinPortal: true }}
           />
         </div>
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>To</label>
-          <input
-            type="date"
-            value={filters.dateTo || ''}
-            onChange={e => setFilter('dateTo', e.target.value)}
+
+        {/* Date To */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={LABEL_STYLE}>To</span>
+          <DateInput
+            value={dateToValue}
+            onChange={d => setFilter('dateTo', d ? dayjs(d).format('YYYY-MM-DD') : null)}
+            placeholder="Pick date"
+            clearable
+            popoverProps={{ withinPortal: true }}
           />
         </div>
 
         {/* Quick ranges */}
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>Quick Range</label>
-          <div style={{ display:'flex',gap:'0.35rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <span style={LABEL_STYLE}>Quick Range</span>
+          <div style={{ display: 'flex', gap: '0.35rem' }}>
             {[7, 14, 28, 90].map(d => (
-              <button key={d} className="btn-secondary" style={{ padding:'0.3rem 0.7rem',fontSize:'0.75rem' }} onClick={() => applyQuickRange(d)}>
+              <button
+                key={d}
+                className="btn-secondary"
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
+                onClick={() => applyQuickRange(d)}
+              >
                 {d}d
               </button>
             ))}
@@ -55,34 +95,55 @@ export function FilterBar() {
         </div>
 
         {/* User filter */}
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>User</label>
-          <select value={filters.user || ''} onChange={e => setFilter('user', e.target.value)}>
-            <option value="">All Users</option>
-            {filterOptions.users.map(u => <option key={u} value={u}>{u}</option>)}
-          </select>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={LABEL_STYLE}>User</span>
+          <Select
+            data={userOptions}
+            value={filters.user || ''}
+            onChange={val => setFilter('user', val)}
+            placeholder="All Users"
+            searchable
+            clearable
+            comboboxProps={{ withinPortal: true }}
+            style={{ minWidth: '160px' }}
+            aria-label="All Users"
+          />
         </div>
 
         {/* IDE filter */}
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>IDE</label>
-          <select value={filters.ide || ''} onChange={e => setFilter('ide', e.target.value)}>
-            <option value="">All IDEs</option>
-            {filterOptions.ides.map(ide => <option key={ide} value={ide}>{ide}</option>)}
-          </select>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={LABEL_STYLE}>IDE</span>
+          <Select
+            data={ideOptions}
+            value={filters.ide || ''}
+            onChange={val => setFilter('ide', val)}
+            placeholder="All IDEs"
+            searchable
+            clearable
+            comboboxProps={{ withinPortal: true }}
+            style={{ minWidth: '140px' }}
+            aria-label="All IDEs"
+          />
         </div>
 
         {/* Language filter */}
-        <div style={{ display:'flex',flexDirection:'column',gap:'0.25rem' }}>
-          <label style={{ fontSize:'0.68rem',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--text-2)' }}>Language</label>
-          <select value={filters.language || ''} onChange={e => setFilter('language', e.target.value)}>
-            <option value="">All Languages</option>
-            {filterOptions.languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-          </select>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={LABEL_STYLE}>Language</span>
+          <Select
+            data={langOptions}
+            value={filters.language || ''}
+            onChange={val => setFilter('language', val)}
+            placeholder="All Languages"
+            searchable
+            clearable
+            comboboxProps={{ withinPortal: true }}
+            style={{ minWidth: '150px' }}
+            aria-label="All Languages"
+          />
         </div>
 
         {/* Clear */}
-        <button className="btn-secondary" onClick={clearAll} style={{ alignSelf:'flex-end' }}>
+        <button className="btn-secondary" onClick={clearAll} style={{ alignSelf: 'flex-end' }}>
           Clear All
         </button>
       </div>

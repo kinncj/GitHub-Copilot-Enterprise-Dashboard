@@ -165,6 +165,45 @@ select option { background: var(--surface-2); color: var(--text-1); }
 .dash-nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.25rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
 .upload-brand { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: clamp(2.8rem, 7vw, 5rem); line-height: 1.04; letter-spacing: -0.02em; color: var(--text-1); }
 .upload-brand em { font-style: italic; color: var(--green); }
+/* ── Mantine overrides ────────────────────────────────────────────────────── */
+[data-mantine-color-scheme="dark"] {
+    --mantine-color-body:           var(--bg);
+    --mantine-color-default:        var(--surface);
+    --mantine-color-default-border: var(--border);
+    --mantine-color-text:           var(--text-1);
+    --mantine-color-dimmed:         var(--text-2);
+    --mantine-color-placeholder:    var(--text-2);
+}
+/* Input fields */
+.mantine-Input-input {
+    background: var(--bg) !important;
+    border-color: var(--border) !important;
+    color: var(--text-1) !important;
+    border-radius: var(--r-sm) !important;
+    font-size: 0.875rem !important;
+    font-family: inherit !important;
+}
+.mantine-Input-input:focus { border-color: rgba(0,200,150,0.5) !important; box-shadow: 0 0 0 2px rgba(0,200,150,0.08) !important; }
+/* Dropdown/popover */
+.mantine-Combobox-dropdown,
+.mantine-Popover-dropdown {
+    background: var(--surface-2) !important;
+    border-color: var(--border-2) !important;
+    border-radius: var(--r-sm) !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+}
+.mantine-Combobox-option {
+    color: var(--text-2);
+    font-size: 0.875rem;
+}
+.mantine-Combobox-option:hover,
+.mantine-Combobox-option[data-combobox-active] { background: rgba(255,255,255,0.05) !important; color: var(--text-1) !important; }
+.mantine-Combobox-option[data-combobox-selected] { background: rgba(0,200,150,0.12) !important; color: var(--green) !important; }
+/* DatePicker day highlights */
+.mantine-DatePickerInput-day[data-selected],
+.mantine-MonthLevel-day[data-selected] { background: var(--green) !important; color: #040404 !important; }
+.mantine-DatePickerInput-day[data-today] { border-color: var(--green) !important; }
+
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up   { animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .fade-up-2 { animation-delay: 0.09s; }

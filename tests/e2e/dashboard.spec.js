@@ -76,36 +76,51 @@ test.describe('Filters', () => {
     await waitForDashboard(page);
   });
 
-  test('user filter dropdown is populated', async ({ page }) => {
-    const userSelect = page.getByRole('combobox').filter({ hasText: /All Users/ });
-    await expect(userSelect).toBeVisible();
-    const options = await userSelect.locator('option').allTextContents();
-    expect(options).toContain('alice');
-    expect(options).toContain('bob');
+  test('user filter input is populated with options', async ({ page }) => {
+    // Mantine Select renders an <input role="textbox"> — click to open dropdown, then check options
+    const userInput = page.getByRole('textbox', { name: 'All Users' });
+    await expect(userInput).toBeVisible();
+    await userInput.click();
+    await expect(page.getByRole('option', { name: 'alice' })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'bob' })).toBeVisible();
+    await page.keyboard.press('Escape');
   });
 
-  test('IDE filter dropdown is populated', async ({ page }) => {
-    const ideSelect = page.getByRole('combobox').filter({ hasText: /All IDEs/ });
-    await expect(ideSelect).toBeVisible();
-    const options = await ideSelect.locator('option').allTextContents();
-    expect(options).toContain('vscode');
-    expect(options).toContain('jetbrains');
+  test('IDE filter input is populated with options', async ({ page }) => {
+    const ideInput = page.getByRole('textbox', { name: 'All IDEs' });
+    await expect(ideInput).toBeVisible();
+    await ideInput.click();
+    await expect(page.getByRole('option', { name: 'vscode' })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'jetbrains' })).toBeVisible();
+    await page.keyboard.press('Escape');
   });
 
-  test('language filter dropdown is populated', async ({ page }) => {
-    const langSelect = page.getByRole('combobox').filter({ hasText: /All Languages/ });
-    await expect(langSelect).toBeVisible();
-    const options = await langSelect.locator('option').allTextContents();
-    expect(options).toContain('python');
-    expect(options).toContain('typescript');
+  test('language filter input is populated with options', async ({ page }) => {
+    const langInput = page.getByRole('textbox', { name: 'All Languages' });
+    await expect(langInput).toBeVisible();
+    await langInput.click();
+    await expect(page.getByRole('option', { name: 'python' })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'typescript' })).toBeVisible();
+    await page.keyboard.press('Escape');
   });
 
   test('filtering by user updates the record count', async ({ page }) => {
-    const userSelect = page.getByRole('combobox').filter({ hasText: /All Users/ });
-    await userSelect.selectOption('alice');
+    const userInput = page.getByRole('textbox', { name: 'All Users' });
+    await userInput.click();
+    await page.getByRole('option', { name: 'alice' }).click();
     // alice has 2 records, bob has 1 — table should now only show alice's rows
     await expect(page.getByRole('table')).toContainText('alice');
     await expect(page.getByRole('table')).not.toContainText('bob');
+  });
+
+  test('user filter supports search/type-to-filter', async ({ page }) => {
+    const userInput = page.getByRole('textbox', { name: 'All Users' });
+    await userInput.click();
+    await userInput.fill('ali');
+    await expect(page.getByRole('option', { name: 'alice' })).toBeVisible();
+    // bob should be filtered out
+    await expect(page.getByRole('option', { name: 'bob' })).not.toBeVisible();
+    await page.keyboard.press('Escape');
   });
 });
 
