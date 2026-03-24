@@ -55,7 +55,7 @@ describe('buildDataCSV', () => {
     expect(header).toContain('Generations');
     expect(header).toContain('Net Lines');
     expect(header).toContain('Value Added');
-    expect(header).toContain('Net Value');
+    expect(header).toContain('Total Value');
   });
 
   it('has one data row per user', () => {

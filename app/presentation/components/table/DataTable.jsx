@@ -41,7 +41,7 @@ export function DataTable() {
         netLines,
         valueAdded:   rate(u.linesAdded),
         valueDeleted: rate(u.linesDeleted),
-        netValue:     rate(netLines),
+        netValue:     rate(u.linesAdded + u.linesDeleted),
       };
     });
   }, [filteredData, MANUAL_LINES_PER_HOUR, BLENDED_RATE_PER_HOUR]);
@@ -120,6 +120,7 @@ export function DataTable() {
           <strong style={{ color:'var(--text-2)' }}>Lines Added</strong> = code actually accepted and applied.
           High generations + low lines → frequent use but short or rejected suggestions.
           Low generations + high lines → fewer triggers but large completions (agent mode, big block accepts).
+          <strong style={{ color:'var(--text-2)' }}>Total Value</strong> counts both added and deleted lines — Copilot-assisted deletion (refactors, dead code removal) saves time too.
         </p>
       </div>
       <div className="table-container">
@@ -149,7 +150,7 @@ export function DataTable() {
               <Th col="netLines" style={{ background:'rgba(16,185,129,0.05)' }}>Net Lines</Th>
               <Th col="valueAdded" style={{ background:'rgba(59,130,246,0.05)', color:'var(--c-green)' }}>Value Added</Th>
               <Th col="valueDeleted" style={{ background:'rgba(59,130,246,0.05)', color:'var(--c-red)' }}>Value Deleted</Th>
-              <Th col="netValue" style={{ background:'rgba(59,130,246,0.05)' }}>Net Value</Th>
+              <Th col="netValue" style={{ background:'rgba(59,130,246,0.05)' }}>Total Value</Th>
             </tr>
           </thead>
           <tbody>
@@ -165,8 +166,8 @@ export function DataTable() {
                 </td>
                 <td style={{ textAlign:'right',color:'var(--c-green)' }}>{fmt$(row.valueAdded)}</td>
                 <td style={{ textAlign:'right',color:'var(--c-red)' }}>{fmt$(row.valueDeleted)}</td>
-                <td style={{ textAlign:'right', color: row.netValue >= 0 ? 'var(--c-green)' : 'var(--c-red)', fontWeight:500 }}>
-                  {row.netValue < 0 ? '-' : ''}{fmt$(row.netValue)}
+                <td style={{ textAlign:'right', color:'var(--c-green)', fontWeight:500 }}>
+                  {fmt$(row.netValue)}
                 </td>
               </tr>
             ))}

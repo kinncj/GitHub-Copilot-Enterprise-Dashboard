@@ -44,7 +44,7 @@ export function buildRawRecordsCSV(records, valueConfig) {
  */
 export function buildDataCSV(records, valueConfig) {
   const { MANUAL_LINES_PER_HOUR, BLENDED_RATE_PER_HOUR } = valueConfig;
-  const headers = ['User', 'Days Active', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Net Value'];
+  const headers = ['User', 'Days Active', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Total Value'];
 
   const byUser = {};
   for (const r of records) {
@@ -61,7 +61,7 @@ export function buildDataCSV(records, valueConfig) {
     .sort((a, b) => (b[1].linesAdded - b[1].linesDeleted) - (a[1].linesAdded - a[1].linesDeleted))
     .map(([user, d]) => {
       const net = d.linesAdded - d.linesDeleted;
-      return [user, d.days.size, d.gens, d.linesAdded, d.linesDeleted, net, rate(d.linesAdded), rate(d.linesDeleted), rate(net)];
+      return [user, d.days.size, d.gens, d.linesAdded, d.linesDeleted, net, rate(d.linesAdded), rate(d.linesDeleted), rate(d.linesAdded + d.linesDeleted)];
     });
 
   return buildCSV(headers, rows);
