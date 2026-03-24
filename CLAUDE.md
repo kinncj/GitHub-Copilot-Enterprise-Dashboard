@@ -1,44 +1,47 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Project instructions for Claude Code. See also `AGENTS.md` for agent-specific guidance and skill recommendations.
 
-## Project Overview
+---
 
-**GitHub Copilot Enterprise Dashboard** - A production-ready, zero-dependency analytics dashboard for visualizing GitHub Copilot Enterprise usage data.
+## What this project is
+
+**GitHub Copilot Enterprise Dashboard** — browser-based analytics for GitHub Copilot Enterprise usage data. Zero backend. Everything runs client-side. Deployed to GitHub Pages via Vite.
 
 **Repository:** [github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard](https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard)
 
-**Key Files:**
-- `index.html` - Main analytics dashboard (production-ready, single-file architecture)
-- `docs/` - Comprehensive documentation with Mermaid diagrams
-- Sample data files for testing (check repository for examples)
-
-**Documentation:**
-- Full documentation available in `docs/` folder
-- Start with `docs/README.md` for navigation
-- Architecture diagrams in `docs/architecture.md`
+---
 
 ## Architecture
 
-### Single-File Architecture
+This codebase follows Clean Architecture with SOLID principles. Read `docs/architecture.md` for diagrams.
 
-Both dashboards follow a **zero-dependency, single-file HTML architecture**:
-- All dependencies loaded via CDN (Tailwind CSS, Chart.js, Lucide Icons)
-- No build process, package managers, or Node.js required
-- Self-contained: HTML structure + embedded CSS + embedded JavaScript
-- Can be opened directly in any modern browser
+**Three layers:**
 
-### Data Flow
+1. **`app/domain/`** — pure JavaScript. No DOM, no globals. Receives data as arguments, returns data. Fully testable in Node.
+2. **`app/state/store.js`** — single mutable state object. Domain functions never import it directly.
+3. **`app/presentation/`** — DOM-aware components and chart renderers. Thin shell over the domain.
 
-See `docs/architecture.md` for detailed Mermaid diagrams. Quick overview:
-- User uploads NDJSON → Chunked Parser (10k lines/batch)
-- Data Validation & Normalization
-- Aggregation Engine (by user, day, IDE, language, feature, model)
-- Filter Engine → Parallel Rendering (KPIs + Charts + Insights + Table)
+**Rule:** nothing in `app/domain/` may import from `app/presentation/` or `app/state/`. If you find yourself wanting to, the logic belongs somewhere else.
 
-### NDJSON Schema
+### Domain modules
 
-GitHub Copilot Enterprise exports have this per-record structure:
+| Module | Job |
+|--------|-----|
+| `app/domain/config/constants.js` | CONFIG thresholds + FEATURE_LABELS |
+| `app/domain/data/parser.js` | `parseNDJSON(text, opts)` → `CopilotRecord[]` |
+| `app/domain/data/merger.js` | `mergeRecords(records[])` — dedup overlapping exports with Math.max |
+| `app/domain/data/aggregator.js` | `aggregateData(records[])` → byUser/Day/IDE/Language/Feature/Model |
+| `app/domain/filtering/engine.js` | `filterRecords(records[], criteria)` + dropdown option extraction |
+| `app/domain/insights/engine.js` | `generateInsights(aggregated, records, config)` → `Insight[]` |
+| `app/domain/export/csv.js` | CSV builders for all data views |
+| `app/domain/export/ndjson.js` | `buildNDJSON(records[])` for consolidated export |
+| `common/utils/format.js` | `formatNumber`, `humanizeFeature` |
+| `common/utils/download.js` | `triggerDownload` (browser-side, not a domain module) |
+| `common/types/index.js` | JSDoc type definitions for the whole domain |
+
+### NDJSON schema
+
 ```json
 {
   "user_login": "string",
@@ -48,123 +51,79 @@ GitHub Copilot Enterprise exports have this per-record structure:
   "loc_added_sum": number,
   "loc_deleted_sum": number,
   "active_time_minutes": number,
-  "totals_by_ide": [{"ide": "vscode", "generations": N, ...}],
-  "totals_by_feature": [{"feature": "code_completion", "count": N, ...}],
-  "totals_by_language_feature": [{"language": "python", "feature": "...", ...}],
-  "totals_by_model_feature": [{"model": "claude-4.5-sonnet", ...}],
+  "totals_by_ide": [{"ide": "vscode", "code_generation_activity_count": N}],
+  "totals_by_feature": [{"feature": "code_completion", "code_generation_activity_count": N}],
+  "totals_by_language_feature": [{"language": "python", "feature": "...", "code_generation_activity_count": N}],
+  "totals_by_language_model": [{"model": "gpt-4", "code_generation_activity_count": N}],
   "model": "string"
 }
 ```
 
-## Key Components (copilot-analytics-dashboard.html)
+### Merge strategy
 
-### State Management
-Single global `state` object tracks:
-- `rawData` - Original parsed records
-- `filteredData` - After filters applied
-- `aggregatedData` - Pre-computed rollups (byUser, byDay, byIDE, etc.)
-- `charts` - Chart.js instances for cleanup/redraw
-- `filters` - Current filter values
-- `sortColumn/sortDirection` - Table sorting state
+GitHub Copilot Enterprise exports use 28-day rolling windows. Uploading two exports with overlapping date ranges creates duplicate `user_login + day` records. `mergeRecords()` deduplicates by taking `Math.max` for all numeric fields (same day = same data, so max is safe) and keeping the first-seen nested arrays.
 
-### Customization Config
-All business thresholds in `CONFIG` object (lines ~550-575):
-```javascript
-const CONFIG = {
-  DAILY_GENERATION_QUOTA: 500,           // Alert threshold
-  LOW_ACCEPTANCE_THRESHOLD: 0.20,        // 20% warning
-  HIGH_ACCEPTANCE_THRESHOLD: 0.70,       // 70% badge
-  POWER_USER_PERCENTILE: 0.90,           // Top 10%
-  MIN_GENERATIONS_FOR_RATE: 50,          // Min for rate calc
-  CHART_ANIMATION_DURATION: 750,
-  MAX_TOP_USERS_SHOWN: 15,
-  MAX_LANGUAGES_SHOWN: 10,
-  CHUNK_SIZE: 10000,                     // Parser chunk size
-  // ...
-};
-```
+---
 
-### Performance Strategy
-- **Chunked parsing**: Process 10k lines at a time with `setTimeout(0)` to prevent UI freezing on large files (100MB+)
-- **Single-pass aggregation**: Data aggregated during filter application, not on-demand
-- **Virtual scrolling simulation**: Table limited to first 500 rows for rendering performance
-- **Chart reuse**: Chart.js instances destroyed and recreated on filter changes to prevent memory leaks
+## Quick reference
 
-### Chart Architecture (14 Charts Total)
+### Running the project
 
-**Activity & Time section:**
-1. **Activity Timeline** - Dual-axis line chart (generations/chat on left, lines added/deleted on right)
-2. **Lines of Code Trend** - Line chart with lines added (green) and lines deleted (red)
-3. **Acceptance Rate Trend** - Line chart with daily rate + 7-day moving average
-4. **Daily Active Users** - Line chart showing unique active users per day
-
-**User Analysis section:**
-5. **Top Users by Generations** - Horizontal bar, color-coded by acceptance rate
-6. **Top Users by Lines Added** - Horizontal bar (alternative ranking)
-7. **User Efficiency Matrix** - Scatter plot (generations vs acceptance rate per user)
-8. **User Engagement Distribution** - Bar histogram of days-active per user
-
-**Tools & Languages section:**
-9. **IDE Market Share** - Doughnut chart
-10. **Acceptance Rate by IDE** - Horizontal bar (which editor drives best acceptance)
-11. **Language Distribution** - Doughnut, top 10 + "Other"
-12. **Acceptance Rate by Language** - Horizontal bar (which languages benefit most)
-13. **Feature Usage** - Bar chart
-14. **Model Distribution** - Pie chart
-
-All charts use consistent theming via `getChartOptions()` helper.
-
-### Insights Engine
-Automated detection system identifies:
-- **Power Users**: Top 10% by generations
-- **High Efficiency**: Top users by acceptance rate (>70%, min 50 gens)
-- **Quota Exceeded**: Days with >500 generations/user
-- **Week-over-Week Trends**: Activity change calculations
-- **Zero Acceptance Days**: Generations without any acceptances
-
-Note: Low Acceptance Alerts are intentionally omitted — ~94% of activity is agent mode which doesn't track acceptances, making low rates normal and non-actionable.
-
-## Quick Reference for Development
-
-For comprehensive guides, see the `docs/` folder:
-
-- **Getting Started:** `docs/getting-started.md` - Quick start and basic usage
-- **Architecture:** `docs/architecture.md` - System design with Mermaid diagrams
-- **Configuration:** `docs/configuration.md` - All CONFIG options explained
-- **Development:** `docs/development.md` - How to add features and extend functionality
-- **API Reference:** `docs/api-reference.md` - Complete function documentation
-- **Deployment:** `docs/deployment.md` - Hosting and deployment guides
-- **Troubleshooting:** `docs/troubleshooting.md` - Common issues and solutions
-
-### Quick Development Tips
-
-**Testing:**
 ```bash
-# Open in browser
-open index.html
-
-# Or use local server if needed
-python3 -m http.server 8000
+make install    # npm install + playwright browsers
+make dev        # vite dev server — http://localhost:3000
+make test       # 93 unit tests (vitest)
+make test-e2e   # playwright e2e
+make build      # production build → dist/
 ```
 
-**Key Configuration (in CONFIG object, lines ~550-575):**
-- `DAILY_GENERATION_QUOTA: 500` - Alert threshold
-- `LOW_ACCEPTANCE_THRESHOLD: 0.20` - Warning threshold (20%)
-- `HIGH_ACCEPTANCE_THRESHOLD: 0.70` - Excellence threshold (70%)
-- `CHUNK_SIZE: 10000` - Parsing chunk size
+### Key config values (`app/domain/config/constants.js`)
 
-**Common Tasks:**
-- Add chart: See `docs/development.md#adding-a-new-chart`
-- Add KPI: See `docs/development.md#adding-a-new-kpi-card`
-- Add filter: See `docs/development.md#adding-a-new-filter`
-- Add insight: See `docs/development.md#adding-a-new-insight`
+| Constant | Default | Meaning |
+|----------|---------|---------|
+| `DAILY_GENERATION_QUOTA` | 500 | Quota Exceeded insight threshold |
+| `HIGH_ACCEPTANCE_THRESHOLD` | 0.70 | High Efficiency insight threshold |
+| `POWER_USER_PERCENTILE` | 0.90 | Top 10% by generations |
+| `MIN_GENERATIONS_FOR_RATE` | 50 | Min gens before acceptance rate is meaningful |
+| `CHUNK_SIZE` | 10000 | NDJSON lines per setTimeout(0) batch |
 
-**Browser Requirements:**
-- Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- ES6+ JavaScript support required
+### Common tasks
 
-**Privacy & Security:**
-- 100% client-side processing
-- No data leaves the browser
-- No backend required
-- Safe for sensitive enterprise data
+- **Add insight** → `app/domain/insights/engine.js` + `tests/unit/domain/insights/engine.test.js`
+- **Add chart** → `app/presentation/charts/` + `index.html` canvas + CSV builder in `app/domain/export/csv.js`
+- **Add KPI card** → `app/presentation/components/kpi.js`
+- **Add filter** → `app/domain/filtering/engine.js` + `filterRecords()` + test
+- **Change threshold** → `app/domain/config/constants.js` only
+- **Full guides** → `docs/`
+
+---
+
+## Tests
+
+93 unit tests in `tests/unit/`, all passing. Every domain function has tests. When changing a domain module, update its tests too — the test file lives at the same relative path under `tests/unit/`.
+
+E2E tests in `tests/e2e/dashboard.spec.js` cover the upload → dashboard → filter → export flow.
+
+---
+
+## Deployment
+
+Push to `main` → GitHub Actions runs `npm ci && npm run build` → deploys `dist/` to GitHub Pages. The `vite.config.js` reads `GITHUB_REPOSITORY` to set the correct base path for the Pages subdirectory.
+
+See `docs/deployment.md` for the full pipeline diagram.
+
+---
+
+## Agent guidance
+
+See `AGENTS.md` for:
+- Which modules are safe to edit (domain = always safe; presentation = carefully)
+- Recommended Claude Code skills for common tasks (`/tdd`, `/ship`, `/wrap-up`, etc.)
+- SOLID constraints that agents must follow
+- Entry points for specific tasks (parsing, merging, insights, exports)
+
+---
+
+## Privacy
+
+100% client-side. No data leaves the browser. No backend. Safe for enterprise usage data.
