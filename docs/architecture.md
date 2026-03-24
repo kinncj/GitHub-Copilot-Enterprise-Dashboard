@@ -2,7 +2,7 @@
 
 ## Layers
 
-The codebase follows Clean Architecture. Domain logic is pure JavaScript with no DOM dependencies. The presentation layer is React components that read from a central hook and pass data down as props.
+The codebase follows Clean Architecture. Domain logic is pure JavaScript with no DOM dependencies. The presentation layer is React components that read from a central hook and pass data down as props. Interactive filter controls use Mantine v8 as a UI component library.
 
 ```mermaid
 graph TD
@@ -70,7 +70,7 @@ Files are parsed once and stored in `rawData`. Every filter change re-runs `filt
 
 ```mermaid
 graph TD
-    main["app/main.jsx"] --> App["App.jsx"]
+    main["app/main.jsx\n(MantineProvider)"] --> App["App.jsx"]
     App --> CTX["AppContext.Provider\n(useAppState)"]
     CTX --> Upload["UploadZone"]
     CTX --> Progress["ProgressBar"]
@@ -87,6 +87,16 @@ graph TD
 ```
 
 `App` renders one of three top-level views based on state: `UploadZone` (no data), `ProgressBar` (loading), or `Dashboard` (data loaded).
+
+---
+
+## UI Components
+
+Interactive filter controls use [Mantine v8](https://mantine.dev):
+
+- `FilterBar` uses `DatePickerInput type="range"` (a single calendar popover where the user clicks start date then end date) and `Select` (searchable, clearable dropdowns) for User, IDE, and Language filters
+- `MantineProvider` is configured in `app/main.jsx` with `defaultColorScheme="dark"` and a custom green primary color — Mantine renders in a dark portal
+- CSS variable overrides in `app/presentation/styles/global.css` under `[data-mantine-color-scheme="dark"]` map design tokens to Mantine's theme system
 
 ---
 

@@ -179,8 +179,40 @@ if (criteria.myFilter) {
 }
 ```
 
-4. Add a `<select>` to `app/presentation/components/dashboard/FilterBar.jsx` wired to `setFilters`.
+4. Add a Mantine `<Select>` to `app/presentation/components/dashboard/FilterBar.jsx` wired to `setFilters`. Provide `searchable` and `clearable` props. Build a `data` array as `[{ value: '', label: 'All X' }, ...options]`.
 5. Add tests in `tests/unit/domain/filtering/engine.test.js`.
+
+---
+
+## UI component library (Mantine)
+
+Interactive filter controls use [Mantine v8](https://mantine.dev). The provider is in `app/main.jsx`:
+
+- `MantineProvider` wraps the whole app with `defaultColorScheme="dark"` and a custom green primary color
+- `@mantine/core/styles.css` and `@mantine/dates/styles.css` are imported in `main.jsx`
+- Design tokens are mapped to Mantine CSS variables in `global.css` under `[data-mantine-color-scheme="dark"]`
+
+### Components in use
+
+| Component | Used for | Key props |
+|-----------|----------|-----------|
+| `DatePickerInput type="range"` | Date range filter | `value={[from, to]}`, `onChange([from, to])`, `numberOfColumns={1}`, `popoverProps={{ withinPortal: true, width: 300 }}` |
+| `Select` | User / IDE / Language filters | `data={options}`, `searchable`, `clearable`, `comboboxProps={{ withinPortal: true }}` |
+
+### CSS override approach
+
+Mantine v8 uses CSS modules with hashed class names. Override styles via:
+1. CSS variable overrides in `global.css` under `[data-mantine-color-scheme="dark"]` — for colors, backgrounds, borders
+2. Class-based overrides targeting stable semantic class names like `.mantine-Input-input`, `.mantine-DatePickerInput-day`, `.mantine-Combobox-option`
+
+Do not pass pseudo-selector styles (e.g. `'&:focus': {...}`) in component `styles` props — React will log warnings. Use global CSS instead.
+
+### Adding a new Mantine component
+
+1. Import from `@mantine/core` or `@mantine/dates`
+2. Wire value/onChange to `filters` state via `setFilters`
+3. Add CSS overrides for the component's semantic classes to `global.css`
+4. Update the e2e tests — Mantine components render accessible roles (`textbox`, `button`, `option`), not native `<select>` / `<input type="date">`
 
 ---
 

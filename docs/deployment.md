@@ -2,7 +2,7 @@
 
 ## GitHub Pages (production)
 
-The site deploys automatically on every push to `main` via `.github/workflows/deploy-index-html.yml`.
+The site deploys automatically on every push to `main` via `.github/workflows/deploy.yml`.
 
 ```mermaid
 flowchart LR
@@ -52,7 +52,7 @@ The build output in `dist/` is a standard static site. Drop it on any CDN or sta
 
 ## CI pipeline
 
-The `infra/ci.yml` workflow runs on push to `main` and `refactor`:
+The `.github/workflows/ci.yml` workflow runs on push to `main` and `refactor`:
 
 ```mermaid
 flowchart LR
@@ -60,7 +60,7 @@ flowchart LR
     install --> unit["vitest run\n93 unit tests"]
     unit --> build["vite build"]
     build --> playwright["playwright install chromium"]
-    playwright --> e2e["playwright test"]
+    playwright --> e2e["playwright test\n18 e2e tests"]
     e2e --> artifacts["upload coverage\nupload playwright report on failure"]
 ```
 

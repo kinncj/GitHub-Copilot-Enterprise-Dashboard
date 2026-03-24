@@ -62,7 +62,7 @@ Playwright is configured for Chromium only (`playwright.config.js`). The dev ser
 
 ```mermaid
 graph TD
-    subgraph E2E["E2E — Playwright"]
+    subgraph E2E["E2E — Playwright (18 tests)"]
         E[dashboard.spec.js\nupload · filters · export]
     end
 
@@ -116,8 +116,21 @@ import { test, expect } from '@playwright/test';
 test('my scenario', async ({ page }) => {
   await page.goto('/');
   // upload sample data using the SAMPLE_NDJSON Buffer helper (see dashboard.spec.js)
-  await expect(page.locator('#someElement')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Add Files/ })).toBeVisible();
 });
 ```
 
 Keep e2e tests coarse — they should verify user-visible outcomes, not implementation details.
+
+### Mantine component selectors
+
+Mantine renders accessible roles, not native form elements:
+
+| Mantine component | How to select |
+|-------------------|--------------|
+| `Select` | `page.getByRole('textbox', { name: 'All Users' })` |
+| `Select` option | `page.getByRole('option', { name: 'alice' })` |
+| `DatePickerInput` | `page.getByRole('button', { name: /Date Range/ })` |
+| Calendar day | `page.getByRole('button', { name: '15 January 2025' })` |
+
+Never use `page.locator('#someId')` — React components don't have predictable HTML IDs.

@@ -14,6 +14,7 @@ A React + Vite browser-based analytics dashboard for GitHub Copilot Enterprise u
 - Renders 14 Chart.js charts, KPI cards, insights, and a data table
 - Exports PNG, CSV, and NDJSON from the browser
 - Deploys to GitHub Pages via Vite build
+- Uses Mantine v8 for interactive filter UI (date range calendar, searchable dropdowns)
 
 **Nothing leaves the browser.** There is no backend, no API calls to any server.
 
@@ -57,7 +58,8 @@ graph TD
         X1[vite.config.js]
         X2[vitest.config.js]
         X3[playwright.config.js]
-        X4[.github/workflows/deploy-index-html.yml]
+        X4[.github/workflows/ci.yml]
+        X5[.github/workflows/deploy.yml]
     end
 ```
 
@@ -144,10 +146,11 @@ These are load-bearing constraints, not style preferences:
 
 - Add `Co-Authored-By: Claude` lines to commit messages (hooks may reject them; see `CLAUDE.md`)
 - Use `git add -A` or `git add .` blindly — stage specific files
-- Modify `.github/workflows/deploy-index-html.yml` without understanding the base path setup in `vite.config.js`
+- Modify `.github/workflows/deploy.yml` without understanding the base path setup in `vite.config.js`
 - Add DOM access to any file under `app/domain/`
 - Import from `app/presentation/` or `app/state/` inside domain modules
 - Skip tests — if a domain function is changed and no test is updated, something is wrong
+- Pass pseudo-selector strings (e.g. `'&:hover': {...}`) in Mantine `styles` props — React logs warnings; put these in `global.css` targeting `.mantine-*` classes instead
 
 ---
 
@@ -168,3 +171,5 @@ These are load-bearing constraints, not style preferences:
 | Chart lifecycle hook | `app/presentation/charts/hooks/useChart.js` |
 | Chart wrapper component | `app/presentation/charts/ChartCard.jsx` |
 | Types (JSDoc) | `common/types/index.js` |
+| Filter UI components | `app/presentation/components/dashboard/FilterBar.jsx` |
+| Mantine theming / CSS overrides | `app/presentation/styles/global.css` (Mantine section) |
