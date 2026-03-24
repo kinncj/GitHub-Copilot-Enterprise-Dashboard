@@ -28,7 +28,7 @@ export function Dashboard() {
   const { aggregatedData } = useApp();
 
   return (
-    <div style={{ position:'relative',zIndex:1,maxWidth:'1280px',margin:'0 auto',padding:'1.5rem 1.5rem 3rem' }}>
+    <div style={{ position:'relative',zIndex:1,maxWidth:'1280px',margin:'0 auto',padding:'calc(52px + 1.5rem) 1.5rem calc(36px + 1.5rem)' }}>
       <Header />
       <FilterBar />
       <div className="mb-8">
@@ -71,16 +71,6 @@ export function Dashboard() {
 
       <InsightsPanel />
       <DataTable />
-
-      <footer style={{ marginTop:'3rem', paddingTop:'1.5rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-        <p style={{ fontSize:'0.72rem', color:'var(--text-3)', letterSpacing:'0.02em' }}>
-          Copyright &copy; 2026{' '}
-          <a href="mailto:kinncj@protonmail.com" style={{ color:'var(--text-2)', textDecoration:'none' }}>
-            Kinn Coelho Juliao &lt;kinncj@protonmail.com&gt;
-          </a>
-          {' '}&mdash; AGPLv3
-        </p>
-      </footer>
     </div>
   );
 }

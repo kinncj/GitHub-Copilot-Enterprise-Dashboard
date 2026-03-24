@@ -25,8 +25,15 @@ export function Header() {
     : '';
 
   return (
-    <header className="mb-8">
-      <div className="dash-nav">
+    <header style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+      height: '52px',
+      borderBottom: '1px solid var(--border)',
+      background: 'var(--nav-bg)',
+      backdropFilter: 'blur(20px)',
+      display: 'flex', alignItems: 'center', padding: '0 1.5rem',
+    }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display:'flex',alignItems:'center',gap:'0.6rem' }}>
           <div style={{ width:'32px',height:'32px',borderRadius:'9px',background:'var(--green-glow)',border:'1px solid rgba(0,200,150,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
             <BarChart2 size={15} color="var(--green)" />

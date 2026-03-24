@@ -32,7 +32,7 @@ export function UploadZone() {
       </nav>
 
       {/* hero */}
-      <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'5rem 1.5rem 3rem' }}>
+      <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'5rem 1.5rem calc(36px + 2rem)' }}>
         <div style={{ width:'100%',maxWidth:'480px' }}>
           <h1 className="upload-brand fade-up" style={{ marginBottom:'1.25rem' }}>
             Understand your<br />team&#39;s <em>Copilot</em><br />usage.
@@ -69,15 +69,6 @@ export function UploadZone() {
         </div>
       </div>
 
-      <footer style={{ padding:'1.5rem', textAlign:'center', borderTop:'1px solid var(--border)' }}>
-        <p style={{ fontSize:'0.72rem', color:'var(--text-3)', letterSpacing:'0.02em' }}>
-          Copyright &copy; 2026{' '}
-          <a href="mailto:kinncj@protonmail.com" style={{ color:'var(--text-2)', textDecoration:'none' }}>
-            Kinn Coelho Juliao &lt;kinncj@protonmail.com&gt;
-          </a>
-          {' '}&mdash; AGPLv3
-        </p>
-      </footer>
     </div>
   );
 }
