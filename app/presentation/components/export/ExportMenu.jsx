@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, ChevronDown, Table2, FileJson } from 'lucide-react';
 import { useApp } from '../../context/AppContext.jsx';
-import { buildDataCSV } from '../../../domain/export/csv.js';
+import { buildRawRecordsCSV } from '../../../domain/export/csv.js';
 import { buildNDJSON } from '../../../domain/export/ndjson.js';
 import { triggerDownload } from '../../../../common/utils/download.js';
 
@@ -17,8 +17,8 @@ export function ExportMenu() {
   }, []);
 
   const exportCSV = () => {
-    const csv = buildDataCSV(filteredData, valueConfig);
-    triggerDownload(new Blob([csv], { type: 'text/csv' }), 'copilot-analytics.csv');
+    const csv = buildRawRecordsCSV(filteredData, valueConfig);
+    triggerDownload(new Blob([csv], { type: 'text/csv' }), 'copilot-raw.csv');
     setOpen(false);
   };
 

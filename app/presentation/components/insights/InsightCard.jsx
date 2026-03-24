@@ -1,12 +1,13 @@
 import React from 'react';
-import { Star, TrendingUp, TrendingDown, AlertCircle, XCircle, Info } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, AlertCircle, XCircle, Info, Award } from 'lucide-react';
 
 const icons = {
   star: Star,
   'trending-up': TrendingUp,
   'trending-down': TrendingDown,
   'alert-circle': AlertCircle,
-  'x-circle': XCircle
+  'x-circle': XCircle,
+  award: Award,
 };
 const colors = { success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#60a5fa' };
 

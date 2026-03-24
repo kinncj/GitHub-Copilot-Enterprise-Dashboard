@@ -17,6 +17,26 @@ function buildCSV(headers, rows) {
 }
 
 /**
+ * Exports filtered records as raw per-user-per-day rows (no aggregation).
+ * Used by the header "Export CSV" — preserves full date granularity.
+ * @param {import('../../../common/types/index.js').CopilotRecord[]} records
+ * @param {import('../../../common/types/index.js').ValueConfig} valueConfig
+ * @returns {string}
+ */
+export function buildRawRecordsCSV(records, valueConfig) {
+  const { MANUAL_LINES_PER_HOUR, BLENDED_RATE_PER_HOUR } = valueConfig;
+  const headers = ['User', 'Date', 'Generations', 'Acceptances', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Net Value'];
+
+  const rows = records.map(r => {
+    const net      = r.loc_added_sum - r.loc_deleted_sum;
+    const netValue = ((net / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR).toFixed(2);
+    return [r.user_login, r.day, r.code_generation_activity_count, r.code_acceptance_activity_count, r.loc_added_sum, r.loc_deleted_sum, net, netValue];
+  });
+
+  return buildCSV(headers, rows);
+}
+
+/**
  * Exports filtered records as a CSV aggregated per user over the filtered period.
  * @param {import('../../../common/types/index.js').CopilotRecord[]} records
  * @param {import('../../../common/types/index.js').ValueConfig} valueConfig

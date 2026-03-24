@@ -23,7 +23,7 @@ export function generateInsights(aggregated, filteredRecords, config = CONFIG) {
   if (powerUsers.length > 0) {
     insights.push({
       title: 'Power Users',
-      subtitle: 'Top 10% by generations (Copilot triggers) — not lines of code',
+      subtitle: 'Top 10% by Copilot trigger count — measures how often they reach for AI, not whether it produced value. High usage can mean deep adoption or frequent dismissals.',
       type: 'success',
       icon: 'star',
       content: powerUsers.map(u => `${u.name} (${formatNumber(u.generations)} gens)`).join(', ')
@@ -45,6 +45,24 @@ export function generateInsights(aggregated, filteredRecords, config = CONFIG) {
       type: 'success',
       icon: 'trending-up',
       content: highEfficiency.map(u => `${u.name} (${(u.rate * 100).toFixed(1)}%)`).join(', ')
+    });
+  }
+
+  // ── Spotlight Users ────────────────────────────────────────────────────────
+  // Top producers by lines added — AI is visibly writing code for these users.
+  const spotlightThreshold = sorted[Math.floor(sorted.length * config.POWER_USER_PERCENTILE)]?.linesAdded || 0;
+  const spotlightUsers = [...userArray]
+    .sort((a, b) => b.linesAdded - a.linesAdded)
+    .filter(u => u.linesAdded > 0)
+    .slice(0, 5);
+
+  if (spotlightUsers.length > 0) {
+    insights.push({
+      title: 'Spotlight Users',
+      subtitle: 'Top users by lines of code added via Copilot — these are the people where AI is visibly producing real output, not just being triggered.',
+      type: 'success',
+      icon: 'award',
+      content: spotlightUsers.map(u => `${u.name} (${formatNumber(u.linesAdded)} lines)`).join(', ')
     });
   }
 
