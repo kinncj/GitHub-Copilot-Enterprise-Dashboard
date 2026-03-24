@@ -24,12 +24,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # This creates a 'dist' folder and moves only index.html into it
-      - name: Prepare Files
-        run: |
-          mkdir dist
-          cp index.html dist/
-          # Optional: cp -r docs dist/ (if your index.html links to them)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -37,7 +42,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Now we only upload the contents of the 'dist' folder
           path: 'dist/'
 
       - name: Deploy to GitHub Pages

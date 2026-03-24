@@ -52,6 +52,7 @@ coverage/
 
 # Test
 /test-results/
+/playwright-report/
 
 # AGPLv3 License
 LICENSE
