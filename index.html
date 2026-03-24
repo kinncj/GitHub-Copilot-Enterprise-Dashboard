@@ -83,7 +83,7 @@
             border: 1px solid var(--border);
             border-radius: var(--r);
             padding: 1.5rem 1.75rem;
-            transition: border-color 0.25s, transform 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             position: relative;
         }
 
@@ -99,7 +99,7 @@
 
         .kpi-card:hover {
             border-color: var(--border-2);
-            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
         }
         .kpi-card:hover::after { opacity: 1; }
 
@@ -317,7 +317,9 @@
         .info-tip .tip-body {
             visibility: hidden;
             opacity: 0;
-            position: fixed;   /* escapes every containing block / overflow */
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
             width: 260px;
             background: var(--surface-2);
             border: 1px solid var(--border-2);
@@ -326,7 +328,7 @@
             border-radius: 10px;
             font-size: 0.7rem;
             line-height: 1.65;
-            z-index: 9999;
+            z-index: 100;
             transition: opacity 0.15s;
             pointer-events: none;
             font-weight: 400;
@@ -3211,22 +3213,6 @@
             loadConfiguration();
             setupUpload();
             lucide.createIcons();
-
-            // Position tooltips as fixed so they escape any overflow:hidden ancestor
-            document.addEventListener('mouseover', e => {
-                const tip = e.target.closest('.info-tip');
-                if (!tip) return;
-                const body = tip.querySelector('.tip-body');
-                if (!body) return;
-                const r = tip.getBoundingClientRect();
-                // Anchor bottom of tooltip 8px above top of the icon
-                body.style.bottom = (window.innerHeight - r.top + 8) + 'px';
-                body.style.top    = 'auto';
-                // Align right edge of tooltip with right edge of icon; clamp to viewport
-                const right = window.innerWidth - r.right;
-                body.style.right = Math.max(8, right) + 'px';
-                body.style.left  = 'auto';
-            });
 
             // Close export dropdown when clicking outside it
             document.addEventListener('click', (e) => {
