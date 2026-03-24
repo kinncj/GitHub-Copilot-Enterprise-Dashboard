@@ -1,22 +1,17 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// GitHub Pages serves project repos at /repo-name/ — Vite must know the base
-// so generated asset paths are correct. Falls back to '/' for local dev.
 const base = process.env.GITHUB_REPOSITORY
   ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
   : '/';
 
 export default defineConfig({
   base,
+  plugins: [react()],
   root: '.',
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      input: 'index.html'
-    }
+    rollupOptions: { input: 'index.html' }
   },
-  server: {
-    port: 3000,
-    open: true
-  }
+  server: { port: 3000 }
 });

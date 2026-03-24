@@ -2,19 +2,18 @@
 
 ## Layers
 
-The codebase follows Clean Architecture: domain logic is pure JavaScript with no DOM dependencies; the presentation layer is a thin shell that reads from the state store and calls domain functions.
+The codebase follows Clean Architecture. Domain logic is pure JavaScript with no DOM dependencies. The presentation layer is React components that read from a central hook and pass data down as props.
 
 ```mermaid
 graph TD
     subgraph Presentation["app/presentation/"]
-        P1[components/kpi.js]
-        P2[components/table.js]
-        P3[components/insights.js]
-        P4[charts/]
+        CTX[context/AppContext.jsx]
+        COMP[components/**/*.jsx]
+        CHARTS[charts/*.jsx]
     end
 
     subgraph State["app/state/"]
-        S[store.js]
+        HOOK[useAppState.js]
     end
 
     subgraph Domain["app/domain/"]
@@ -34,10 +33,11 @@ graph TD
         C3[types/index.js]
     end
 
-    Presentation --> State
-    Presentation --> Domain
+    COMP --> CTX
+    CHARTS --> CTX
+    CTX --> HOOK
+    HOOK --> Domain
     Domain --> Common
-    State -.->|"reads slice"| Domain
 ```
 
 Domain modules have **no imports from `app/state/` or `app/presentation/`**. They receive data as arguments and return values — this is what makes them testable in Node without a browser.
@@ -48,53 +48,45 @@ Domain modules have **no imports from `app/state/` or `app/presentation/`**. The
 
 ```mermaid
 flowchart LR
-    A[User drops .ndjson file] --> B[parseNDJSON\nchunked, 10k lines/batch]
-    B --> C[normalizeRecord\ncoerce types, drop invalids]
-    C --> D[mergeRecords\nMath.max on overlapping exports]
-    D --> E[app/state/store.js\nrawData]
+    A[User drops .ndjson file] --> B["parseNDJSON\nchunked, 10k lines/batch"]
+    B --> C["normalizeRecord\ncoerce types, drop invalids"]
+    C --> D["mergeRecords\nMath.max on overlapping exports"]
+    D --> E["useAppState.js\nrawData state"]
 
-    E --> F[filterRecords\ndate · user · IDE · language]
-    F --> G[aggregateData\nbyUser · byDay · byIDE · byLanguage · byFeature · byModel]
+    E --> F["filterRecords\ndate · user · IDE · language"]
+    F --> G["aggregateData\nbyUser · byDay · byIDE · byLanguage · byFeature · byModel"]
 
-    G --> H1[renderKPIs]
-    G --> H2[renderCharts × 14]
-    G --> H3[generateInsights → renderInsights]
-    G --> H4[renderTable]
+    G --> H1["KpiSection"]
+    G --> H2["14 chart components"]
+    G --> H3["generateInsights → InsightsPanel"]
+    G --> H4["DataTable"]
 ```
 
-Files go through the parser once. Every filter change re-runs `filterRecords → aggregateData → render`. No caching layer — the single-pass aggregation is fast enough for the dataset sizes involved.
+Files are parsed once and stored in `rawData`. Every filter change re-runs `filterRecords → aggregateData → render`. No caching — the single-pass aggregation is fast enough for the dataset sizes involved.
 
 ---
 
-## Module Map
+## React Component Tree
 
 ```mermaid
-graph LR
-    main["app/main.js"] --> store["app/state/store.js"]
-    main --> parser["app/domain/data/parser.js"]
-    main --> merger["app/domain/data/merger.js"]
-    main --> filter["app/domain/filtering/engine.js"]
-    main --> agg["app/domain/data/aggregator.js"]
-    main --> ins["app/domain/insights/engine.js"]
-    main --> kpi["app/presentation/components/kpi.js"]
-    main --> charts["app/presentation/charts/"]
-    main --> table["app/presentation/components/table.js"]
+graph TD
+    main["app/main.jsx"] --> App["App.jsx"]
+    App --> CTX["AppContext.Provider\n(useAppState)"]
+    CTX --> Upload["UploadZone"]
+    CTX --> Progress["ProgressBar"]
+    CTX --> Dashboard["Dashboard"]
 
-    parser --> constants["app/domain/config/constants.js"]
-    merger --> constants
-    filter --> constants
-    agg --> constants
-    ins --> constants
-    ins --> format["common/utils/format.js"]
-
-    kpi --> store
-    charts --> store
-    table --> store
-
-    csvExport["app/domain/export/csv.js"] --> format
-    ndjsonExport["app/domain/export/ndjson.js"]
-    download["common/utils/download.js"]
+    Dashboard --> Header
+    Dashboard --> FilterBar
+    Dashboard --> KpiSection
+    Dashboard --> MetricsGlossary
+    Dashboard --> ValueConfig
+    Dashboard --> Charts["14 chart components"]
+    Dashboard --> InsightsPanel
+    Dashboard --> DataTable
 ```
+
+`App` renders one of three top-level views based on state: `UploadZone` (no data), `ProgressBar` (loading), or `Dashboard` (data loaded).
 
 ---
 
@@ -102,15 +94,17 @@ graph LR
 
 ```mermaid
 classDiagram
-    class State {
+    class useAppState {
         CopilotRecord[] rawData
         LoadedFile[] loadedFiles
+        FilterCriteria filters
+        ValueConfig valueConfig
+        boolean loading
+        Progress progress
         CopilotRecord[] filteredData
         AggregatedData aggregatedData
-        Map~string,Chart~ charts
-        FilterCriteria filters
-        string|null sortColumn
-        string sortDirection
+        Insight[] insights
+        FilterOptions filterOptions
     }
 
     class CopilotRecord {
@@ -125,7 +119,7 @@ classDiagram
         FeatureEntry[] totals_by_feature
         LanguageFeatureEntry[] totals_by_language_feature
         LanguageModelEntry[] totals_by_language_model
-        string model
+        ModelFeatureEntry[] totals_by_model_feature
     }
 
     class AggregatedData {
@@ -145,10 +139,50 @@ classDiagram
         string|null language
     }
 
-    State --> CopilotRecord
-    State --> AggregatedData
-    State --> FilterCriteria
+    useAppState --> CopilotRecord
+    useAppState --> AggregatedData
+    useAppState --> FilterCriteria
 ```
+
+`filteredData`, `aggregatedData`, `insights`, and `filterOptions` are derived synchronously from `rawData` + `filters` on every render — no separate dispatch step.
+
+---
+
+## NDJSON Schema
+
+The real GitHub Copilot Enterprise export format (as of late 2025):
+
+```json
+{
+  "report_start_day": "2025-11-19",
+  "report_end_day": "2025-12-16",
+  "day": "2025-12-07",
+  "enterprise_id": "5429",
+  "user_id": 12345678,
+  "user_login": "octocat",
+  "user_initiated_interaction_count": 40,
+  "code_generation_activity_count": 101,
+  "code_acceptance_activity_count": 4,
+  "loc_suggested_to_add_sum": 617,
+  "loc_suggested_to_delete_sum": 0,
+  "loc_added_sum": 2452,
+  "loc_deleted_sum": 93,
+  "used_agent": true,
+  "used_chat": true,
+  "totals_by_ide": [...],
+  "totals_by_feature": [...],
+  "totals_by_language_feature": [...],
+  "totals_by_language_model": [...],
+  "totals_by_model_feature": [...]
+}
+```
+
+**Field notes:**
+- `loc_suggested_to_add_sum` — lines Copilot suggested (ghost text shown)
+- `loc_added_sum` — lines actually accepted/applied (what landed in the file)
+- `active_time_minutes` — not present in current API exports; parser defaults to 0
+- `model` — not a root-level field; model info is in `totals_by_language_model` and `totals_by_model_feature`
+- `user_initiated_interaction_count` — user-triggered chat/agent interactions (not passive completions)
 
 ---
 
@@ -157,7 +191,7 @@ classDiagram
 | Principle | Where it shows up |
 |-----------|-------------------|
 | **Single Responsibility** | Each module has one job: `parser.js` parses, `merger.js` merges, `aggregator.js` aggregates. None of them render or touch the DOM. |
-| **Open/Closed** | New insight types: add a function to `insights/engine.js`, no existing code changes. New chart: add a module under `presentation/charts/`, register it. |
-| **Liskov** | Not directly applicable (no inheritance hierarchy). Composition used instead. |
+| **Open/Closed** | New insight: add a block to `insights/engine.js`, no existing code changes. New chart: add a JSX component under `presentation/charts/`. |
+| **Liskov** | Not directly applicable (no inheritance). Composition used throughout. |
 | **Interface Segregation** | Domain functions take only the data slice they need — `filterRecords(records, criteria)` doesn't receive the whole state. |
-| **Dependency Inversion** | Domain modules depend on `common/utils/format.js` (abstraction), not on browser APIs. The presentation layer wires the browser into the domain by passing callbacks (e.g. `onProgress`). |
+| **Dependency Inversion** | Domain modules depend on `common/utils/format.js`, not on browser APIs. The React layer wires the browser into the domain by passing callbacks (`onProgress`). |

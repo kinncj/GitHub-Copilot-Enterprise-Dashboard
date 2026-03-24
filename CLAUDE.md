@@ -6,7 +6,7 @@ Project instructions for Claude Code. See also `AGENTS.md` for agent-specific gu
 
 ## What this project is
 
-**GitHub Copilot Enterprise Dashboard** — browser-based analytics for GitHub Copilot Enterprise usage data. Zero backend. Everything runs client-side. Deployed to GitHub Pages via Vite.
+**GitHub Copilot Enterprise Dashboard** — React + Vite browser-based analytics for GitHub Copilot Enterprise usage data. Zero backend. Everything runs client-side. Deployed to GitHub Pages.
 
 **Repository:** [github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard](https://github.com/kinncj/GitHub-Copilot-Enterprise-Dashboard)
 
@@ -14,13 +14,13 @@ Project instructions for Claude Code. See also `AGENTS.md` for agent-specific gu
 
 ## Architecture
 
-This codebase follows Clean Architecture with SOLID principles. Read `docs/architecture.md` for diagrams.
+This codebase follows Clean Architecture with SOLID principles. Read `docs/architecture.md` for full diagrams.
 
 **Three layers:**
 
 1. **`app/domain/`** — pure JavaScript. No DOM, no globals. Receives data as arguments, returns data. Fully testable in Node.
-2. **`app/state/store.js`** — single mutable state object. Domain functions never import it directly.
-3. **`app/presentation/`** — DOM-aware components and chart renderers. Thin shell over the domain.
+2. **`app/state/useAppState.js`** — React hook that orchestrates all domain calls. Components consume it via `useApp()` from `AppContext`.
+3. **`app/presentation/`** — React JSX components and Chart.js renderers. Thin shell over the domain.
 
 **Rule:** nothing in `app/domain/` may import from `app/presentation/` or `app/state/`. If you find yourself wanting to, the logic belongs somewhere else.
 
@@ -40,7 +40,7 @@ This codebase follows Clean Architecture with SOLID principles. Read `docs/archi
 | `common/utils/download.js` | `triggerDownload` (browser-side, not a domain module) |
 | `common/types/index.js` | JSDoc type definitions for the whole domain |
 
-### NDJSON schema
+### NDJSON schema (real API format, late 2025)
 
 ```json
 {
@@ -48,16 +48,26 @@ This codebase follows Clean Architecture with SOLID principles. Read `docs/archi
   "day": "YYYY-MM-DD",
   "code_generation_activity_count": number,
   "code_acceptance_activity_count": number,
+  "user_initiated_interaction_count": number,
+  "loc_suggested_to_add_sum": number,
+  "loc_suggested_to_delete_sum": number,
   "loc_added_sum": number,
   "loc_deleted_sum": number,
-  "active_time_minutes": number,
-  "totals_by_ide": [{"ide": "vscode", "code_generation_activity_count": N}],
-  "totals_by_feature": [{"feature": "code_completion", "code_generation_activity_count": N}],
+  "used_agent": boolean,
+  "used_chat": boolean,
+  "totals_by_ide": [{"ide": "vscode", "code_generation_activity_count": N, ...}],
+  "totals_by_feature": [{"feature": "chat_panel_agent_mode", "code_generation_activity_count": N, ...}],
   "totals_by_language_feature": [{"language": "python", "feature": "...", "code_generation_activity_count": N}],
-  "totals_by_language_model": [{"model": "gpt-4", "code_generation_activity_count": N}],
-  "model": "string"
+  "totals_by_language_model": [{"language": "python", "model": "claude-4.5-sonnet", "code_generation_activity_count": N}],
+  "totals_by_model_feature": [{"model": "claude-4.5-sonnet", "feature": "...", "code_generation_activity_count": N}]
 }
 ```
+
+**Key schema notes:**
+- `loc_added_sum` = lines actually accepted/applied (not ghost text shown)
+- `loc_suggested_to_add_sum` = lines Copilot showed as suggestions
+- `active_time_minutes` is **absent** from current exports — parser defaults it to 0
+- Root-level `model` field is **absent** — model data is in `totals_by_language_model`
 
 ### Merge strategy
 
@@ -72,7 +82,7 @@ GitHub Copilot Enterprise exports use 28-day rolling windows. Uploading two expo
 ```bash
 make install    # npm install + playwright browsers
 make dev        # vite dev server — http://localhost:3000
-make test       # 93 unit tests (vitest)
+make test       # unit tests (vitest)
 make test-e2e   # playwright e2e
 make build      # production build → dist/
 ```
@@ -90,9 +100,9 @@ make build      # production build → dist/
 ### Common tasks
 
 - **Add insight** → `app/domain/insights/engine.js` + `tests/unit/domain/insights/engine.test.js`
-- **Add chart** → `app/presentation/charts/` + `index.html` canvas + CSV builder in `app/domain/export/csv.js`
-- **Add KPI card** → `app/presentation/components/kpi.js`
-- **Add filter** → `app/domain/filtering/engine.js` + `filterRecords()` + test
+- **Add chart** → new `app/presentation/charts/MyChart.jsx` + register in `Dashboard.jsx` + CSV builder in `app/domain/export/csv.js`
+- **Add KPI card** → `app/presentation/components/kpi/KpiSection.jsx`
+- **Add filter** → `app/domain/filtering/engine.js` + `filterRecords()` + `FilterBar.jsx` + test
 - **Change threshold** → `app/domain/config/constants.js` only
 - **Full guides** → `docs/`
 
@@ -100,7 +110,7 @@ make build      # production build → dist/
 
 ## Tests
 
-93 unit tests in `tests/unit/`, all passing. Every domain function has tests. When changing a domain module, update its tests too — the test file lives at the same relative path under `tests/unit/`.
+Unit tests in `tests/unit/`, all passing. Every domain function has tests. When changing a domain module, update its tests — the test file is at the same relative path under `tests/unit/`.
 
 E2E tests in `tests/e2e/dashboard.spec.js` cover the upload → dashboard → filter → export flow.
 
@@ -108,7 +118,7 @@ E2E tests in `tests/e2e/dashboard.spec.js` cover the upload → dashboard → fi
 
 ## Deployment
 
-Push to `main` → GitHub Actions runs `npm ci && npm run build` → deploys `dist/` to GitHub Pages. The `vite.config.js` reads `GITHUB_REPOSITORY` to set the correct base path for the Pages subdirectory.
+Push to `main` → GitHub Actions runs `npm ci && npm run build` → deploys `dist/` to GitHub Pages. The `vite.config.js` reads `GITHUB_REPOSITORY` to set the correct base path.
 
 See `docs/deployment.md` for the full pipeline diagram.
 
@@ -119,7 +129,7 @@ See `docs/deployment.md` for the full pipeline diagram.
 See `AGENTS.md` for:
 - Which modules are safe to edit (domain = always safe; presentation = carefully)
 - Recommended Claude Code skills for common tasks (`/tdd`, `/ship`, `/wrap-up`, etc.)
-- SOLID constraints that agents must follow
+- SOLID constraints agents must follow
 - Entry points for specific tasks (parsing, merging, insights, exports)
 
 ---

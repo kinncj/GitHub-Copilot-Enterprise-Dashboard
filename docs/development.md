@@ -26,31 +26,47 @@ npm run test:e2e
 ```
 app/
   domain/          # Pure JS — no DOM, fully testable in Node
-    config/        # Constants and feature labels
+    config/        # Constants and feature labels (FEATURE_LABELS, CONFIG)
     data/          # Parser, merger, aggregator
     filtering/     # Filter engine + dropdown option extraction
     insights/      # Insight card generation
     export/        # CSV and NDJSON builders
-  state/           # Central store (one object, mutated in place)
-  presentation/    # DOM-aware components and chart renderers
-  main.js          # Wires everything together
+  state/
+    useAppState.js # Central React hook — orchestrates all domain calls
+  presentation/
+    context/       # AppContext + useApp hook
+    components/    # React JSX components
+      upload/      # UploadZone
+      progress/    # ProgressBar
+      dashboard/   # Dashboard, Header, FilterBar
+      kpi/         # KpiSection, KpiCard, FeatureAdoptionCard
+      insights/    # InsightsPanel, InsightCard
+      table/       # DataTable
+      export/      # ExportMenu
+      glossary/    # MetricsGlossary
+      config/      # ValueConfig
+      shared/      # SectionDivider
+    charts/        # Chart.js components (one file per chart)
+      hooks/       # useChart.js lifecycle hook
+    styles/        # global.css (Tailwind + design tokens)
+  main.jsx         # React entry point
 
 common/
   utils/           # formatNumber, humanizeFeature, triggerDownload
   types/           # JSDoc type definitions
 
 tests/
-  unit/            # Mirrors app/domain/ and common/ structure
+  unit/            # Mirrors app/domain/ structure
   e2e/             # Playwright tests against the running app
 ```
 
-The rule: **domain/ has no DOM access**. If a function needs `document`, it belongs in `presentation/`.
+**The rule: domain/ has no DOM access.** If a function needs `document` or `window`, it belongs in `presentation/`.
 
 ---
 
 ## Adding a new insight
 
-Insights live in `app/domain/insights/engine.js`. The function `generateInsights` returns `Insight[]` — add a new block before the return:
+Insights live in `app/domain/insights/engine.js`. Add a block to `generateInsights()` before the `return`:
 
 ```javascript
 // in generateInsights()
@@ -77,60 +93,85 @@ it('flags my condition', () => {
 });
 ```
 
+No presentation code changes needed — `InsightsPanel` renders whatever `generateInsights` returns.
+
 ---
 
 ## Adding a new chart
 
-1. Create `app/presentation/charts/my-chart.js`:
+1. Create `app/presentation/charts/MyChart.jsx`:
 
-```javascript
-import { state } from '../../state/store.js';
+```jsx
+import React from 'react';
+import { useChart } from './hooks/useChart.js';
+import { ChartCard } from './ChartCard.jsx';
+import { getChartDefaults } from './chartOptions.js';
 
-export function renderMyChart() {
-  const { aggregatedData, charts } = state;
-  if (charts.myChart) charts.myChart.destroy();
+export function MyChart({ aggregatedData }) {
+  const { byDay = {} } = aggregatedData;
 
-  const ctx = document.getElementById('myChart').getContext('2d');
-  charts.myChart = new Chart(ctx, {
-    type: 'bar',
-    data: { /* built from aggregatedData */ },
-    options: getChartOptions('My Chart Title')
+  const { canvasRef, chartRef } = useChart([JSON.stringify(byDay)], () => {
+    const labels = Object.keys(byDay).sort();
+    const defaults = getChartDefaults();
+    return {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'My Metric',
+          data: labels.map(d => byDay[d].someField),
+          backgroundColor: '#818cf8'
+        }]
+      },
+      options: defaults
+    };
   });
+
+  return (
+    <ChartCard title="My Chart" subtitle="What it shows" chartRef={chartRef}>
+      <canvas ref={canvasRef} />
+    </ChartCard>
+  );
 }
 ```
 
-2. Add `<canvas id="myChart">` and a card wrapper to `index.html`.
+2. Import and render it in `app/presentation/components/dashboard/Dashboard.jsx`:
 
-3. Import and call `renderMyChart()` from `app/presentation/charts/index.js`.
+```jsx
+import { MyChart } from '../../charts/MyChart.jsx';
+// inside Dashboard's JSX:
+<MyChart aggregatedData={aggregatedData} />
+```
 
-4. Add a CSV export function to `app/domain/export/csv.js` and a button to the card header.
+3. Add a CSV export function to `app/domain/export/csv.js` and pass `onCSV` to `ChartCard`.
+
+The `useChart(deps, buildConfig)` hook handles Chart.js lifecycle — it destroys and recreates the chart whenever `deps` changes.
 
 ---
 
 ## Adding a new KPI card
 
-KPI cards are rendered by `app/presentation/components/kpi.js`. Each card is an object:
+KPI cards live in `app/presentation/components/kpi/KpiSection.jsx`. Each `<KpiCard>` takes:
 
-```javascript
-{
-  label: 'My Metric',
-  value: formatNumber(myValue),
-  icon: 'activity',
-  color: 'blue',
-  subtitle: 'optional context line',
-  tooltip: 'Explanation shown on hover'
-}
+```jsx
+<KpiCard
+  label="My Metric"
+  value={formatNumber(myValue)}
+  icon="activity"
+  subtitle="optional context"
+  tooltip="Shown on hover"
+/>
 ```
 
-Add it to the relevant section array in `renderKPIs()`.
+Add it to the relevant section in `KpiSection` (Activity, Lines of Code, or Feature Adoption).
 
 ---
 
 ## Adding a new filter
 
-1. Add a `<select id="myFilter">` in `index.html`.
-2. Add `myFilter` extraction to `extractFilterOptions()` in `app/domain/filtering/engine.js`.
-3. Add the filter condition to `filterRecords()`:
+1. Add the filter field to the `filters` state in `app/state/useAppState.js`.
+2. Add extraction to `extractFilterOptions()` in `app/domain/filtering/engine.js`.
+3. Add the condition to `filterRecords()`:
 
 ```javascript
 if (criteria.myFilter) {
@@ -138,17 +179,16 @@ if (criteria.myFilter) {
 }
 ```
 
-4. Wire the DOM select → state → `applyFilters()` in `app/main.js`.
+4. Add a `<select>` to `app/presentation/components/dashboard/FilterBar.jsx` wired to `setFilters`.
 5. Add tests in `tests/unit/domain/filtering/engine.test.js`.
 
 ---
 
 ## Adding a new export
 
-Pure builders go in `app/domain/export/csv.js` (or a new file in `export/`). They receive data slices as arguments and return strings. No Blob, no `document` — that's the caller's job.
+Pure builders go in `app/domain/export/csv.js`. They receive data slices as arguments and return strings — no Blob, no `document`:
 
 ```javascript
-// app/domain/export/csv.js
 export function buildMyExportCSV(aggregated) {
   const rows = Object.entries(aggregated.byUser).map(([user, d]) => [user, d.generations]);
   return buildCSV(['User', 'Generations'], rows);
@@ -159,16 +199,16 @@ The presentation layer calls `triggerDownload(new Blob([csv], { type: 'text/csv'
 
 ---
 
-## Composition pattern for presentation components
-
-Presentation components follow a HOC-style composition: a component function takes a render dependency object rather than reading globals directly. This lets you test render logic by passing mock data.
+## Chart lifecycle pattern
 
 ```mermaid
 flowchart TD
-    main["app/main.js\n(wires deps)"] --> comp["renderKPIs(deps)"]
-    comp --> dom["DOM update"]
-    comp --> domain["domain functions\n(pure, no DOM)"]
-    domain --> data["state.aggregatedData slice"]
+    JSX["Chart component renders"] --> REF["canvasRef attached to canvas"]
+    REF --> HOOK["useChart(deps, buildConfig)"]
+    HOOK --> EFFECT["useEffect runs on dep change"]
+    EFFECT --> DESTROY["destroy old chart instance"]
+    DESTROY --> CREATE["new Chart(canvas, buildConfig())"]
+    CREATE --> CLEANUP["cleanup fn: destroy on unmount"]
 ```
 
-The `deps` object carries everything a component needs: `aggregatedData`, `filteredData`, `config`, `onExport`, etc. Nothing is read from global state inside the component — it's all passed in.
+`buildConfig` is a factory function called inside `useEffect`. It closes over the component's current props/state. `deps` array controls when the chart rebuilds — typically `[JSON.stringify(dataSlice)]`.
