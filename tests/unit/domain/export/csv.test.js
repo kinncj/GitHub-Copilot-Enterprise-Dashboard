@@ -51,14 +51,14 @@ describe('buildDataCSV', () => {
     const csv = buildDataCSV([record()], valueConfig);
     const lines = csv.split('\n');
     expect(lines[0]).toContain('User');
-    expect(lines[0]).toContain('Date');
     expect(lines[0]).toContain('Generations');
+    expect(lines[0]).toContain('Accept Rate');
   });
 
-  it('has one data row per record', () => {
+  it('has one data row per user', () => {
     const csv = buildDataCSV([record(), record({ user_login: 'bob', day: '2025-01-02' })], valueConfig);
     const lines = csv.split('\n');
-    expect(lines).toHaveLength(3); // 1 header + 2 data
+    expect(lines).toHaveLength(3); // 1 header + 2 users
   });
 
   it('computes value columns correctly', () => {

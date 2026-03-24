@@ -17,21 +17,29 @@ function buildCSV(headers, rows) {
 }
 
 /**
- * Exports filtered records as a CSV with per-day per-user rows.
+ * Exports filtered records as a CSV aggregated per user over the filtered period.
  * @param {import('../../../common/types/index.js').CopilotRecord[]} records
  * @param {import('../../../common/types/index.js').ValueConfig} valueConfig
  * @returns {string}
  */
 export function buildDataCSV(records, valueConfig) {
   const { MANUAL_LINES_PER_HOUR, BLENDED_RATE_PER_HOUR } = valueConfig;
-  const headers = ['User', 'Date', 'Generations', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Value Added', 'Value Deleted', 'Net Value'];
+  const headers = ['User', 'Generations', 'Acceptances', 'Accept Rate', 'Lines Added', 'Lines Deleted', 'Net Lines', 'Net Value'];
 
-  const rows = records.map(r => {
-    const net       = r.loc_added_sum - r.loc_deleted_sum;
-    const valueAdd  = (r.loc_added_sum  / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR;
-    const valueDel  = (r.loc_deleted_sum / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR;
-    const netValue  = (net / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR;
-    return [r.user_login, r.day, r.code_generation_activity_count, r.loc_added_sum, r.loc_deleted_sum, net, valueAdd.toFixed(2), valueDel.toFixed(2), netValue.toFixed(2)];
+  const byUser = {};
+  for (const r of records) {
+    if (!byUser[r.user_login]) byUser[r.user_login] = { gens: 0, accepts: 0, linesAdded: 0, linesDeleted: 0 };
+    byUser[r.user_login].gens       += r.code_generation_activity_count;
+    byUser[r.user_login].accepts    += r.code_acceptance_activity_count;
+    byUser[r.user_login].linesAdded += r.loc_added_sum;
+    byUser[r.user_login].linesDeleted += r.loc_deleted_sum;
+  }
+
+  const rows = Object.entries(byUser).map(([user, d]) => {
+    const net        = d.linesAdded - d.linesDeleted;
+    const acceptRate = d.gens > 0 ? ((d.accepts / d.gens) * 100).toFixed(1) + '%' : '—';
+    const netValue   = ((net / MANUAL_LINES_PER_HOUR) * BLENDED_RATE_PER_HOUR).toFixed(2);
+    return [user, d.gens, d.accepts, acceptRate, d.linesAdded, d.linesDeleted, net, netValue];
   });
 
   return buildCSV(headers, rows);

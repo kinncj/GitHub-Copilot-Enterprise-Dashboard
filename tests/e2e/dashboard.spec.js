@@ -167,8 +167,8 @@ test.describe('Data Explorer table', () => {
 
   test('table rows are visible after upload', async ({ page }) => {
     const rows = page.getByRole('table').getByRole('row');
-    // header row + 3 data rows
-    await expect(rows).toHaveCount(4);
+    // header row + 2 user rows (alice and bob, aggregated across days)
+    await expect(rows).toHaveCount(3);
   });
 
   test('table shows both users', async ({ page }) => {

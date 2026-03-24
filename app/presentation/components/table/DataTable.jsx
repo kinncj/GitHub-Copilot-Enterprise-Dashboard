@@ -5,46 +5,48 @@ import { buildDataCSV } from '../../../domain/export/csv.js';
 import { triggerDownload } from '../../../../common/utils/download.js';
 import { useApp } from '../../context/AppContext.jsx';
 
-const TABLE_LIMIT = 500;
-
 const COLUMNS = [
-  { key: 'user_login',    label: 'User',        align: 'left' },
-  { key: 'day',           label: 'Date',        align: 'left' },
-  { key: 'generations',   label: 'Generations', align: 'right' },
-  { key: 'acceptances',   label: 'Acceptances', align: 'right' },
-  { key: 'acceptRate',    label: 'Accept Rate', align: 'right' },
-  { key: 'linesAdded',    label: 'Lines Added', align: 'right' },
-  { key: 'linesDeleted',  label: 'Lines Del',   align: 'right' },
-  { key: 'netLines',      label: 'Net Lines',   align: 'right' },
-  { key: 'activeTime',    label: 'Active Min',  align: 'right' },
+  { key: 'user_login',   label: 'User',        align: 'left'  },
+  { key: 'generations',  label: 'Generations', align: 'right' },
+  { key: 'acceptances',  label: 'Acceptances', align: 'right' },
+  { key: 'acceptRate',   label: 'Accept Rate', align: 'right' },
+  { key: 'linesAdded',   label: 'Lines Added', align: 'right' },
+  { key: 'linesDeleted', label: 'Lines Del',   align: 'right' },
+  { key: 'netLines',     label: 'Net Lines',   align: 'right' },
+  { key: 'activeTime',   label: 'Active Min',  align: 'right' },
 ];
 
 export function DataTable() {
-  const { filteredData, valueConfig, aggregatedData } = useApp();
+  const { filteredData, valueConfig } = useApp();
   const [sortCol, setSortCol] = useState('generations');
   const [sortDir, setSortDir] = useState('desc');
   const [search, setSearch] = useState('');
 
+  // Aggregate per user over the filtered date range
   const rows = useMemo(() => {
-    return filteredData.map(r => ({
-      user_login:   r.user_login,
-      day:          r.day,
-      generations:  r.code_generation_activity_count,
-      acceptances:  r.code_acceptance_activity_count,
-      acceptRate:   r.code_generation_activity_count > 0
-        ? (r.code_acceptance_activity_count / r.code_generation_activity_count * 100)
-        : 0,
-      linesAdded:   r.loc_added_sum,
-      linesDeleted: r.loc_deleted_sum,
-      netLines:     r.loc_added_sum - r.loc_deleted_sum,
-      activeTime:   r.active_time_minutes,
+    const byUser = {};
+    for (const r of filteredData) {
+      if (!byUser[r.user_login]) {
+        byUser[r.user_login] = { user_login: r.user_login, generations: 0, acceptances: 0, linesAdded: 0, linesDeleted: 0, activeTime: 0 };
+      }
+      const u = byUser[r.user_login];
+      u.generations  += r.code_generation_activity_count;
+      u.acceptances  += r.code_acceptance_activity_count;
+      u.linesAdded   += r.loc_added_sum;
+      u.linesDeleted += r.loc_deleted_sum;
+      u.activeTime   += r.active_time_minutes;
+    }
+    return Object.values(byUser).map(u => ({
+      ...u,
+      acceptRate: u.generations > 0 ? (u.acceptances / u.generations * 100) : 0,
+      netLines:   u.linesAdded - u.linesDeleted,
     }));
   }, [filteredData]);
 
   const filtered = useMemo(() => {
     if (!search) return rows;
     const q = search.toLowerCase();
-    return rows.filter(r => r.user_login.toLowerCase().includes(q) || r.day.includes(q));
+    return rows.filter(r => r.user_login.toLowerCase().includes(q));
   }, [rows, search]);
 
   const sorted = useMemo(() => {
@@ -55,8 +57,6 @@ export function DataTable() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
   }, [filtered, sortCol, sortDir]);
-
-  const visible = sorted.slice(0, TABLE_LIMIT);
 
   const handleSort = col => {
     if (col === sortCol) {
@@ -83,13 +83,13 @@ export function DataTable() {
         <h3 style={{ fontWeight:600,fontSize:'1rem',color:'var(--text-1)' }}>
           Data Explorer
           <span style={{ fontSize:'0.75rem',color:'var(--text-2)',marginLeft:'0.5rem',fontWeight:400 }}>
-            {filteredData.length.toLocaleString()} records{filtered.length < filteredData.length ? ` · ${filtered.length} matching` : ''}{sorted.length > TABLE_LIMIT ? ` · showing first ${TABLE_LIMIT}` : ''}
+            {rows.length.toLocaleString()} users{filtered.length < rows.length ? ` · ${filtered.length} matching` : ''}
           </span>
         </h3>
         <div style={{ display:'flex',gap:'0.5rem',alignItems:'center' }}>
           <input
             type="text"
-            placeholder="Search user or date..."
+            placeholder="Search user..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ width:'200px' }}
@@ -102,11 +102,7 @@ export function DataTable() {
           <thead>
             <tr>
               {COLUMNS.map(col => (
-                <th
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                  style={{ textAlign: col.align }}
-                >
+                <th key={col.key} onClick={() => handleSort(col.key)} style={{ textAlign: col.align }}>
                   <span style={{ display:'inline-flex',alignItems:'center',gap:'0.25rem' }}>
                     {col.label}
                     <SortIcon col={col.key} />
@@ -116,10 +112,9 @@ export function DataTable() {
             </tr>
           </thead>
           <tbody>
-            {visible.map((row, i) => (
-              <tr key={`${row.user_login}-${row.day}-${i}`}>
+            {sorted.map(row => (
+              <tr key={row.user_login}>
                 <td style={{ color:'var(--text-1)',fontWeight:500 }}>{row.user_login}</td>
-                <td>{row.day}</td>
                 <td style={{ textAlign:'right',color:'var(--c-indigo)' }}>{formatNumber(row.generations)}</td>
                 <td style={{ textAlign:'right' }}>{formatNumber(row.acceptances)}</td>
                 <td style={{ textAlign:'right' }}>
@@ -132,10 +127,10 @@ export function DataTable() {
                 <td style={{ textAlign:'right',color:'var(--c-green)' }}>{formatNumber(row.linesAdded)}</td>
                 <td style={{ textAlign:'right',color:'var(--c-red)' }}>{formatNumber(row.linesDeleted)}</td>
                 <td style={{ textAlign:'right' }}>{formatNumber(row.netLines)}</td>
-                <td style={{ textAlign:'right' }}>{row.activeTime}</td>
+                <td style={{ textAlign:'right' }}>{formatNumber(row.activeTime)}</td>
               </tr>
             ))}
-            {visible.length === 0 && (
+            {sorted.length === 0 && (
               <tr>
                 <td colSpan={COLUMNS.length} style={{ textAlign:'center',padding:'2rem',color:'var(--text-2)' }}>No records found</td>
               </tr>
