@@ -23,3 +23,22 @@ export function triggerDownloadFromDataUrl(dataUrl, filename) {
   a.download = filename;
   a.click();
 }
+
+/**
+ * Captures an HTML element as a PNG and triggers a download.
+ * Uses html2canvas under the hood.
+ * @param {HTMLElement} element
+ * @param {string} filename
+ * @returns {Promise<void>}
+ */
+export async function captureElementAsPng(element, filename) {
+  if (!element) return;
+  const html2canvas = (await import('html2canvas')).default;
+  const canvas = await html2canvas(element, {
+    backgroundColor: '#111111',
+    scale: 2,
+    logging: false,
+    useCORS: true
+  });
+  triggerDownloadFromDataUrl(canvas.toDataURL('image/png'), filename);
+}

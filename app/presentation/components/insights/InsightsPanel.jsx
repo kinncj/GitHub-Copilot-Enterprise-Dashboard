@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { useApp } from '../../context/AppContext.jsx';
 import { InsightCard } from './InsightCard.jsx';
 import { buildInsightsCSV } from '../../../domain/export/csv.js';
-import { triggerDownload } from '../../../../common/utils/download.js';
+import { triggerDownload, captureElementAsPng } from '../../../../common/utils/download.js';
 
 export function InsightsPanel() {
   const { insights } = useApp();
+  const panelRef = useRef(null);
 
   const handleCSV = () => {
     const csv = buildInsightsCSV(insights);
@@ -14,7 +15,7 @@ export function InsightsPanel() {
   };
 
   return (
-    <div className="card mb-6" id="insightsPanel">
+    <div className="card mb-6" id="insightsPanel" ref={panelRef}>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
           <Lightbulb size={20} color="var(--green)" />
@@ -22,6 +23,7 @@ export function InsightsPanel() {
         </h3>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
           <button className="btn-secondary text-xs" onClick={handleCSV}>CSV</button>
+          <button className="btn-secondary text-xs" onClick={() => captureElementAsPng(panelRef.current, 'insights.png')}>PNG</button>
         </div>
       </div>
       {insights.length === 0 ? (

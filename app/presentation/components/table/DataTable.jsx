@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { formatNumber } from '../../../../common/utils/format.js';
 import { buildDataCSV } from '../../../domain/export/csv.js';
-import { triggerDownload } from '../../../../common/utils/download.js';
+import { triggerDownload, captureElementAsPng } from '../../../../common/utils/download.js';
 import { useApp } from '../../context/AppContext.jsx';
 
 
@@ -12,6 +12,7 @@ export function DataTable() {
   const [sortCol, setSortCol] = useState('netLines');
   const [sortDir, setSortDir] = useState('desc');
   const [search, setSearch] = useState('');
+  const cardRef = useRef(null);
 
   // Aggregate per user over the filtered date range
   const rows = useMemo(() => {
@@ -92,7 +93,7 @@ export function DataTable() {
   const fmt$ = v => `$${formatNumber(Math.abs(v))}`;
 
   return (
-    <div className="card mb-6">
+    <div className="card mb-6" ref={cardRef}>
       <div style={{ marginBottom:'1rem' }}>
         <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
           <h3 style={{ fontWeight:600,fontSize:'1rem',color:'var(--text-1)' }}>
@@ -113,6 +114,7 @@ export function DataTable() {
               style={{ width:'200px' }}
             />
             <button className="btn-secondary" onClick={handleCSV}>CSV</button>
+            <button className="btn-secondary" onClick={() => captureElementAsPng(cardRef.current, 'data-explorer.png')}>PNG</button>
           </div>
         </div>
         <p style={{ fontSize:'0.72rem',color:'var(--text-3)',marginTop:'0.35rem',lineHeight:1.5 }}>

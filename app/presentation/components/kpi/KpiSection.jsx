@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { KpiCard } from './KpiCard.jsx';
 import { FeatureAdoptionCard } from './FeatureAdoptionCard.jsx';
@@ -6,7 +6,7 @@ import { SectionDivider } from '../shared/SectionDivider.jsx';
 import { formatNumber } from '../../../../common/utils/format.js';
 import { humanizeFeature } from '../../../../common/utils/format.js';
 import { buildActivityKpiCSV, buildLocKpiCSV, buildFeatureAdoptionCSV } from '../../../domain/export/csv.js';
-import { triggerDownload } from '../../../../common/utils/download.js';
+import { triggerDownload, captureElementAsPng } from '../../../../common/utils/download.js';
 
 const FEATURE_ACCENTS = [
   '#818cf8', '#34d399', '#f59e0b', '#60a5fa', '#a78bfa', '#f87171', '#fb923c', '#4ade80'
@@ -14,6 +14,9 @@ const FEATURE_ACCENTS = [
 
 export function KpiSection() {
   const { aggregatedData, valueConfig } = useApp();
+  const activityRef  = useRef(null);
+  const locRef       = useRef(null);
+  const featuresRef  = useRef(null);
   const { byUser, byDay, byFeature } = aggregatedData;
 
   if (!byUser || !byDay) return null;
@@ -78,87 +81,100 @@ export function KpiSection() {
   return (
     <div>
       {/* Activity section */}
-      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
-        <SectionDivider icon="activity" label="Activity" />
-        <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadActivityCSV}>CSV</button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <KpiCard
-          label="Total Users"
-          value={formatNumber(totalUsers)}
-          subtitle="Unique users in date range"
-          tooltip="Distinct user_login values across all filtered records."
-        />
-        <KpiCard
-          label="Total Generations"
-          value={formatNumber(totalGenerations)}
-          subtitle="Copilot triggers (all modes)"
-          tooltip="Sum of code_generation_activity_count across all records. Includes completions, chat, and agent mode."
-        />
-        <KpiCard
-          label="Acceptance Rate"
-          value={acceptanceRate + '%'}
-          subtitle="Completions only — agent mode excluded"
-          tooltip="Acceptances / Generations. Only meaningful for code_completion; agent mode doesn't track acceptances."
-        />
-        <KpiCard
-          label="Chat & Inline"
-          value={formatNumber(chatCount)}
-          subtitle="Chat + inline chat interactions"
-          tooltip="Sum of generations from chat, chat_inline, and inline_chat features."
-        />
-        <KpiCard
-          label="Avg Daily Users"
-          value={avgDailyUsers}
-          subtitle={`Over ${activeDays} active days`}
-          tooltip="Mean unique users per active day in the filtered date range."
-        />
+      <div ref={activityRef}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
+          <SectionDivider icon="activity" label="Activity" />
+          <div style={{ display:'flex',gap:'0.4rem' }}>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadActivityCSV}>CSV</button>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={() => captureElementAsPng(activityRef.current, 'kpi-activity.png')}>PNG</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <KpiCard
+            label="Total Users"
+            value={formatNumber(totalUsers)}
+            subtitle="Unique users in date range"
+            tooltip="Distinct user_login values across all filtered records."
+          />
+          <KpiCard
+            label="Total Generations"
+            value={formatNumber(totalGenerations)}
+            subtitle="Copilot triggers (all modes)"
+            tooltip="Sum of code_generation_activity_count across all records. Includes completions, chat, and agent mode."
+          />
+          <KpiCard
+            label="Acceptance Rate"
+            value={acceptanceRate + '%'}
+            subtitle="Completions only — agent mode excluded"
+            tooltip="Acceptances / Generations. Only meaningful for code_completion; agent mode doesn't track acceptances."
+          />
+          <KpiCard
+            label="Chat & Inline"
+            value={formatNumber(chatCount)}
+            subtitle="Chat + inline chat interactions"
+            tooltip="Sum of generations from chat, chat_inline, and inline_chat features."
+          />
+          <KpiCard
+            label="Avg Daily Users"
+            value={avgDailyUsers}
+            subtitle={`Over ${activeDays} active days`}
+            tooltip="Mean unique users per active day in the filtered date range."
+          />
+        </div>
       </div>
 
       {/* Lines of Code section */}
-      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
-        <SectionDivider icon="activity" label="Lines of Code" />
-        <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadLocCSV}>CSV</button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <KpiCard
-          label="Lines Added"
-          value={formatNumber(linesAdded)}
-          subtitle="Total loc_added_sum"
-          tooltip="Sum of lines inserted by Copilot across all records."
-        />
-        <KpiCard
-          label="Lines Deleted"
-          value={formatNumber(linesDeleted)}
-          subtitle="Total loc_deleted_sum"
-          tooltip="Sum of lines removed by Copilot (agent refactors, cleanups)."
-        />
-        <KpiCard
-          label="Net Lines"
-          value={formatNumber(netLines)}
-          subtitle="Added minus deleted"
-          tooltip="Net change in codebase size: loc_added_sum - loc_deleted_sum."
-        />
-        <KpiCard
-          label="Value (Net)"
-          value={fmtCurrency(netValue)}
-          subtitle={`@ $${BLENDED_RATE_PER_HOUR}/hr, ${MANUAL_LINES_PER_HOUR} lines/hr`}
-          tooltip="Estimated value of net lines produced: (net / MANUAL_LINES_PER_HOUR) × BLENDED_RATE_PER_HOUR."
-        />
-        <KpiCard
-          label="Active Hours"
-          value={formatNumber(Math.round(hours))}
-          subtitle="Total active_time_minutes / 60"
-          tooltip="Sum of active_time_minutes across all records, converted to hours."
-        />
+      <div ref={locRef}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
+          <SectionDivider icon="activity" label="Lines of Code" />
+          <div style={{ display:'flex',gap:'0.4rem' }}>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadLocCSV}>CSV</button>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={() => captureElementAsPng(locRef.current, 'kpi-loc.png')}>PNG</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <KpiCard
+            label="Lines Added"
+            value={formatNumber(linesAdded)}
+            subtitle="Total loc_added_sum"
+            tooltip="Sum of lines inserted by Copilot across all records."
+          />
+          <KpiCard
+            label="Lines Deleted"
+            value={formatNumber(linesDeleted)}
+            subtitle="Total loc_deleted_sum"
+            tooltip="Sum of lines removed by Copilot (agent refactors, cleanups)."
+          />
+          <KpiCard
+            label="Net Lines"
+            value={formatNumber(netLines)}
+            subtitle="Added minus deleted"
+            tooltip="Net change in codebase size: loc_added_sum - loc_deleted_sum."
+          />
+          <KpiCard
+            label="Value (Net)"
+            value={fmtCurrency(netValue)}
+            subtitle={`@ $${BLENDED_RATE_PER_HOUR}/hr, ${MANUAL_LINES_PER_HOUR} lines/hr`}
+            tooltip="Estimated value of net lines produced: (net / MANUAL_LINES_PER_HOUR) × BLENDED_RATE_PER_HOUR."
+          />
+          <KpiCard
+            label="Active Hours"
+            value={formatNumber(Math.round(hours))}
+            subtitle="Total active_time_minutes / 60"
+            tooltip="Sum of active_time_minutes across all records, converted to hours."
+          />
+        </div>
       </div>
 
       {/* Feature adoption section */}
       {featureCards.length > 0 && (
-        <>
+        <div ref={featuresRef}>
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
             <SectionDivider icon="activity" label="Feature Adoption" />
-            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadFeatureCSV}>CSV</button>
+            <div style={{ display:'flex',gap:'0.4rem' }}>
+              <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadFeatureCSV}>CSV</button>
+              <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={() => captureElementAsPng(featuresRef.current, 'kpi-features.png')}>PNG</button>
+            </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             {featureCards.map(fc => (
@@ -172,7 +188,7 @@ export function KpiSection() {
               />
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
