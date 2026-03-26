@@ -52,7 +52,6 @@ export function KpiSection() {
   // Code generation KPIs
   const linesChangedWithAI = linesAdded + linesDeleted;
   const totalSuggested     = Object.values(byUser).reduce((s, u) => s + (u.locSuggested || 0), 0);
-  const lineAcceptRate     = totalSuggested > 0 ? ((linesAdded / totalSuggested) * 100).toFixed(1) : null;
   const AGENT_FEATURES     = new Set(['agent', 'agent_edit', 'chat_panel_agent_mode', 'chat_panel_plan_mode', 'chat_panel_custom_mode']);
   const agentGens          = Object.entries(byFeature || {}).filter(([k]) => AGENT_FEATURES.has(k)).reduce((s, [, d]) => s + d.generations, 0);
   const agentContrib       = totalGenerations > 0 ? ((agentGens / totalGenerations) * 100).toFixed(1) : '0.0';
@@ -91,9 +90,9 @@ export function KpiSection() {
     const rows = [
       ['Metric', 'Value'],
       ['Lines Changed with AI', linesChangedWithAI],
-      ['Agent Contribution %', agentContrib],
+      ['Agent Contribution % (by trigger count)', agentContrib],
       ['Avg Lines Deleted / User', avgLinesDeletedPerUser],
-      ['Line Acceptance Rate %', lineAcceptRate ?? 'n/a'],
+      ['Completion Suggestions (lines)', totalSuggested],
     ];
     const csv = rows.map(r => r.join(',')).join('\n');
     triggerDownload(new Blob([csv], { type: 'text/csv' }), 'kpi-code-generation.csv');
@@ -206,21 +205,21 @@ export function KpiSection() {
           <KpiCard
             label="Agent Contribution"
             value={agentContrib + '%'}
-            subtitle="Share of triggers from agent features"
-            tooltip="Generations from agent, edit, and agentic chat modes divided by total generations. Proxy for how much activity is autonomous vs inline suggestion."
+            subtitle="By trigger count, not by lines"
+            tooltip="Agent, Edit Mode, and agentic Chat triggers divided by total generations. GitHub's version (92%+) is computed by lines per feature — data not available in the NDJSON export. This proxy will read lower because agents write many lines per trigger while completions write few."
           />
           <KpiCard
             label="Avg Lines Deleted / User"
             value={formatNumber(avgLinesDeletedPerUser)}
-            subtitle="Agent-assisted removals per active user"
-            tooltip="Total lines deleted divided by unique users. High values indicate active refactoring and cleanup via Copilot."
+            subtitle="Copilot-assisted removals per user"
+            tooltip="Total loc_deleted_sum divided by unique users. GitHub's version counts only agent deletions; this includes all Copilot-assisted deletions."
           />
-          {lineAcceptRate !== null && (
+          {totalSuggested > 0 && (
             <KpiCard
-              label="Line Acceptance Rate"
-              value={lineAcceptRate + '%'}
-              subtitle="Lines applied vs lines suggested"
-              tooltip="loc_added_sum / loc_suggested_to_add_sum. How much of what Copilot offered was actually kept. Only available when the export includes loc_suggested_to_add_sum."
+              label="Completion Suggestions"
+              value={formatNumber(totalSuggested)}
+              subtitle="Lines offered via completions & chat"
+              tooltip="Sum of loc_suggested_to_add_sum — lines Copilot showed as ghost text or chat suggestions (user-initiated only). Does not include lines written autonomously by agents. Cannot be compared directly to Lines Added."
             />
           )}
         </div>

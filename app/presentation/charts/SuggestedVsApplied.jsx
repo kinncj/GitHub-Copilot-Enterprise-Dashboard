@@ -71,7 +71,7 @@ export function SuggestedVsApplied({ aggregatedData }) {
   }
 
   return (
-    <ChartCard title="Suggested vs Applied" subtitle="Lines Copilot offered vs lines actually kept" onCSV={handleCSV} chartRef={chartRef} filename="suggested-vs-applied.png">
+    <ChartCard title="Suggested vs Applied" subtitle="Completion suggestions (user-initiated) vs total lines added (all modes)" onCSV={handleCSV} chartRef={chartRef} filename="suggested-vs-applied.png">
       <canvas ref={canvasRef} />
     </ChartCard>
   );
