@@ -147,6 +147,22 @@ describe('aggregateData', () => {
     });
   });
 
+  describe('byFeature LoC', () => {
+    it('accumulates loc_added_sum and loc_deleted_sum per feature', () => {
+      const r = record({
+        totals_by_feature: [
+          { feature: 'agent_edit', code_generation_activity_count: 5, code_acceptance_activity_count: 0, loc_added_sum: 200, loc_deleted_sum: 40 },
+          { feature: 'code_completion', code_generation_activity_count: 10, code_acceptance_activity_count: 7, loc_added_sum: 50, loc_deleted_sum: 0 }
+        ]
+      });
+      const { byFeature } = aggregateData([r]);
+      expect(byFeature['agent_edit'].linesAdded).toBe(200);
+      expect(byFeature['agent_edit'].linesDeleted).toBe(40);
+      expect(byFeature['code_completion'].linesAdded).toBe(50);
+      expect(byFeature['code_completion'].linesDeleted).toBe(0);
+    });
+  });
+
   describe('byLanguage', () => {
     it('aggregates language breakdowns', () => {
       const r = record({

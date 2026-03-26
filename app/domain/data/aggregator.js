@@ -79,9 +79,11 @@ export function aggregateData(records) {
 
     // ── By feature ───────────────────────────────────────────
     for (const f of record.totals_by_feature) {
-      if (!byFeature[f.feature]) byFeature[f.feature] = { generations: 0, acceptances: 0 };
-      byFeature[f.feature].generations += f.code_generation_activity_count || 0;
-      byFeature[f.feature].acceptances += f.code_acceptance_activity_count || 0;
+      if (!byFeature[f.feature]) byFeature[f.feature] = { generations: 0, acceptances: 0, linesAdded: 0, linesDeleted: 0 };
+      byFeature[f.feature].generations  += f.code_generation_activity_count || 0;
+      byFeature[f.feature].acceptances  += f.code_acceptance_activity_count || 0;
+      byFeature[f.feature].linesAdded   += f.loc_added_sum || 0;
+      byFeature[f.feature].linesDeleted += f.loc_deleted_sum || 0;
     }
 
     // ── By model ─────────────────────────────────────────────

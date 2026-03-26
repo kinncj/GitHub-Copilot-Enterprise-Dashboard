@@ -53,8 +53,8 @@ export function KpiSection() {
   const linesChangedWithAI = linesAdded + linesDeleted;
   const totalSuggested     = Object.values(byUser).reduce((s, u) => s + (u.locSuggested || 0), 0);
   const AGENT_FEATURES     = new Set(['agent', 'agent_edit', 'chat_panel_agent_mode', 'chat_panel_plan_mode', 'chat_panel_custom_mode']);
-  const agentGens          = Object.entries(byFeature || {}).filter(([k]) => AGENT_FEATURES.has(k)).reduce((s, [, d]) => s + d.generations, 0);
-  const agentContrib       = totalGenerations > 0 ? ((agentGens / totalGenerations) * 100).toFixed(1) : '0.0';
+  const agentLinesChanged  = Object.entries(byFeature || {}).filter(([k]) => AGENT_FEATURES.has(k)).reduce((s, [, d]) => s + (d.linesAdded || 0) + (d.linesDeleted || 0), 0);
+  const agentContrib       = linesChangedWithAI > 0 ? ((agentLinesChanged / linesChangedWithAI) * 100).toFixed(1) : '0.0';
   const avgLinesDeletedPerUser = totalUsers > 0 ? Math.round(linesDeleted / totalUsers) : 0;
 
   // Feature adoption
@@ -90,7 +90,7 @@ export function KpiSection() {
     const rows = [
       ['Metric', 'Value'],
       ['Lines Changed with AI', linesChangedWithAI],
-      ['Agent Contribution % (by trigger count)', agentContrib],
+      ['Agent Contribution % (by lines changed)', agentContrib],
       ['Avg Lines Deleted / User', avgLinesDeletedPerUser],
       ['Completion Suggestions (lines)', totalSuggested],
     ];
@@ -205,8 +205,8 @@ export function KpiSection() {
           <KpiCard
             label="Agent Contribution"
             value={agentContrib + '%'}
-            subtitle="By trigger count, not by lines"
-            tooltip="Agent, Edit Mode, and agentic Chat triggers divided by total generations. GitHub's version (92%+) is computed by lines per feature — data not available in the NDJSON export. This proxy will read lower because agents write many lines per trigger while completions write few."
+            subtitle="Lines changed by agent features"
+            tooltip="(loc_added + loc_deleted from agent, agent_edit, and agentic chat features) / total lines changed. Computed from per-feature LoC in totals_by_feature — same method as GitHub's dashboard."
           />
           <KpiCard
             label="Avg Lines Deleted / User"
