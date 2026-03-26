@@ -27,6 +27,10 @@ export function mergeRecords(records) {
     existing.loc_added_sum                   = Math.max(existing.loc_added_sum                   || 0, r.loc_added_sum                   || 0);
     existing.loc_deleted_sum                 = Math.max(existing.loc_deleted_sum                 || 0, r.loc_deleted_sum                 || 0);
     existing.active_time_minutes             = Math.max(existing.active_time_minutes             || 0, r.active_time_minutes             || 0);
+    existing.loc_suggested_to_add_sum        = Math.max(existing.loc_suggested_to_add_sum        || 0, r.loc_suggested_to_add_sum        || 0);
+    // booleans: true wins
+    if (r.used_agent) existing.used_agent = true;
+    if (r.used_chat)  existing.used_chat  = true;
     // nested arrays: keep first-seen — same day = same breakdown
   }
 

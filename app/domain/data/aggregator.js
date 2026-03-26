@@ -1,4 +1,17 @@
 /**
+ * Returns the ISO Monday (week start) for a given YYYY-MM-DD string.
+ * @param {string} dayStr
+ * @returns {string} YYYY-MM-DD of the Monday of that week
+ */
+function getWeekStart(dayStr) {
+  const d = new Date(dayStr + 'T00:00:00Z');
+  const dow = d.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff = dow === 0 ? -6 : 1 - dow; // shift to Monday
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
  * Aggregates a flat list of CopilotRecords into dimension-keyed rollups.
  * Pure function — no side effects, no DOM access.
  *
@@ -8,6 +21,7 @@
 export function aggregateData(records) {
   const byUser     = {};
   const byDay      = {};
+  const byWeek     = {};
   const byIDE      = {};
   const byLanguage = {};
   const byFeature  = {};
@@ -23,6 +37,7 @@ export function aggregateData(records) {
         linesDeleted: 0,
         locSuggested: 0,
         activeTime: 0,
+        usedAgent: false,
         days: new Set(),
         features: new Set()
       };
@@ -34,6 +49,7 @@ export function aggregateData(records) {
     user.linesDeleted  += record.loc_deleted_sum;
     user.locSuggested  += record.loc_suggested_to_add_sum;
     user.activeTime    += record.active_time_minutes;
+    if (record.used_agent) user.usedAgent = true;
     user.days.add(record.day);
     for (const f of record.totals_by_feature) {
       if ((f.code_generation_activity_count || 0) > 0 || (f.count || 0) > 0) {
@@ -62,6 +78,11 @@ export function aggregateData(records) {
     day.users.add(record.user_login);
     const chatFeature = record.totals_by_feature.find(f => f.feature === 'chat' || f.feature === 'inline_chat');
     if (chatFeature) day.chatCount += chatFeature.count || 0;
+
+    // ── By week ──────────────────────────────────────────────
+    const weekKey = getWeekStart(record.day);
+    if (!byWeek[weekKey]) byWeek[weekKey] = { users: new Set() };
+    byWeek[weekKey].users.add(record.user_login);
 
     // ── By IDE ───────────────────────────────────────────────
     for (const ide of record.totals_by_ide) {
@@ -102,5 +123,11 @@ export function aggregateData(records) {
     delete day.users;
   }
 
-  return { byUser, byDay, byIDE, byLanguage, byFeature, byModel };
+  // Convert users Set to count on week entries
+  for (const week of Object.values(byWeek)) {
+    week.activeUsers = week.users.size;
+    delete week.users;
+  }
+
+  return { byUser, byDay, byWeek, byIDE, byLanguage, byFeature, byModel };
 }

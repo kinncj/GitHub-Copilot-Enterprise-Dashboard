@@ -17,8 +17,9 @@ export function KpiSection() {
   const activityRef  = useRef(null);
   const locRef       = useRef(null);
   const codeGenRef   = useRef(null);
+  const adoptionRef  = useRef(null);
   const featuresRef  = useRef(null);
-  const { byUser, byDay, byFeature } = aggregatedData;
+  const { byUser, byDay, byFeature, byModel } = aggregatedData;
 
   if (!byUser || !byDay) return null;
 
@@ -56,6 +57,11 @@ export function KpiSection() {
   const agentLinesChanged  = Object.entries(byFeature || {}).filter(([k]) => AGENT_FEATURES.has(k)).reduce((s, [, d]) => s + (d.linesAdded || 0) + (d.linesDeleted || 0), 0);
   const agentContrib       = linesChangedWithAI > 0 ? ((agentLinesChanged / linesChangedWithAI) * 100).toFixed(1) : '0.0';
   const avgLinesDeletedPerUser = totalUsers > 0 ? Math.round(linesDeleted / totalUsers) : 0;
+
+  // Adoption KPIs
+  const agentAdopters     = Object.values(byUser).filter(u => u.usedAgent).length;
+  const agentAdoptionPct  = totalUsers > 0 ? Math.round((agentAdopters / totalUsers) * 100) : 0;
+  const topModel          = Object.entries(byModel || {}).sort(([, a], [, b]) => b - a)[0]?.[0] || null;
 
   // Feature adoption
   const usersByFeature = {};
@@ -96,6 +102,17 @@ export function KpiSection() {
     ];
     const csv = rows.map(r => r.join(',')).join('\n');
     triggerDownload(new Blob([csv], { type: 'text/csv' }), 'kpi-code-generation.csv');
+  };
+  const downloadAdoptionCSV = () => {
+    const rows = [
+      ['Metric', 'Value'],
+      ['Agent Adoption %', agentAdoptionPct],
+      ['Agent Users', agentAdopters],
+      ['Total Users', totalUsers],
+      ['Most Used Model', topModel || 'N/A'],
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    triggerDownload(new Blob([csv], { type: 'text/csv' }), 'kpi-adoption.csv');
   };
 
   return (
@@ -220,6 +237,39 @@ export function KpiSection() {
               value={formatNumber(totalSuggested)}
               subtitle="Lines offered via completions & chat"
               tooltip="Sum of loc_suggested_to_add_sum — lines Copilot showed as ghost text or chat suggestions (user-initiated only). Does not include lines written autonomously by agents. Cannot be compared directly to Lines Added."
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Adoption section */}
+      <div ref={adoptionRef}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
+          <SectionDivider icon="activity" label="Adoption" />
+          <div style={{ display:'flex',gap:'0.4rem' }}>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadAdoptionCSV}>CSV</button>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={() => captureElementAsPng(adoptionRef.current, 'kpi-adoption.png')}>PNG</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <KpiCard
+            label="Agent Adoption"
+            value={agentAdoptionPct + '%'}
+            subtitle={`${agentAdopters} of ${totalUsers} users used an agent feature`}
+            tooltip="% of users who have used_agent=true in at least one record. Matches GitHub's 'Agent adoption' metric on the Copilot IDE usage page."
+          />
+          <KpiCard
+            label="Agent Users"
+            value={formatNumber(agentAdopters)}
+            subtitle="Users with at least one agent session"
+            tooltip="Count of distinct users where used_agent=true appears in any record within the filtered date range."
+          />
+          {topModel && (
+            <KpiCard
+              label="Top Model"
+              value={topModel}
+              subtitle="Most-used model by generation count"
+              tooltip="Model with the highest total code_generation_activity_count from totals_by_language_model. Matches GitHub's 'Most used chat model'."
             />
           )}
         </div>

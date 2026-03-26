@@ -26,6 +26,7 @@ describe('aggregateData', () => {
     const result = aggregateData([]);
     expect(result.byUser).toEqual({});
     expect(result.byDay).toEqual({});
+    expect(result.byWeek).toEqual({});
     expect(result.byIDE).toEqual({});
     expect(result.byLanguage).toEqual({});
     expect(result.byFeature).toEqual({});
@@ -193,6 +194,67 @@ describe('aggregateData', () => {
       });
       const { byModel } = aggregateData([r]);
       expect(byModel['unknown']).toBe(3);
+    });
+  });
+
+  describe('byUser usedAgent', () => {
+    it('is false when used_agent is absent or false', () => {
+      const { byUser } = aggregateData([record({ used_agent: false })]);
+      expect(byUser['alice'].usedAgent).toBe(false);
+    });
+
+    it('is true when any record has used_agent=true', () => {
+      const records = [
+        record({ day: '2025-01-01', used_agent: false }),
+        record({ day: '2025-01-02', used_agent: true })
+      ];
+      const { byUser } = aggregateData(records);
+      expect(byUser['alice'].usedAgent).toBe(true);
+    });
+
+    it('counts agent adopters correctly across users', () => {
+      const records = [
+        record({ user_login: 'alice', used_agent: true }),
+        record({ user_login: 'bob',   used_agent: false })
+      ];
+      const { byUser } = aggregateData(records);
+      expect(byUser['alice'].usedAgent).toBe(true);
+      expect(byUser['bob'].usedAgent).toBe(false);
+    });
+  });
+
+  describe('byWeek', () => {
+    it('groups days into the correct Monday week', () => {
+      // 2025-01-06 is a Monday; 2025-01-07 is Tuesday (same week)
+      const records = [
+        record({ day: '2025-01-06' }),
+        record({ day: '2025-01-07' })
+      ];
+      const { byWeek } = aggregateData(records);
+      expect(byWeek['2025-01-06']).toBeDefined();
+      expect(byWeek['2025-01-06'].activeUsers).toBe(1); // same user both days
+    });
+
+    it('puts Sunday into the preceding Monday week', () => {
+      // 2025-01-05 is a Sunday → belongs to week starting 2024-12-30
+      const { byWeek } = aggregateData([record({ day: '2025-01-05' })]);
+      expect(byWeek['2024-12-30']).toBeDefined();
+      expect(byWeek['2025-01-05']).toBeUndefined();
+    });
+
+    it('counts unique users per week', () => {
+      const records = [
+        record({ user_login: 'alice', day: '2025-01-06' }),
+        record({ user_login: 'bob',   day: '2025-01-07' }),
+        record({ user_login: 'alice', day: '2025-01-08' }) // duplicate user same week
+      ];
+      const { byWeek } = aggregateData(records);
+      expect(byWeek['2025-01-06'].activeUsers).toBe(2);
+    });
+
+    it('does not expose the internal users Set', () => {
+      const { byWeek } = aggregateData([record({ day: '2025-01-06' })]);
+      expect(byWeek['2025-01-06'].users).toBeUndefined();
     });
   });
 });

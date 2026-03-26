@@ -15,6 +15,7 @@ import { SuggestedVsApplied } from '../../charts/SuggestedVsApplied.jsx';
 import { LoCTrend } from '../../charts/LoCTrend.jsx';
 import { AcceptanceRateTrend } from '../../charts/AcceptanceRateTrend.jsx';
 import { DailyActiveUsers } from '../../charts/DailyActiveUsers.jsx';
+import { WeeklyActiveUsers } from '../../charts/WeeklyActiveUsers.jsx';
 import { TopUsersByGenerations } from '../../charts/TopUsersByGenerations.jsx';
 import { TopUsersByLoC } from '../../charts/TopUsersByLoC.jsx';
 import { EfficiencyMatrix } from '../../charts/EfficiencyMatrix.jsx';
@@ -53,6 +54,7 @@ export function Dashboard() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DailyActiveUsers aggregatedData={aggregatedData} />
+        <WeeklyActiveUsers aggregatedData={aggregatedData} />
       </div>
 
       <SectionDivider icon="users" label="User Analysis" />

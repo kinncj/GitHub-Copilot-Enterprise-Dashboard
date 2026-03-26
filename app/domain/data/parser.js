@@ -19,6 +19,8 @@ export function normalizeRecord(raw) {
     loc_added_sum:                    Number(raw.loc_added_sum)                   || 0,
     loc_deleted_sum:                  Number(raw.loc_deleted_sum)                 || 0,
     active_time_minutes:              Number(raw.active_time_minutes)             || 0,
+    used_agent:                       raw.used_agent === true,
+    used_chat:                        raw.used_chat === true,
     totals_by_ide:                    Array.isArray(raw.totals_by_ide)            ? raw.totals_by_ide            : [],
     totals_by_feature:                Array.isArray(raw.totals_by_feature)        ? raw.totals_by_feature        : [],
     totals_by_language_feature:       Array.isArray(raw.totals_by_language_feature) ? raw.totals_by_language_feature : [],
