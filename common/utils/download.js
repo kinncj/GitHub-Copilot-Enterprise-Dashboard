@@ -42,3 +42,41 @@ export async function captureElementAsPng(element, filename) {
   });
   triggerDownloadFromDataUrl(canvas.toDataURL('image/png'), filename);
 }
+
+/**
+ * Captures the entire page as a PNG, including all table rows (overflow expanded).
+ * @param {string} filename
+ * @returns {Promise<void>}
+ */
+export async function captureFullPageAsPng(filename) {
+  const html2canvas = (await import('html2canvas')).default;
+
+  // Expand clipped scroll containers so all rows are visible in the capture
+  const clipped = document.querySelectorAll('.table-container');
+  const saved = Array.from(clipped).map(el => ({
+    el,
+    maxHeight: el.style.maxHeight,
+    overflow:  el.style.overflow,
+  }));
+  for (const { el } of saved) {
+    el.style.maxHeight = 'none';
+    el.style.overflow  = 'visible';
+  }
+
+  try {
+    const canvas = await html2canvas(document.documentElement, {
+      backgroundColor: '#111111',
+      scale: 1,
+      logging: false,
+      useCORS: true,
+      scrollX: 0,
+      scrollY: 0,
+    });
+    triggerDownloadFromDataUrl(canvas.toDataURL('image/png'), filename);
+  } finally {
+    for (const { el, maxHeight, overflow } of saved) {
+      el.style.maxHeight = maxHeight;
+      el.style.overflow  = overflow;
+    }
+  }
+}
