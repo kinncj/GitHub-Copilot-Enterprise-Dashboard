@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { KpiCard } from './KpiCard.jsx';
 import { FeatureAdoptionCard } from './FeatureAdoptionCard.jsx';
@@ -16,6 +16,7 @@ export function KpiSection() {
   const { aggregatedData, valueConfig } = useApp();
   const activityRef  = useRef(null);
   const locRef       = useRef(null);
+  const codeGenRef   = useRef(null);
   const featuresRef  = useRef(null);
   const { byUser, byDay, byFeature } = aggregatedData;
 
@@ -48,6 +49,15 @@ export function KpiSection() {
   const addedValue     = valueCalc(linesAdded);
   const totalChangedVal = valueCalc(linesAdded + linesDeleted);
 
+  // Code generation KPIs
+  const linesChangedWithAI = linesAdded + linesDeleted;
+  const totalSuggested     = Object.values(byUser).reduce((s, u) => s + (u.locSuggested || 0), 0);
+  const lineAcceptRate     = totalSuggested > 0 ? ((linesAdded / totalSuggested) * 100).toFixed(1) : null;
+  const AGENT_FEATURES     = new Set(['agent', 'agent_edit', 'chat_panel_agent_mode', 'chat_panel_plan_mode', 'chat_panel_custom_mode']);
+  const agentGens          = Object.entries(byFeature || {}).filter(([k]) => AGENT_FEATURES.has(k)).reduce((s, [, d]) => s + d.generations, 0);
+  const agentContrib       = totalGenerations > 0 ? ((agentGens / totalGenerations) * 100).toFixed(1) : '0.0';
+  const avgLinesDeletedPerUser = totalUsers > 0 ? Math.round(linesDeleted / totalUsers) : 0;
+
   // Feature adoption
   const usersByFeature = {};
   for (const u of Object.values(byUser)) {
@@ -76,6 +86,17 @@ export function KpiSection() {
   const downloadFeatureCSV = () => {
     const csv = buildFeatureAdoptionCSV(aggregatedData);
     triggerDownload(new Blob([csv], { type: 'text/csv' }), 'kpi-features.csv');
+  };
+  const downloadCodeGenCSV = () => {
+    const rows = [
+      ['Metric', 'Value'],
+      ['Lines Changed with AI', linesChangedWithAI],
+      ['Agent Contribution %', agentContrib],
+      ['Avg Lines Deleted / User', avgLinesDeletedPerUser],
+      ['Line Acceptance Rate %', lineAcceptRate ?? 'n/a'],
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    triggerDownload(new Blob([csv], { type: 'text/csv' }), 'kpi-code-generation.csv');
   };
 
   return (
@@ -163,6 +184,45 @@ export function KpiSection() {
             subtitle="Total active_time_minutes / 60"
             tooltip="Sum of active_time_minutes across all records, converted to hours."
           />
+        </div>
+      </div>
+
+      {/* Code Generation section */}
+      <div ref={codeGenRef}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem' }}>
+          <SectionDivider icon="activity" label="Code Generation" />
+          <div style={{ display:'flex',gap:'0.4rem' }}>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={downloadCodeGenCSV}>CSV</button>
+            <button className="btn-secondary" style={{ fontSize:'0.72rem' }} onClick={() => captureElementAsPng(codeGenRef.current, 'kpi-code-generation.png')}>PNG</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <KpiCard
+            label="Lines Changed with AI"
+            value={formatNumber(linesChangedWithAI)}
+            subtitle="Lines added + deleted across all modes"
+            tooltip="Total lines of code touched by Copilot: loc_added_sum + loc_deleted_sum. GitHub's headline metric for code generation volume."
+          />
+          <KpiCard
+            label="Agent Contribution"
+            value={agentContrib + '%'}
+            subtitle="Share of triggers from agent features"
+            tooltip="Generations from agent, edit, and agentic chat modes divided by total generations. Proxy for how much activity is autonomous vs inline suggestion."
+          />
+          <KpiCard
+            label="Avg Lines Deleted / User"
+            value={formatNumber(avgLinesDeletedPerUser)}
+            subtitle="Agent-assisted removals per active user"
+            tooltip="Total lines deleted divided by unique users. High values indicate active refactoring and cleanup via Copilot."
+          />
+          {lineAcceptRate !== null && (
+            <KpiCard
+              label="Line Acceptance Rate"
+              value={lineAcceptRate + '%'}
+              subtitle="Lines applied vs lines suggested"
+              tooltip="loc_added_sum / loc_suggested_to_add_sum. How much of what Copilot offered was actually kept. Only available when the export includes loc_suggested_to_add_sum."
+            />
+          )}
         </div>
       </div>
 

@@ -21,17 +21,19 @@ export function aggregateData(records) {
         acceptances: 0,
         linesAdded: 0,
         linesDeleted: 0,
+        locSuggested: 0,
         activeTime: 0,
         days: new Set(),
         features: new Set()
       };
     }
     const user = byUser[record.user_login];
-    user.generations  += record.code_generation_activity_count;
-    user.acceptances  += record.code_acceptance_activity_count;
-    user.linesAdded   += record.loc_added_sum;
-    user.linesDeleted += record.loc_deleted_sum;
-    user.activeTime   += record.active_time_minutes;
+    user.generations   += record.code_generation_activity_count;
+    user.acceptances   += record.code_acceptance_activity_count;
+    user.linesAdded    += record.loc_added_sum;
+    user.linesDeleted  += record.loc_deleted_sum;
+    user.locSuggested  += record.loc_suggested_to_add_sum;
+    user.activeTime    += record.active_time_minutes;
     user.days.add(record.day);
     for (const f of record.totals_by_feature) {
       if ((f.code_generation_activity_count || 0) > 0 || (f.count || 0) > 0) {
@@ -46,15 +48,17 @@ export function aggregateData(records) {
         acceptances: 0,
         linesAdded: 0,
         linesDeleted: 0,
+        locSuggested: 0,
         chatCount: 0,
         users: new Set()
       };
     }
     const day = byDay[record.day];
-    day.generations  += record.code_generation_activity_count;
-    day.acceptances  += record.code_acceptance_activity_count;
-    day.linesAdded   += record.loc_added_sum;
-    day.linesDeleted += record.loc_deleted_sum;
+    day.generations   += record.code_generation_activity_count;
+    day.acceptances   += record.code_acceptance_activity_count;
+    day.linesAdded    += record.loc_added_sum;
+    day.linesDeleted  += record.loc_deleted_sum;
+    day.locSuggested  += record.loc_suggested_to_add_sum;
     day.users.add(record.user_login);
     const chatFeature = record.totals_by_feature.find(f => f.feature === 'chat' || f.feature === 'inline_chat');
     if (chatFeature) day.chatCount += chatFeature.count || 0;

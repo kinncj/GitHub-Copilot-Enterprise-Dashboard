@@ -7,6 +7,7 @@ function record(overrides = {}) {
     day: '2025-01-01',
     code_generation_activity_count: 10,
     code_acceptance_activity_count: 5,
+    loc_suggested_to_add_sum: 200,
     loc_added_sum: 100,
     loc_deleted_sum: 20,
     active_time_minutes: 60,
@@ -33,10 +34,11 @@ describe('aggregateData', () => {
 
   describe('byUser', () => {
     it('aggregates single user', () => {
-      const [r] = [record({ code_generation_activity_count: 20, loc_added_sum: 150 })];
+      const [r] = [record({ code_generation_activity_count: 20, loc_added_sum: 150, loc_suggested_to_add_sum: 300 })];
       const { byUser } = aggregateData([r]);
       expect(byUser['alice'].generations).toBe(20);
       expect(byUser['alice'].linesAdded).toBe(150);
+      expect(byUser['alice'].locSuggested).toBe(300);
     });
 
     it('sums across multiple days for same user', () => {
@@ -122,6 +124,15 @@ describe('aggregateData', () => {
       });
       const { byDay } = aggregateData([r]);
       expect(byDay['2025-01-01'].chatCount).toBe(7);
+    });
+
+    it('accumulates locSuggested in byDay', () => {
+      const records = [
+        record({ user_login: 'alice', day: '2025-01-01', loc_suggested_to_add_sum: 100 }),
+        record({ user_login: 'bob',   day: '2025-01-01', loc_suggested_to_add_sum: 50 })
+      ];
+      const { byDay } = aggregateData(records);
+      expect(byDay['2025-01-01'].locSuggested).toBe(150);
     });
   });
 

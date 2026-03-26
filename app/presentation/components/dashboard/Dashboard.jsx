@@ -10,6 +10,8 @@ import { ValueConfig } from '../config/ValueConfig.jsx';
 import { SectionDivider } from '../shared/SectionDivider.jsx';
 // Charts
 import { ActivityTimeline } from '../../charts/ActivityTimeline.jsx';
+import { DailyLinesChanged } from '../../charts/DailyLinesChanged.jsx';
+import { SuggestedVsApplied } from '../../charts/SuggestedVsApplied.jsx';
 import { LoCTrend } from '../../charts/LoCTrend.jsx';
 import { AcceptanceRateTrend } from '../../charts/AcceptanceRateTrend.jsx';
 import { DailyActiveUsers } from '../../charts/DailyActiveUsers.jsx';
@@ -38,12 +40,18 @@ export function Dashboard() {
       <ValueConfig />
 
       <SectionDivider icon="activity" label="Activity & Time" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ActivityTimeline aggregatedData={aggregatedData} />
-        <LoCTrend aggregatedData={aggregatedData} />
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <DailyLinesChanged aggregatedData={aggregatedData} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <ActivityTimeline aggregatedData={aggregatedData} />
+        <SuggestedVsApplied aggregatedData={aggregatedData} />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <LoCTrend aggregatedData={aggregatedData} />
         <AcceptanceRateTrend aggregatedData={aggregatedData} />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DailyActiveUsers aggregatedData={aggregatedData} />
       </div>
 

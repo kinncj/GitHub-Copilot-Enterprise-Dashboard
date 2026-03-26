@@ -35,9 +35,15 @@ describe('normalizeRecord', () => {
     const record = normalizeRecord({ user_login: 'alice', day: '2025-01-01' });
     expect(record.code_generation_activity_count).toBe(0);
     expect(record.code_acceptance_activity_count).toBe(0);
+    expect(record.loc_suggested_to_add_sum).toBe(0);
     expect(record.loc_added_sum).toBe(0);
     expect(record.loc_deleted_sum).toBe(0);
     expect(record.active_time_minutes).toBe(0);
+  });
+
+  it('parses loc_suggested_to_add_sum', () => {
+    const record = normalizeRecord({ user_login: 'alice', day: '2025-01-01', loc_suggested_to_add_sum: '250' });
+    expect(record.loc_suggested_to_add_sum).toBe(250);
   });
 
   it('defaults nested arrays to [] when absent', () => {

@@ -15,6 +15,7 @@ export function normalizeRecord(raw) {
     day:                              String(raw.day),
     code_generation_activity_count:   Number(raw.code_generation_activity_count)  || 0,
     code_acceptance_activity_count:   Number(raw.code_acceptance_activity_count)  || 0,
+    loc_suggested_to_add_sum:         Number(raw.loc_suggested_to_add_sum)        || 0,
     loc_added_sum:                    Number(raw.loc_added_sum)                   || 0,
     loc_deleted_sum:                  Number(raw.loc_deleted_sum)                 || 0,
     active_time_minutes:              Number(raw.active_time_minutes)             || 0,
