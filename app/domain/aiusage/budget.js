@@ -31,6 +31,16 @@ function monthLength(d) {
 }
 
 /**
+ * Names a license tier from its per-seat monthly credit allowance. GitHub's
+ * standard rates: Copilot Business = 1,900, Copilot Enterprise = 3,900.
+ */
+function tierName(quota) {
+  if (quota === 1900) return 'Copilot Business';
+  if (quota === 3900) return 'Copilot Enterprise';
+  return quota ? `${quota.toLocaleString()}-credit tier` : 'No-quota tier';
+}
+
+/**
  * Derives a default license configuration from the records: for each org, one
  * license row per distinct quota tier, with `seats` defaulted to the number of
  * *active* users at that tier. Using these defaults reproduces the CSV-derived
@@ -56,7 +66,7 @@ export function deriveDefaultLicenses(records) {
     orgs[org] = [...tiers.entries()]
       .sort((a, b) => b[0] - a[0])
       .map(([quota, users]) => ({
-        name: quota ? `${quota.toLocaleString()}-credit tier` : 'No-quota tier',
+        name: tierName(quota),
         quota,
         seats: users.size
       }));
@@ -176,37 +186,31 @@ export function computeAIUsageBudget(records, licenseConfig = null) {
       net: orgNet.get(org) || 0,
       users: orgUsers.get(org)?.size || 0,
       seats: useCfg ? orgSeats(org) : (orgUsers.get(org)?.size || 0),
-      billableOverage: 0,
-      billableProjectedOverage: 0
+      usersOverAllowance: 0
     };
   }
 
-  // ── Per user (always the per-user quota from the CSV) ──
+  // ── Per user (the per-user quota from the CSV is each seat's contribution to
+  // the pool, not a hard cap — included credits pool at the billing entity level) ──
   const byUser = {};
   for (const [user, consumed] of userCredits) {
     byUser[user] = { ...proj(consumed, userQuota.get(user) || 0), net: userNet.get(user) || 0 };
   }
 
-  // ── Billable overage (credits are enforced per seat, NOT pooled) ────────────
-  // The real overage charge is the SUM of each user's overage beyond their own
-  // quota — a heavy user is billed even if the org has idle-seat headroom. This
-  // is deliberately different from (enterprise consumed − enterprise allowance).
-  let billableOverage = 0;
-  let billableProjectedOverage = 0;
+  // Informational only: how many users are projected to draw more than their own
+  // per-seat allowance. The shared pool absorbs this (lighter users offset heavy
+  // ones); it only causes a block if the admin sets user-level budgets. Overage
+  // billing itself is pooled — see enterprise.projectedOverage.
+  let usersOverAllowance = 0;
   for (const line of Object.values(byUser)) {
-    billableOverage          += Math.max(0, line.consumed  - line.budget);
-    billableProjectedOverage += Math.max(0, line.projected - line.budget);
+    if (line.budget > 0 && line.projected > line.budget) usersOverAllowance++;
   }
-  enterprise.billableOverage = billableOverage;
-  enterprise.billableProjectedOverage = billableProjectedOverage;
-
+  enterprise.usersOverAllowance = usersOverAllowance;
   for (const [org, users] of orgUsers) {
     if (!byOrg[org]) continue;
     for (const u of users) {
       const l = byUser[u];
-      if (!l) continue;
-      byOrg[org].billableOverage          += Math.max(0, l.consumed  - l.budget);
-      byOrg[org].billableProjectedOverage += Math.max(0, l.projected - l.budget);
+      if (l && l.budget > 0 && l.projected > l.budget) byOrg[org].usersOverAllowance++;
     }
   }
 
@@ -257,17 +261,17 @@ export function generateBudgetInsights(budget, config) {
     });
   }
 
-  // Projected overage charges — summed per-seat (the real billable number)
-  if (enterprise.billableProjectedOverage > 0) {
-    const cr = Math.round(enterprise.billableProjectedOverage);
-    const dollars = Math.round(enterprise.billableProjectedOverage * CONFIG.CREDIT_USD);
+  // Projected overage charges — pooled at the billing entity level. Overage only
+  // accrues once total consumption exceeds the total included allowance.
+  if (enterprise.projectedOverage > 0) {
+    const cr = Math.round(enterprise.projectedOverage);
+    const dollars = Math.round(enterprise.projectedOverage * CONFIG.CREDIT_USD);
     insights.push({
       title: 'Projected Overage Charges',
-      subtitle: 'Sum of per-user overage beyond individual quota — credits are enforced per seat, not pooled across the org',
+      subtitle: 'Projected consumption beyond the pooled monthly allowance (credits pool across the billing entity)',
       type: escalate('error'),
       icon: 'alert-circle',
-      content: prefix + `~${cr.toLocaleString()} credits over individual quotas → ~$${dollars.toLocaleString()} in overage at $0.01/credit` +
-        (enterprise.projectedPct <= 1 ? ` — even though total consumption is only ${(enterprise.projectedPct * 100).toFixed(0)}% of the summed allowance` : '')
+      content: prefix + `~${cr.toLocaleString()} credits over the pooled allowance → ~$${dollars.toLocaleString()} in overage at $0.01/credit (if overage is enabled; otherwise usage is blocked)`
     });
   }
 
@@ -285,16 +289,17 @@ export function generateBudgetInsights(budget, config) {
     });
   }
 
-  // Users projected over quota
+  // Heavy users drawing over their per-seat share. Informational: the pool
+  // absorbs this unless the admin sets user-level budgets, which block the user.
   const usersOver = Object.entries(byUser)
     .filter(([, u]) => u.budget > 0 && u.projectedPct > 1)
     .sort((a, b) => b[1].projectedPct - a[1].projectedPct);
   if (usersOver.length > 0) {
     insights.push({
-      title: 'Users Projected Over Quota',
-      subtitle: 'At the current run rate these users will exceed their monthly credit quota' + (low ? ' — low confidence' : ''),
-      type: escalate('error'),
-      icon: 'alert-circle',
+      title: 'Heavy Users (Over Per-Seat Share)',
+      subtitle: 'Projected to draw more than their own seat allowance. Pooled credits cover this; only user-level budgets would block them.',
+      type: 'info',
+      icon: 'trending-up',
       content: prefix + `${usersOver.length} user${usersOver.length === 1 ? '' : 's'} — top: ` +
         usersOver.slice(0, 5).map(([u, d]) => `${u} (${fmtPct(d.projectedPct)})`).join(', ')
     });

@@ -114,11 +114,14 @@ Guardrails (so the budget view stays honest):
   downgraded to `info`.
 - **Consumption vs billed** — gross (credits × $0.01) is labeled **Consumption Value**; `net_amount`
   is surfaced as **Billed to Date**.
-- **Overage is per-seat, not pooled.** Quota is enforced per user, so the real billable overage is
-  `enterprise.billableProjectedOverage` = Σ over users of `max(0, projected_user − quota_user)` — NOT
-  `enterprise_projected − enterprise_allowance`. A heavy user is billed even when the org has idle-seat
-  headroom, so this can be non-zero while total consumption sits under the summed allowance. The status
-  pill (`OVERAGE PROJECTED`) and the Projected Overage card both use this per-seat figure.
+- **Overage is pooled at the billing entity level** (per GitHub's
+  [usage-based billing](https://docs.github.com/en/copilot/concepts/billing/usage-based-billing-for-organizations-and-enterprises)).
+  Included credits pool across the org/enterprise — power users draw from the shared pool, offset by
+  lighter users — so overage accrues only once total consumption exceeds the total allowance:
+  `enterprise.projectedOverage` = `max(0, enterprise_projected − enterprise_allowance)`. A user
+  exceeding their own per-seat share is **not** itself a charge (it's surfaced as `usersOverAllowance`,
+  informational); it only blocks if the admin sets user-level budgets. Tier names come from the plan
+  allowances: 1,900 = Copilot Business, 3,900 = Copilot Enterprise.
 - **Multi-month** — `enterprise.multiMonth` flags files spanning >1 calendar month (the monthly
   projection assumes one month); a warning banner + insight tell the user to filter to a single month.
 - **License config is dataset-specific** — held in memory only (never localStorage) and cleared on

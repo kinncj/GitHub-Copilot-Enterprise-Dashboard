@@ -19,10 +19,11 @@ export function BudgetSummary() {
 
   const orgsOver = Object.values(byOrg).filter(o => o.budget > 0 && o.projectedPct > 1).length;
   const orgsAtRisk = Object.values(byOrg).filter(o => o.budget > 0 && o.projectedPct >= near && o.projectedPct <= 1).length;
-  const usersOver = Object.values(byUser).filter(u => u.budget > 0 && u.projectedPct > 1).length;
+  const usersOver = enterprise.usersOverAllowance;
   const low = enterprise.confidence === 'low';
-  // Real billable overage = sum of per-user overages (credits aren't pooled).
-  const projOverageCr = enterprise.billableProjectedOverage;
+  // Overage is pooled at the billing entity level: it accrues only once total
+  // consumption exceeds the total included allowance.
+  const projOverageCr = enterprise.projectedOverage;
   const willOverage = projOverageCr > 0;
 
   // With too few observed days the projection isn't trustworthy — don't raise a
@@ -95,8 +96,8 @@ export function BudgetSummary() {
         <KpiCard
           label="Projected Overage"
           value={willOverage ? formatCredits(projOverageCr) : '—'}
-          subtitle={willOverage ? `${usd(projOverageCr)} est. billable · per-seat${low ? ' · preliminary' : ''}` : 'no users projected over quota'}
-          tooltip="Sum of each user's projected overage beyond their OWN monthly quota — credits are enforced per seat, not pooled, so this is the real billable overage even when total consumption is under the summed allowance. Cost at $0.01 / credit (actual billing may cap or block)."
+          subtitle={willOverage ? `${usd(projOverageCr)} beyond pooled allowance${low ? ' · preliminary' : ''}` : 'within pooled allowance'}
+          tooltip="Projected credits beyond the total included allowance = max(0, projected − allotted). Included credits pool across the billing entity, so overage only accrues once the shared pool is exhausted. Cost at $0.01 / credit if overage is enabled; otherwise usage is blocked."
           valueColor={!low && willOverage ? '#ef4444' : undefined}
         />
         <KpiCard
@@ -108,8 +109,8 @@ export function BudgetSummary() {
         <KpiCard
           label="At-Risk Accounts"
           value={`${orgsOver + orgsAtRisk} / ${usersOver}`}
-          subtitle="orgs (≥80%) · users over quota"
-          tooltip="Organizations projected to reach ≥80% of budget, and users projected to exceed their individual monthly quota."
+          subtitle="orgs (≥80%) · heavy users"
+          tooltip="Organizations projected to reach ≥80% of their pooled budget, and users projected to draw more than their own per-seat share. Heavy users are covered by the shared pool unless user-level budgets are configured."
         />
       </div>
 
@@ -117,10 +118,14 @@ export function BudgetSummary() {
         Budgets are in <strong style={{ color:'var(--text-2)' }}>AI credits</strong> (premium requests); dollar values use GitHub's{' '}
         <strong style={{ color:'var(--text-2)' }}>$0.01 / credit</strong> rate. Model multipliers are already baked into the credit counts.
         Projection assumes the observed daily run rate continues for the rest of the month.{' '}
-        Quota is enforced <strong style={{ color:'var(--text-2)' }}>per seat</strong> — unused credits don't pool, so overage is the sum of each user's own excess.{' '}
+        Included credits <strong style={{ color:'var(--text-2)' }}>pool across the billing entity</strong> — power users draw from the shared pool, offset by lighter users, so overage accrues only once the whole pool is exhausted.{' '}
+        <a href={CONFIG.BILLING_DOCS_URL} target="_blank" rel="noreferrer"
+           style={{ color:'var(--green)',display:'inline-flex',alignItems:'center',gap:'0.2rem' }}>
+          usage-based billing <ExternalLink size={11} />
+        </a>{' · '}
         <a href={CONFIG.PRICING_DOCS_URL} target="_blank" rel="noreferrer"
            style={{ color:'var(--green)',display:'inline-flex',alignItems:'center',gap:'0.2rem' }}>
-          GitHub models &amp; pricing <ExternalLink size={11} />
+          models &amp; pricing <ExternalLink size={11} />
         </a>
       </p>
     </div>

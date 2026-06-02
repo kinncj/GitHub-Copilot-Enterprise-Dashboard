@@ -380,11 +380,14 @@ guardrails:
 - **Consumption ≠ billing.** *Consumption Value* is the gross list-price value of credits used
   (credits × $0.01). *Billed to Date* is `net_amount` — the money actually charged, usually **$0** while
   under the included allowance.
-- **Overage is per-seat, not pooled.** Quota is enforced per user — one person's unused credits do not
-  cover another's overage. So *Projected Overage* is the **sum of each user's own projected excess**
-  (`Σ max(0, projected_user − quota_user)`), not enterprise consumption minus the summed allowance. This
-  is why the org can look "67% of allowance / on track" while still facing real overage charges from a
-  few heavy users — the per-seat figure is the honest spend risk.
+- **Overage is pooled at the billing entity level.** Per GitHub's
+  [usage-based billing](https://docs.github.com/en/copilot/concepts/billing/usage-based-billing-for-organizations-and-enterprises),
+  each seat's included credits pool across the org/enterprise: power users draw from the shared pool and
+  lighter users offset them. So *Projected Overage* is `max(0, projected − total allowance)` at the
+  pooled level — it accrues only once the whole pool is exhausted, and is then billed at $0.01/credit
+  (or blocked, if overage isn't enabled). A user exceeding their own per-seat share is shown separately
+  as a "heavy user" (informational); it only blocks them if an admin sets a user-level budget. Per-seat
+  allowances map to plans: 1,900 = Copilot Business, 3,900 = Copilot Enterprise.
 - **Low-confidence projections.** Below 7 observed days (`MIN_PROJECTION_DAYS`) the projection is shown
   as **preliminary** — the red "over budget" alarm is suppressed and insights are informational only.
 - **Multi-month files** are detected and flagged; the monthly projection assumes a single month, so

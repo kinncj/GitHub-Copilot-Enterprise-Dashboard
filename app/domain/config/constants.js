@@ -37,7 +37,10 @@ export const CONFIG = {
   // the export, so credits × CREDIT_USD gives gross dollars.
   // Source: https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
   CREDIT_USD: 0.01,
-  PRICING_DOCS_URL: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing'
+  PRICING_DOCS_URL: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing',
+  // Included credits pool at the billing entity level; overage applies only once
+  // the shared pool is exhausted. Source:
+  BILLING_DOCS_URL: 'https://docs.github.com/en/copilot/concepts/billing/usage-based-billing-for-organizations-and-enterprises'
 };
 
 /**

@@ -36,31 +36,39 @@ describe('budget confidence / overage / multi-month', () => {
     expect(b.enterprise.net).toBe(2);
   });
 
-  it('computes billable overage per-seat, NOT from a pooled enterprise budget', () => {
-    // 8-day window (ok confidence). Two users, big shared allowance, but usage is
-    // lopsided: alice blows her quota, bob barely uses his.
+  it('pools credits at the billing entity level — a heavy user is absorbed by idle headroom', () => {
+    // 8-day window (ok confidence). Two seats pool to 2000. alice runs hot, bob barely uses his.
     const cfg = { enabled: true, orgs: { 'Org-A': [{ quota: 1000, seats: 2 }] } }; // pool = 2000
     const b = computeAIUsageBudget([
-      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-01', quantity: 400, monthlyQuota: 1000 }),
-      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-08', quantity: 400, monthlyQuota: 1000 }),
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-01', quantity: 200, monthlyQuota: 1000 }),
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-08', quantity: 200, monthlyQuota: 1000 }),
       rec({ username: 'bob',   organization: 'Org-A', date: '2026-06-01', quantity: 10,  monthlyQuota: 1000 }),
       rec({ username: 'bob',   organization: 'Org-A', date: '2026-06-08', quantity: 10,  monthlyQuota: 1000 }),
     ], cfg);
-    // factor over 8 days = 1 + 22/8 = 3.75. alice: 800*3.75=3000 (>1000 quota → 2000 over). bob: 20*3.75=75 (under).
-    // Enterprise consumed 820, projected 3075, pool budget 2000 → pool overage would be 1075.
-    // But per-seat billable overage = alice's 2000 only (bob contributes 0).
-    expect(b.enterprise.billableProjectedOverage).toBeCloseTo(2000);
-    expect(b.enterprise.projected).toBeCloseTo(3075);
-    expect(b.byOrg['Org-A'].billableProjectedOverage).toBeCloseTo(2000);
+    // factor over 8 days = 3.75. alice projected 400*3.75=1500 (>1000 → over her share). bob 75.
+    // Pooled: enterprise projected 1575 < 2000 pool → NO overage. alice counts as a heavy user.
+    expect(b.enterprise.projectedOverage).toBe(0);
+    expect(b.enterprise.usersOverAllowance).toBe(1); // alice draws over her seat share, absorbed by the pool
   });
 
-  it('surfaces a Projected Overage Charges insight even when total is under the summed allowance', () => {
+  it('does NOT raise overage charges while total stays under the pooled allowance', () => {
     const cfg = { enabled: true, orgs: { 'Org-A': [{ quota: 1000, seats: 10 }] } }; // huge pool
     const b = computeAIUsageBudget([
-      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-01', quantity: 400, monthlyQuota: 1000 }),
-      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-08', quantity: 400, monthlyQuota: 1000 }),
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-01', quantity: 200, monthlyQuota: 1000 }),
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-08', quantity: 200, monthlyQuota: 1000 }),
     ], cfg);
     expect(b.enterprise.projectedPct).toBeLessThan(1); // under the 10k pool
+    const ins = generateBudgetInsights(b, { NEAR_QUOTA_THRESHOLD: 0.8 });
+    expect(ins.find(i => i.title === 'Projected Overage Charges')).toBeFalsy();
+  });
+
+  it('raises overage charges once the pooled allowance is exceeded', () => {
+    const cfg = { enabled: true, orgs: { 'Org-A': [{ quota: 1000, seats: 1 }] } }; // pool = 1000
+    const b = computeAIUsageBudget([
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-01', quantity: 200, monthlyQuota: 1000 }),
+      rec({ username: 'alice', organization: 'Org-A', date: '2026-06-08', quantity: 200, monthlyQuota: 1000 }),
+    ], cfg);
+    expect(b.enterprise.projected).toBeCloseTo(1500); // > 1000 pool
     const ins = generateBudgetInsights(b, { NEAR_QUOTA_THRESHOLD: 0.8 });
     expect(ins.find(i => i.title === 'Projected Overage Charges')).toBeTruthy();
   });
@@ -162,7 +170,7 @@ describe('generateBudgetInsights', () => {
   it('lists users projected over quota', () => {
     const b = computeAIUsageBudget([rec({ username: 'heavy', quantity: 200, monthlyQuota: 1000 })]);
     const ins = generateBudgetInsights(b, CONFIG);
-    expect(ins.find(i => i.title === 'Users Projected Over Quota').content).toMatch(/heavy/);
+    expect(ins.find(i => i.title === 'Heavy Users (Over Per-Seat Share)').content).toMatch(/heavy/);
   });
 
   it('marks a low-usage enterprise as on track (success)', () => {
@@ -177,8 +185,8 @@ describe('deriveDefaultLicenses', () => {
       rec({ username: 'b', organization: 'Org-A', monthlyQuota: 3900 }),
       rec({ username: 'c', organization: 'Org-B', monthlyQuota: 1900 }),
     ]);
-    expect(cfg.orgs['Org-A']).toEqual([{ name: '3,900-credit tier', quota: 3900, seats: 2 }]);
-    expect(cfg.orgs['Org-B']).toEqual([{ name: '1,900-credit tier', quota: 1900, seats: 1 }]);
+    expect(cfg.orgs['Org-A']).toEqual([{ name: 'Copilot Enterprise', quota: 3900, seats: 2 }]);
+    expect(cfg.orgs['Org-B']).toEqual([{ name: 'Copilot Business', quota: 1900, seats: 1 }]);
   });
 });
 
