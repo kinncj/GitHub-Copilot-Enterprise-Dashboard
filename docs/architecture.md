@@ -79,14 +79,14 @@ Files are parsed once and stored in `rawData`. Every filter change re-runs `filt
 flowchart LR
   CSV[AI Usage Report CSV] --> P["parseAIUsageCSV\nRFC-4180, BOM-aware, header-driven"]
   P --> AG["aggregateAIUsage\nbyUser · byDay · byModel · byOrg · byCostCenter · bySku"]
-  AG --> BUD["computeAIUsageBudget(records, licenseConfig)\nrun-rate projection · per-seat overage"]
+  AG --> BUD["computeAIUsageBudget(records, licenseConfig)\nrun-rate projection · pooled overage"]
   AG --> INS["generateAIUsageInsights + generateBudgetInsights"]
   AG --> CH["AI Usage charts + budget cards + tables"]
 ```
 
 The two datasets are never merged. `useAppState` holds both (`rawData` and `aiUsageRaw`) plus `activeView`; `App.jsx` renders `Dashboard` or `AIUsageDashboard` accordingly, and `ViewTabs` switches between them when both are loaded.
 
-The budget model is the one piece that needs care: quota is enforced **per seat**, so `computeAIUsageBudget` projects month-end consumption from the observed run rate and computes overage as the sum of each user's own excess beyond their quota — not enterprise consumption minus a pooled allowance. Org and enterprise budgets are the sum of configured (or active-user) seat quotas; individual budgets always use the per-user quota from the file. See [`data.md`](data.md) for the full model.
+The budget model is the one piece that needs care: included credits **pool at the billing entity level** (per GitHub's usage-based billing), so `computeAIUsageBudget` projects month-end consumption from the observed run rate and computes overage as `max(0, projected − total allowance)` at the pooled level — overage accrues only once the shared pool is exhausted, not when an individual exceeds their seat share. Org and enterprise budgets are the sum of configured (or active-user) seat quotas; the per-user quota from the file is each seat's contribution to the pool, surfaced as a "heavy user" signal rather than a charge. See [`data.md`](data.md) for the full model.
 
 ---
 

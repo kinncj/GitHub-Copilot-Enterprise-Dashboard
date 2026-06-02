@@ -38,8 +38,11 @@ export const CONFIG = {
   MIN_PROJECTION_DAYS:       7,     // below this many observed days, projections are "preliminary"
   CREDIT_USD:                0.01,  // dollar value of one AI credit (GitHub's rate)
   PRICING_DOCS_URL: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing',
+  BILLING_DOCS_URL: 'https://docs.github.com/en/copilot/concepts/billing/usage-based-billing-for-organizations-and-enterprises',
 };
 ```
+
+`BILLING_DOCS_URL` is linked from the budget panel footnote as the source for the pooling rule: included credits pool at the billing entity level, so overage accrues only once the shared pool is exhausted (1,900 credits/seat on Copilot Business, 3,900 on Copilot Enterprise).
 
 ## Runtime value overrides
 

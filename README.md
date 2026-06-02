@@ -32,7 +32,7 @@ AI-credit consumption and cost from the billing export.
 - **Cost & credits** — credits over time, top users, by model (auto-routed vs explicit), by org/cost-center/SKU
 - **Budget & burn rate** — month-end projection at the user, org, and enterprise level, against each seat's monthly quota
 - **License config** — enter real licenses per tier so org/enterprise budgets count idle seats the export leaves out
-- **Per-seat overage** — credits don't pool, so projected overage is the sum of each user's own excess (the real billable risk)
+- **Pooled overage** — included credits pool across the billing entity, so projected overage is total consumption beyond the total allowance; heavy users are absorbed by the shared pool
 - Credits priced at $0.01 each (GitHub's rate); projections under 7 days of data are marked preliminary
 
 **Nothing leaves the browser.** No backend, no API calls, no tracking. Safe for enterprise usage and billing data.

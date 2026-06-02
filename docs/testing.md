@@ -42,7 +42,7 @@ tests/unit/
       aggregator.test.js  # aggregateAIUsage
       filtering.test.js   # filterAIUsage + option extraction
       insights.test.js    # generateAIUsageInsights
-      budget.test.js      # computeAIUsageBudget: projection, per-seat overage,
+      budget.test.js      # computeAIUsageBudget: projection, pooled overage,
                           #   confidence gating, multi-month, license config
   common/
     utils/

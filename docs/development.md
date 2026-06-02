@@ -264,7 +264,7 @@ The AI-usage (cost/budget) side mirrors the activity pipeline, in its own folder
 | Add/adjust a parsed field | `app/domain/aiusage/parser.js` (`normalizeAIUsageRecord`) + the `AIUsageRecord` typedef in `common/types/index.js` |
 | Add an aggregation dimension | `app/domain/aiusage/aggregator.js` (`aggregateAIUsage`) |
 | Add a cost/credit chart | new file under `app/presentation/charts/aiusage/`, then render it in `AIUsageDashboard.jsx`. Read `aggregatedData` (passed as a prop) or `aiUsageBudget` (via `useApp()`) |
-| Add a budget metric | `app/domain/aiusage/budget.js` (`computeAIUsageBudget`) — keep the per-seat overage rule; surface it in `BudgetSummary.jsx` |
+| Add a budget metric | `app/domain/aiusage/budget.js` (`computeAIUsageBudget`) — keep the pooled-overage rule (credits pool at the billing entity level); surface it in `BudgetSummary.jsx` |
 | Add an insight | `generateAIUsageInsights` (consumption) or `generateBudgetInsights` (budget) — both flow into `aiUsageInsights` in `useAppState` and render via `AIUsageInsightsPanel` |
 | Add a filter | `aiusage/filtering.js` (`filterAIUsage` + `extractAIUsageFilterOptions`) and `AIUsageFilterBar.jsx` |
 
