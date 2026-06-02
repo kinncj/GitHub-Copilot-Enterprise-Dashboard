@@ -5,23 +5,29 @@ import { useApp } from '../../context/AppContext.jsx';
 import { ExportMenu } from '../export/ExportMenu.jsx';
 
 export function Header() {
-  const { rawData, loadedFiles, loadFiles, resetData } = useApp();
+  const { rawData, loadedFiles, aiUsageRaw, aiUsageFiles, activeView, loadFiles, resetData } = useApp();
   const fileInputRef = useRef(null);
   const { setColorScheme } = useMantineColorScheme();
   const colorScheme = useComputedColorScheme('dark');
   const toggleScheme = () => setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
 
   const handleAddFiles = files => {
-    const valid = [...files].filter(f => f.name.endsWith('.ndjson') || f.name.endsWith('.json'));
+    const valid = [...files].filter(f => /\.(ndjson|json|csv)$/i.test(f.name));
     if (valid.length) loadFiles(valid, true);
   };
 
-  const dateRange = rawData.length > 0
-    ? (() => { const dates = rawData.map(r => r.day).sort(); return `${dates[0]} \u2013 ${dates[dates.length - 1]}`; })()
+  // Indicator reflects the active view's dataset.
+  const isUsage = activeView === 'aiusage';
+  const data = isUsage ? aiUsageRaw : rawData;
+  const files = isUsage ? aiUsageFiles : loadedFiles;
+  const dateKey = isUsage ? 'date' : 'day';
+
+  const dateRange = data.length > 0
+    ? (() => { const dates = data.map(r => r[dateKey]).sort(); return `${dates[0]} \u2013 ${dates[dates.length - 1]}`; })()
     : '';
 
-  const indicator = loadedFiles.length > 0
-    ? `${loadedFiles.length} file${loadedFiles.length > 1 ? 's' : ''} \u00b7 ${rawData.length.toLocaleString()} records${dateRange ? ' \u00b7 ' + dateRange : ''}`
+  const indicator = files.length > 0
+    ? `${files.length} file${files.length > 1 ? 's' : ''} \u00b7 ${data.length.toLocaleString()} records${dateRange ? ' \u00b7 ' + dateRange : ''}`
     : '';
 
   return (
@@ -43,7 +49,7 @@ export function Header() {
         </div>
         <div style={{ display:'flex',gap:'0.5rem',alignItems:'center' }}>
           {indicator && <span style={{ fontSize:'0.75rem',color:'var(--text-2)',marginRight:'0.25rem' }}>{indicator}</span>}
-          <input ref={fileInputRef} type="file" accept=".ndjson,.json" multiple style={{ display:'none' }} onChange={e => handleAddFiles(e.target.files)} />
+          <input ref={fileInputRef} type="file" accept=".ndjson,.json,.csv" multiple style={{ display:'none' }} onChange={e => handleAddFiles(e.target.files)} />
           <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>
             <Plus size={13} /> Add Files
           </button>

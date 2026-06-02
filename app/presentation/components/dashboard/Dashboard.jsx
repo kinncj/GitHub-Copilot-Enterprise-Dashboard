@@ -8,6 +8,7 @@ import { DataTable } from '../table/DataTable.jsx';
 import { MetricsGlossary } from '../glossary/MetricsGlossary.jsx';
 import { ValueConfig } from '../config/ValueConfig.jsx';
 import { SectionDivider } from '../shared/SectionDivider.jsx';
+import { ViewTabs } from '../shared/ViewTabs.jsx';
 // Charts
 import { ActivityTimeline } from '../../charts/ActivityTimeline.jsx';
 import { DailyLinesChanged } from '../../charts/DailyLinesChanged.jsx';
@@ -33,6 +34,7 @@ export function Dashboard() {
   return (
     <div style={{ position:'relative',zIndex:1,maxWidth:'1280px',margin:'0 auto',padding:'calc(52px + 1.5rem) 1.5rem calc(36px + 1.5rem)' }}>
       <Header />
+      <ViewTabs />
       <FilterBar />
       <div className="mb-8">
         <KpiSection />

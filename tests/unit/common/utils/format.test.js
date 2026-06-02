@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatNumber, humanizeFeature } from '../../../../common/utils/format.js';
+import { formatNumber, humanizeFeature, formatCurrency, formatCredits } from '../../../../common/utils/format.js';
 
 describe('formatNumber', () => {
   it('formats numbers below 1000 as-is', () => {
@@ -22,6 +22,35 @@ describe('formatNumber', () => {
   it('formats billions with B suffix', () => {
     expect(formatNumber(1_000_000_000)).toBe('1.0B');
     expect(formatNumber(3_200_000_000)).toBe('3.2B');
+  });
+});
+
+describe('formatCurrency', () => {
+  it('keeps two decimals for sub-$1 amounts', () => {
+    expect(formatCurrency(0.1644)).toBe('$0.16');
+  });
+  it('rounds whole-dollar amounts', () => {
+    expect(formatCurrency(12)).toBe('$12');
+    expect(formatCurrency(276.03)).toBe('$276');
+  });
+  it('uses K and M suffixes', () => {
+    expect(formatCurrency(1500)).toBe('$1.5K');
+    expect(formatCurrency(2_500_000)).toBe('$2.5M');
+  });
+  it('handles zero and negatives', () => {
+    expect(formatCurrency(0)).toBe('$0');
+    expect(formatCurrency(-1500)).toBe('-$1.5K');
+  });
+});
+
+describe('formatCredits', () => {
+  it('shows one decimal below 1000, stripping trailing .0', () => {
+    expect(formatCredits(16.44)).toBe('16.4');
+    expect(formatCredits(10)).toBe('10');
+  });
+  it('uses K and M for large credit counts', () => {
+    expect(formatCredits(27602.86)).toBe('27.6K');
+    expect(formatCredits(1_200_000)).toBe('1.2M');
   });
 });
 

@@ -32,11 +32,18 @@ This codebase follows Clean Architecture with SOLID principles. Read `docs/archi
 | `app/domain/data/parser.js` | `parseNDJSON(text, opts)` → `CopilotRecord[]` |
 | `app/domain/data/merger.js` | `mergeRecords(records[])` — dedup overlapping exports with Math.max |
 | `app/domain/data/aggregator.js` | `aggregateData(records[])` → byUser/Day/IDE/Language/Feature/Model |
+| `app/domain/data/detect.js` | `detectFileType(name, text)` → `'activity'｜'aiusage'` — routes uploads |
 | `app/domain/filtering/engine.js` | `filterRecords(records[], criteria)` + dropdown option extraction |
 | `app/domain/insights/engine.js` | `generateInsights(aggregated, records, config)` → `Insight[]` |
 | `app/domain/export/csv.js` | CSV builders for all data views |
 | `app/domain/export/ndjson.js` | `buildNDJSON(records[])` for consolidated export |
-| `common/utils/format.js` | `formatNumber`, `humanizeFeature` |
+| `app/domain/aiusage/parser.js` | `parseAIUsageCSV(text, opts)` → `AIUsageRecord[]` (RFC-4180 CSV reader, BOM-aware) |
+| `app/domain/aiusage/aggregator.js` | `aggregateAIUsage(records[])` → totals + byUser/Day/Model/Org/CostCenter/Sku |
+| `app/domain/aiusage/filtering.js` | `filterAIUsage(records[], criteria)` + option extraction |
+| `app/domain/aiusage/insights.js` | `generateAIUsageInsights(aggregated, records, config)` → `Insight[]` |
+| `app/domain/aiusage/budget.js` | `computeAIUsageBudget(records)` (run-rate projection per user/org/enterprise) + `generateBudgetInsights()` |
+| `app/domain/aiusage/export.js` | CSV builders for the AI Usage views |
+| `common/utils/format.js` | `formatNumber`, `formatCurrency`, `formatCredits`, `humanizeFeature` |
 | `common/utils/download.js` | `triggerDownload` (browser-side, not a domain module) |
 | `common/types/index.js` | JSDoc type definitions for the whole domain |
 
@@ -68,6 +75,56 @@ This codebase follows Clean Architecture with SOLID principles. Read `docs/archi
 - `loc_suggested_to_add_sum` = lines Copilot showed as suggestions
 - `active_time_minutes` is **absent** from current exports — parser defaults it to 0
 - Root-level `model` field is **absent** — model data is in `totals_by_language_model`
+
+### AI Usage Report (second dataset — credits/cost)
+
+GitHub also exports an **AI Usage Report CSV** (`AIUsageReport_*.csv`) — AI-credit consumption /
+billing, a *different* dataset from the activity NDJSON. The app auto-detects file type on upload
+(`detect.js`) and keeps the two datasets fully independent; when both are loaded, an **Activity / AI
+Usage** tab switcher appears (`ViewTabs.jsx`, driven by `activeView` in `useAppState`).
+
+CSV columns (BOM-prefixed, header-driven so order-independent):
+`date, username, product, sku, model, quantity, unit_type, applied_cost_per_quantity, gross_amount,
+discount_amount, net_amount, total_monthly_quota, organization, repository, cost_center_name,
+aic_quantity, aic_gross_amount`.
+
+Key notes:
+- `quantity`/`aic_quantity` = **AI credits** consumed (fractional); `gross_amount` = $ value;
+  `net_amount` is often **$0** (fully discounted while under the monthly quota) — gross is the
+  headline spend metric, net shown alongside.
+- `model` may be prefixed `Auto: ` (auto-routed). The parser sets `isAuto` and `baseModel` (prefix
+  stripped); the aggregator merges Auto/explicit variants under `baseModel` and tracks the split.
+- `sku`: `copilot_ai_credit` (chat/completions) vs `coding_agent_ai_credit` (coding agent).
+- AI Usage presentation lives in `app/presentation/components/aiusage/` and
+  `app/presentation/charts/aiusage/`. Thresholds (`NEAR_QUOTA_THRESHOLD`, `TOP_SPENDERS_SHOWN`) live
+  in `constants.js`.
+
+**Budget & burn rate.** `budget.js` projects month-end consumption from the observed run rate
+(`projected = consumed + dailyRate × remainingDays`) at the **individual, org, and enterprise** level,
+comparing against the per-user `total_monthly_quota`. Credits are priced at **`CREDIT_USD` = $0.01**
+(model multipliers are already baked into the credit counts) — see `PRICING_DOCS_URL` in `constants.js`
+([GitHub models & pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing)).
+The dashboard surfaces an enterprise burn-down chart (cumulative vs projection vs budget ceiling), org
+utilization, projected per-user quota overage, and Used-vs-Allotted breakdown tables (credits **and**
+dollars). Budget insights are prepended to `aiUsageInsights` in `useAppState`.
+
+Guardrails (so the budget view stays honest):
+- **Confidence gating** — below `MIN_PROJECTION_DAYS` (7) observed days, `enterprise.confidence` is
+  `'low'`: the status pill shows `PRELIMINARY`, the red alarm is suppressed, and budget insights are
+  downgraded to `info`.
+- **Consumption vs billed** — gross (credits × $0.01) is labeled **Consumption Value**; `net_amount`
+  is surfaced as **Billed to Date**.
+- **Overage is per-seat, not pooled.** Quota is enforced per user, so the real billable overage is
+  `enterprise.billableProjectedOverage` = Σ over users of `max(0, projected_user − quota_user)` — NOT
+  `enterprise_projected − enterprise_allowance`. A heavy user is billed even when the org has idle-seat
+  headroom, so this can be non-zero while total consumption sits under the summed allowance. The status
+  pill (`OVERAGE PROJECTED`) and the Projected Overage card both use this per-seat figure.
+- **Multi-month** — `enterprise.multiMonth` flags files spanning >1 calendar month (the monthly
+  projection assumes one month); a warning banner + insight tell the user to filter to a single month.
+- **License config is dataset-specific** — held in memory only (never localStorage) and cleared on
+  reset or any fresh (non-append) load, so seats never bleed across enterprises.
+- Derived data in `useAppState` (both activity and AI-usage pipelines) is `useMemo`-ized.
+- `detectFileType` requires a multi-column AI-usage signature so unrelated CSVs aren't misrouted.
 
 ### Merge strategy
 
