@@ -31,12 +31,27 @@ export const CONFIG = {
   // ── Value calculation defaults (user-overridable in the UI) ─────────────
   BLENDED_RATE_PER_HOUR:     90,    // $/hr average developer cost
   MANUAL_LINES_PER_HOUR:     30,    // lines a developer writes manually per hour
+
+  // ── AI Usage report (credit/cost) ───────────────────────────────────────
+  NEAR_QUOTA_THRESHOLD:      0.80,  // flag users/orgs at >= 80% of their credit budget
+  TOP_SPENDERS_SHOWN:        5,     // users listed in the Top Spenders insight
+  MIN_PROJECTION_DAYS:       7,     // below this many observed days, projections are "preliminary"
+  CREDIT_USD:                0.01,  // dollar value of one AI credit (GitHub's rate)
+  PRICING_DOCS_URL: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing',
 };
 ```
 
 ## Runtime value overrides
 
 `BLENDED_RATE_PER_HOUR` and `MANUAL_LINES_PER_HOUR` can be changed in the dashboard's "Value Calculation Configuration" panel. The domain functions that compute value estimates receive a `ValueConfig` object as an argument rather than reading `CONFIG` directly — keeping them testable with any values.
+
+The AI Usage view has a second runtime panel, "License & Budget Configuration", where you enter licenses per tier (seats × per-seat quota) per org. `computeAIUsageBudget(records, licenseConfig)` takes that config as an argument; when it's enabled, org and enterprise budgets come from the configured seats instead of the active users in the file. This config is held in memory only (never localStorage) and is cleared on reset or a fresh upload, since seat counts are specific to one dataset.
+
+### Notes on the AI Usage constants
+
+- `CREDIT_USD` (0.01) converts credits to dollars. Model multipliers are already folded into the credit counts in the export, so `credits × CREDIT_USD` gives gross dollars. `PRICING_DOCS_URL` is linked from the budget panel as the source.
+- `MIN_PROJECTION_DAYS` (7) gates the burn-rate projection: with fewer observed days, `enterprise.confidence` is `'low'`, the projection is labelled preliminary, and the over-budget alarm is suppressed.
+- `NEAR_QUOTA_THRESHOLD` (0.80) drives the "at risk" status and the near-quota insights at both the per-user and per-org level.
 
 ## Why LOW_ACCEPTANCE_THRESHOLD isn't used
 
