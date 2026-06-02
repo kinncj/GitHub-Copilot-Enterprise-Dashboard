@@ -25,6 +25,13 @@ graph TD
         D6[insights/engine.js]
         D7[export/csv.js]
         D8[export/ndjson.js]
+        D9[data/detect.js]
+        A1[aiusage/parser.js]
+        A2[aiusage/aggregator.js]
+        A3[aiusage/filtering.js]
+        A4[aiusage/insights.js]
+        A5[aiusage/budget.js]
+        A6[aiusage/export.js]
     end
 
     subgraph Common["common/"]
@@ -62,7 +69,24 @@ flowchart LR
     G --> H4["DataTable"]
 ```
 
-Files are parsed once and stored in `rawData`. Every filter change re-runs `filterRecords → aggregateData → render`. No caching — the single-pass aggregation is fast enough for the dataset sizes involved.
+Files are parsed once and stored in `rawData`. Every filter change re-runs `filterRecords → aggregateData → render`. The derived values are wrapped in `useMemo`, so they recompute only when their inputs change.
+
+### Two pipelines, one upload
+
+`detectFileType(name, text)` routes each uploaded file. A file whose first non-blank character is `{` (or has the `.ndjson`/`.json` extension) goes to the activity pipeline above. A CSV whose header carries the AI-usage column signature (`username` + `quantity`/`aic_quantity` + a cost/quota column) goes to the AI-usage pipeline:
+
+```mermaid
+flowchart LR
+  CSV[AI Usage Report CSV] --> P["parseAIUsageCSV\nRFC-4180, BOM-aware, header-driven"]
+  P --> AG["aggregateAIUsage\nbyUser · byDay · byModel · byOrg · byCostCenter · bySku"]
+  AG --> BUD["computeAIUsageBudget(records, licenseConfig)\nrun-rate projection · per-seat overage"]
+  AG --> INS["generateAIUsageInsights + generateBudgetInsights"]
+  AG --> CH["AI Usage charts + budget cards + tables"]
+```
+
+The two datasets are never merged. `useAppState` holds both (`rawData` and `aiUsageRaw`) plus `activeView`; `App.jsx` renders `Dashboard` or `AIUsageDashboard` accordingly, and `ViewTabs` switches between them when both are loaded.
+
+The budget model is the one piece that needs care: quota is enforced **per seat**, so `computeAIUsageBudget` projects month-end consumption from the observed run rate and computes overage as the sum of each user's own excess beyond their quota — not enterprise consumption minus a pooled allowance. Org and enterprise budgets are the sum of configured (or active-user) seat quotas; individual budgets always use the per-user quota from the file. See [`data.md`](data.md) for the full model.
 
 ---
 
@@ -75,19 +99,26 @@ graph TD
     App --> Footer["Footer (fixed, always visible)"]
     CTX --> Upload["UploadZone"]
     CTX --> Progress["ProgressBar"]
-    CTX --> Dashboard["Dashboard"]
+    CTX --> Dashboard["Dashboard (activity)"]
+    CTX --> AIDash["AIUsageDashboard (cost)"]
 
+    Dashboard --> Tabs1[ViewTabs]
     Dashboard --> Header
     Dashboard --> FilterBar
     Dashboard --> KpiSection
-    Dashboard --> MetricsGlossary
-    Dashboard --> ValueConfig
     Dashboard --> Charts["14 chart components"]
     Dashboard --> InsightsPanel
     Dashboard --> DataTable
+
+    AIDash --> Tabs2[ViewTabs]
+    AIDash --> BudgetSummary
+    AIDash --> LicenseConfig
+    AIDash --> AICharts["budget + cost charts"]
+    AIDash --> Breakdown["BudgetBreakdownTable (org/user)"]
+    AIDash --> AITable["AIUsageTable"]
 ```
 
-`App` renders one of three top-level views based on state: `UploadZone` (no data), `ProgressBar` (loading), or `Dashboard` (data loaded). `Footer` is always rendered regardless of view — it sits outside the conditional logic in `App.jsx`.
+`App` picks the top-level view from state: `UploadZone` (no data), `ProgressBar` (loading), or — once data is loaded — `Dashboard` or `AIUsageDashboard` depending on `activeView` (and which dataset is present). `ViewTabs` renders only when both datasets are loaded, letting the user switch. `Footer` is always rendered, outside the conditional logic in `App.jsx`.
 
 ---
 
@@ -159,7 +190,7 @@ classDiagram
     useAppState --> FilterCriteria
 ```
 
-`filteredData`, `aggregatedData`, `insights`, and `filterOptions` are derived synchronously from `rawData` + `filters` on every render — no separate dispatch step.
+`filteredData`, `aggregatedData`, `insights`, and `filterOptions` are derived from `rawData` + `filters` via `useMemo`. The AI-usage side mirrors this with `aiUsageRaw` + `aiUsageFilters` → `aiUsageFiltered`, `aiUsageAggregated`, `aiUsageBudget`, and `aiUsageInsights`, plus `activeView` and the in-memory `licenseConfig`. No separate dispatch step.
 
 ---
 

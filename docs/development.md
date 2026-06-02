@@ -27,12 +27,14 @@ npm run test:e2e
 app/
   domain/          # Pure JS — no DOM, fully testable in Node
     config/        # Constants and feature labels (FEATURE_LABELS, CONFIG)
-    data/          # Parser, merger, aggregator
+    data/          # Parser, merger, aggregator, detect (file-type routing)
     filtering/     # Filter engine + dropdown option extraction
     insights/      # Insight card generation
     export/        # CSV and NDJSON builders
+    aiusage/       # AI Usage CSV pipeline: parser, aggregator, filtering,
+                   #   insights, budget (burn-rate), export
   state/
-    useAppState.js # Central React hook — orchestrates all domain calls
+    useAppState.js # Central React hook — orchestrates both pipelines + activeView
   presentation/
     context/       # AppContext + useApp hook
     components/    # React JSX components
@@ -45,8 +47,11 @@ app/
       export/      # ExportMenu
       glossary/    # MetricsGlossary
       config/      # ValueConfig
-      shared/      # SectionDivider, Footer
+      aiusage/     # AIUsageDashboard, BudgetSummary, LicenseConfig,
+                   #   BudgetBreakdownTable, AIUsageKpiSection/FilterBar/Table
+      shared/      # SectionDivider, Footer, ViewTabs
     charts/        # Chart.js components (one file per chart)
+      aiusage/     # Cost + budget charts (burn-down, overage, doughnuts)
       hooks/       # useChart.js lifecycle hook
     styles/        # global.css (Tailwind + design tokens)
   main.jsx         # React entry point
@@ -93,7 +98,7 @@ const icons = {
 };
 ```
 
-Current registered icons: `star`, `trending-up`, `trending-down`, `alert-circle`, `x-circle`, `award`.
+Current registered icons: `star`, `trending-up`, `trending-down`, `alert-circle`, `x-circle`, `award`, `dollar-sign`, `cpu`, `bot`, `shuffle`.
 
 Then add a test in `tests/unit/domain/insights/engine.test.js`:
 
@@ -247,6 +252,23 @@ export function buildMyExportCSV(aggregated) {
 ```
 
 The presentation layer calls `triggerDownload(new Blob([csv], { type: 'text/csv' }), 'my-export.csv')` from `common/utils/download.js`.
+
+---
+
+## Working on the AI Usage dashboard
+
+The AI-usage (cost/budget) side mirrors the activity pipeline, in its own folders, so the two never tangle.
+
+| Task | Where |
+|------|-------|
+| Add/adjust a parsed field | `app/domain/aiusage/parser.js` (`normalizeAIUsageRecord`) + the `AIUsageRecord` typedef in `common/types/index.js` |
+| Add an aggregation dimension | `app/domain/aiusage/aggregator.js` (`aggregateAIUsage`) |
+| Add a cost/credit chart | new file under `app/presentation/charts/aiusage/`, then render it in `AIUsageDashboard.jsx`. Read `aggregatedData` (passed as a prop) or `aiUsageBudget` (via `useApp()`) |
+| Add a budget metric | `app/domain/aiusage/budget.js` (`computeAIUsageBudget`) — keep the per-seat overage rule; surface it in `BudgetSummary.jsx` |
+| Add an insight | `generateAIUsageInsights` (consumption) or `generateBudgetInsights` (budget) — both flow into `aiUsageInsights` in `useAppState` and render via `AIUsageInsightsPanel` |
+| Add a filter | `aiusage/filtering.js` (`filterAIUsage` + `extractAIUsageFilterOptions`) and `AIUsageFilterBar.jsx` |
+
+`detectFileType` in `app/domain/data/detect.js` decides which pipeline a file enters; if GitHub changes the CSV header, update its signature check (and `tests/unit/domain/data/detect.test.js`). The reusable `MetricDoughnut.jsx` covers most "share by dimension" charts — pass it a bucket and a metric (`credits` or `gross`) instead of writing a new doughnut each time.
 
 ---
 

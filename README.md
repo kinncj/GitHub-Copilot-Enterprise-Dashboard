@@ -1,6 +1,6 @@
 # GitHub Copilot Enterprise Dashboard
 
-Browser-based analytics for GitHub Copilot Enterprise usage data.
+Browser-based analytics for GitHub Copilot Enterprise usage and AI-credit cost data.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/demo-live-success.svg)](https://kinncj.github.io/GitHub-Copilot-Enterprise-Dashboard/)
@@ -12,16 +12,30 @@ Browser-based analytics for GitHub Copilot Enterprise usage data.
 
 ## What it does
 
-Upload one or more NDJSON exports from the GitHub Copilot Enterprise API. The dashboard parses, deduplicates, and visualises:
+The dashboard reads GitHub's **two** Copilot exports. Drop either (or both); the file type is detected on upload, and when both are loaded a tab switches between them. They are analysed separately.
+
+### Activity report (NDJSON)
+
+Team usage and productivity from the Copilot Enterprise API export.
 
 - **14 charts** — activity timelines, acceptance rate trends, user rankings, IDE/language/feature/model breakdowns
 - **KPI cards** — total users, generations, acceptance rate, lines of code, estimated value
-- **Feature adoption** — which Copilot features (Code Completion, Edit Mode, Chat · Agent, etc.) are used across the team
+- **Feature adoption** — which Copilot features (Code Completion, Edit Mode, Chat · Agent, etc.) the team uses
 - **Insights** — power users, high-efficiency users, spotlight users (top code producers), weekly trend, quota alerts
-- **Data table** — per-user aggregated view (Days Active, Generations, Lines Added/Deleted/Net, Value Added/Deleted/Total), sortable, filterable
+- **Data table** — per-user aggregated view, sortable and filterable
 - **Exports** — CSV and PNG per chart, consolidated NDJSON
 
-**Nothing leaves the browser.** No backend, no API calls, no tracking. Safe for enterprise usage data.
+### AI Usage report (CSV)
+
+AI-credit consumption and cost from the billing export.
+
+- **Cost & credits** — credits over time, top users, by model (auto-routed vs explicit), by org/cost-center/SKU
+- **Budget & burn rate** — month-end projection at the user, org, and enterprise level, against each seat's monthly quota
+- **License config** — enter real licenses per tier so org/enterprise budgets count idle seats the export leaves out
+- **Per-seat overage** — credits don't pool, so projected overage is the sum of each user's own excess (the real billable risk)
+- Credits priced at $0.01 each (GitHub's rate); projections under 7 days of data are marked preliminary
+
+**Nothing leaves the browser.** No backend, no API calls, no tracking. Safe for enterprise usage and billing data.
 
 ---
 
@@ -32,7 +46,7 @@ npm install
 npm run dev     # http://localhost:3000
 ```
 
-Drop an NDJSON export from the GitHub Copilot Enterprise API onto the upload zone. Multiple files are merged automatically — useful for combining overlapping 28-day rolling exports.
+Drop a Copilot Enterprise **NDJSON** export or an **AI Usage Report CSV** onto the upload zone — the type is detected automatically. Multiple NDJSON files merge into one date range (handy for overlapping 28-day rolling exports); load a CSV alongside them to get the cost and budget views.
 
 ---
 
@@ -54,9 +68,9 @@ Drop an NDJSON export from the GitHub Copilot Enterprise API onto the upload zon
 
 Clean Architecture with SOLID principles. Three layers:
 
-1. **`app/domain/`** — pure JS, no DOM. Parser, merger, aggregator, filter engine, insights engine, CSV/NDJSON exporters.
-2. **`app/state/useAppState.js`** — React hook that orchestrates all domain calls.
-3. **`app/presentation/`** — React components and Chart.js renderers.
+1. **`app/domain/`** — pure JS, no DOM. Two parallel pipelines: the activity one (`data/`, `filtering/`, `insights/`, `export/`) and the AI-usage one (`aiusage/` — parser, aggregator, filtering, insights, budget, export), plus `data/detect.js` to route uploads.
+2. **`app/state/useAppState.js`** — React hook that orchestrates both pipelines and holds the active view.
+3. **`app/presentation/`** — React components and Chart.js renderers (`components/aiusage/` and `charts/aiusage/` for the cost dashboard).
 
 Domain modules have no imports from the presentation or state layer — fully testable in Node without a browser.
 
@@ -68,7 +82,7 @@ See [`docs/architecture.md`](docs/architecture.md) for diagrams.
 
 | Doc | What's in it |
 |-----|-------------|
-| [`docs/data.md`](docs/data.md) | Every data point, all 14 charts, Data Explorer columns, insights, value calculation |
+| [`docs/data.md`](docs/data.md) | Every data point, all 14 charts, Data Explorer columns, insights, value calculation, the AI Usage report + budget/burn-rate model |
 | [`docs/architecture.md`](docs/architecture.md) | Layer diagrams, data flow, NDJSON schema, SOLID table |
 | [`docs/development.md`](docs/development.md) | How to add charts, insights, KPIs, filters, exports |
 | [`docs/configuration.md`](docs/configuration.md) | CONFIG thresholds, FEATURE_LABELS, value calculation |

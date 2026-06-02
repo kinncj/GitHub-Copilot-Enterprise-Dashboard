@@ -30,15 +30,23 @@ tests/unit/
       parser.test.js      # normalizeRecord, parseNDJSON
       merger.test.js      # mergeRecords
       aggregator.test.js  # aggregateData (all 6 dimensions)
+      detect.test.js      # detectFileType (NDJSON vs AI-usage CSV routing)
     filtering/
       engine.test.js      # filterRecords, quickRangeDates, extractFilterOptions
     insights/
       engine.test.js      # generateInsights (all 6 insight types)
     export/
       csv.test.js         # all buildXxxCSV functions
+    aiusage/
+      parser.test.js      # CSV reader (BOM, quoting, header mapping), normalize
+      aggregator.test.js  # aggregateAIUsage
+      filtering.test.js   # filterAIUsage + option extraction
+      insights.test.js    # generateAIUsageInsights
+      budget.test.js      # computeAIUsageBudget: projection, per-seat overage,
+                          #   confidence gating, multi-month, license config
   common/
     utils/
-      format.test.js      # formatNumber, humanizeFeature
+      format.test.js      # formatNumber, humanizeFeature, formatCurrency, formatCredits
 ```
 
 Domain tests run in Node — no browser, no DOM. Every domain function takes plain data as arguments and returns plain data back, so there's nothing to mock.
@@ -66,12 +74,14 @@ graph TD
         E[dashboard.spec.js\nupload · filters · export]
     end
 
-    subgraph Unit["Unit — Vitest (95 tests)"]
+    subgraph Unit["Unit — Vitest (174 tests)"]
         U1[parser · merger · aggregator]
         U2[filtering engine]
         U3[insights engine]
         U4[csv builders]
         U5[format utils]
+        U6[aiusage: parser · aggregator · filtering · insights · budget]
+        U7[detect]
     end
 
     E2E -.->|"relies on"| Unit
