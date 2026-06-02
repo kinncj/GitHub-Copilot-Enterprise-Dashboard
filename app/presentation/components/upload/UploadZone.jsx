@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, FilePlus, Sun, Moon } from 'lucide-react';
+import { UploadCloud, FilePlus, Sun, Moon, BarChart2, DollarSign } from 'lucide-react';
 import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useApp } from '../../context/AppContext.jsx';
 
@@ -12,7 +12,7 @@ export function UploadZone() {
   const toggleScheme = () => setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
 
   const handleFiles = files => {
-    const valid = [...files].filter(f => f.name.endsWith('.ndjson') || f.name.endsWith('.json'));
+    const valid = [...files].filter(f => /\.(ndjson|json|csv)$/i.test(f.name));
     if (valid.length) loadFiles(valid, false);
   };
 
@@ -33,12 +33,14 @@ export function UploadZone() {
 
       {/* hero */}
       <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'5rem 1.5rem calc(36px + 2rem)' }}>
-        <div style={{ width:'100%',maxWidth:'480px' }}>
+        <div style={{ width:'100%',maxWidth:'540px' }}>
           <h1 className="upload-brand fade-up" style={{ marginBottom:'1.25rem' }}>
-            Understand your<br />team&#39;s <em>Copilot</em><br />usage.
+            Understand your<br />team&#39;s <em>Copilot</em><br />usage &amp; cost.
           </h1>
           <p className="fade-up fade-up-2" style={{ color:'var(--text-2)',fontSize:'1rem',lineHeight:1.65,marginBottom:'2.5rem' }}>
-            Upload a GitHub Copilot Enterprise NDJSON export<br />to explore team activity, feature adoption, and ROI.
+            Drop either of GitHub&#39;s two exports — the <strong style={{ color:'var(--text-1)' }}>Copilot activity</strong> NDJSON
+            or the <strong style={{ color:'var(--text-1)' }}>AI Usage</strong> billing CSV. Load both to switch between
+            adoption and budget views. Everything runs in your browser.
           </p>
 
           <div
@@ -51,24 +53,50 @@ export function UploadZone() {
             <div style={{ display:'inline-flex',alignItems:'center',justifyContent:'center',width:'52px',height:'52px',borderRadius:'14px',background:'var(--surface-2)',border:'1px solid var(--border)',marginBottom:'1.25rem' }}>
               <UploadCloud size={24} color="var(--green)" />
             </div>
-            <p style={{ fontSize:'0.9rem',fontWeight:500,color:'var(--text-1)',marginBottom:'0.35rem' }}>Drop one or more NDJSON files here</p>
-            <p style={{ fontSize:'0.8rem',color:'var(--text-2)',marginBottom:'1.5rem' }}>Combine multiple 28-day exports for a longer date range</p>
-            <input ref={fileInputRef} type="file" accept=".ndjson,.json" multiple style={{ display:'none' }} onChange={e => handleFiles(e.target.files)} />
+            <p style={{ fontSize:'0.9rem',fontWeight:500,color:'var(--text-1)',marginBottom:'0.35rem' }}>Drop NDJSON or AI Usage CSV files here</p>
+            <p style={{ fontSize:'0.8rem',color:'var(--text-2)',marginBottom:'1.5rem' }}>Combine multiple exports — file type is detected automatically</p>
+            <input ref={fileInputRef} type="file" accept=".ndjson,.json,.csv" multiple style={{ display:'none' }} onChange={e => handleFiles(e.target.files)} />
             <button className="btn-primary" onClick={() => fileInputRef.current?.click()}>
               <FilePlus size={15} />
               Select Files
             </button>
           </div>
 
-          <div className="fade-up fade-up-4" style={{ marginTop:'1rem',padding:'0.9rem 1.1rem',borderRadius:'10px',background:'var(--surface)',border:'1px solid var(--border)' }}>
-            <p style={{ fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.09em',color:'var(--text-3)',marginBottom:'0.4rem' }}>Expected format</p>
-            <code style={{ fontSize:'0.73rem',fontFamily:'ui-monospace,monospace',color:'var(--green)',wordBreak:'break-all' }}>
-              {`{"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150,...}`}
-            </code>
+          <div className="fade-up fade-up-4" style={{ marginTop:'1rem',display:'grid',gap:'0.6rem' }}>
+            <FormatCard
+              icon={<BarChart2 size={14} color="var(--green)" />}
+              title="Activity export"
+              ext=".ndjson / .json"
+              powers="usage, adoption, lines-of-code & productivity"
+              sample={`{"user_login":"octocat","day":"2024-01-15","code_generation_activity_count":150, ...}`}
+            />
+            <FormatCard
+              icon={<DollarSign size={14} color="var(--green)" />}
+              title="AI Usage report"
+              ext=".csv"
+              powers="AI-credit consumption, cost & budget burn-rate"
+              sample={`date,username,product,sku,model,quantity,unit_type,gross_amount,total_monthly_quota,organization, ...`}
+            />
           </div>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function FormatCard({ icon, title, ext, powers, sample }) {
+  return (
+    <div style={{ padding:'0.8rem 1rem',borderRadius:'10px',background:'var(--surface)',border:'1px solid var(--border)',textAlign:'left' }}>
+      <div style={{ display:'flex',alignItems:'center',gap:'0.4rem',marginBottom:'0.4rem' }}>
+        {icon}
+        <span style={{ fontSize:'0.78rem',fontWeight:600,color:'var(--text-1)' }}>{title}</span>
+        <span style={{ fontSize:'0.62rem',fontFamily:'ui-monospace,monospace',color:'var(--text-3)',background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'5px',padding:'0.05rem 0.35rem' }}>{ext}</span>
+        <span style={{ fontSize:'0.68rem',color:'var(--text-3)',marginLeft:'auto' }}>{powers}</span>
+      </div>
+      <code style={{ display:'block',fontSize:'0.68rem',fontFamily:'ui-monospace,monospace',color:'var(--green)',wordBreak:'break-all',lineHeight:1.5 }}>
+        {sample}
+      </code>
     </div>
   );
 }

@@ -111,3 +111,66 @@
  * @property {number} MANUAL_LINES_PER_HOUR
  * @property {number} BLENDED_RATE_PER_HOUR
  */
+
+/**
+ * One row of a GitHub AI Usage Report CSV — AI-credit consumption / billing.
+ * Distinct from CopilotRecord (which is code-activity). Never merged with it.
+ * @typedef {Object} AIUsageRecord
+ * @property {string} date - ISO date string YYYY-MM-DD
+ * @property {string} username
+ * @property {string} product - e.g. "copilot"
+ * @property {string} sku - e.g. "copilot_ai_credit", "coding_agent_ai_credit"
+ * @property {string} model - raw model label, may be prefixed "Auto: "
+ * @property {string} baseModel - model with the "Auto: " prefix stripped
+ * @property {boolean} isAuto - true when the model was auto-routed ("Auto: ...")
+ * @property {number} quantity - AI credits consumed (fractional)
+ * @property {string} unitType - e.g. "ai-credits"
+ * @property {number} costPerQuantity - applied cost per credit (USD)
+ * @property {number} grossAmount - gross USD value of consumption
+ * @property {number} discountAmount - USD discounted
+ * @property {number} netAmount - net USD billed (often 0 under quota)
+ * @property {number} monthlyQuota - the user's total monthly credit quota
+ * @property {string} organization
+ * @property {string} repository
+ * @property {string} costCenter
+ * @property {number} aicQuantity - AI-credit quantity (mirror of quantity)
+ * @property {number} aicGrossAmount - AI-credit gross USD (mirror of grossAmount)
+ */
+
+/**
+ * @typedef {Object} AIUsageAggregated
+ * @property {{credits: number, gross: number, net: number, discount: number}} totals
+ * @property {Object.<string, {credits: number, gross: number, net: number, quota: number, days: Set<string>, models: Set<string>, daysActive: number, modelCount: number}>} byUser
+ * @property {Object.<string, {credits: number, gross: number, net: number, activeUsers: number}>} byDay
+ * @property {Object.<string, {credits: number, gross: number, auto: number, manual: number}>} byModel
+ * @property {Object.<string, {credits: number, gross: number, net: number}>} byOrg
+ * @property {Object.<string, {credits: number, gross: number, net: number}>} byCostCenter
+ * @property {Object.<string, {credits: number, gross: number, net: number}>} bySku
+ */
+
+/**
+ * @typedef {Object} BudgetLine
+ * @property {number} budget - credit budget (quota)
+ * @property {number} consumed - credits consumed so far
+ * @property {number} projected - run-rate projection to month end
+ * @property {number} remaining - budget - consumed
+ * @property {number} consumedPct - consumed / budget
+ * @property {number} projectedPct - projected / budget
+ */
+
+/**
+ * @typedef {Object} AIUsageBudget
+ * @property {BudgetLine & {gross: number, daysObserved: number, daysInMonth: number, dayOfMonth: number, remainingDays: number, factor: number, minDate: string, maxDate: string, month: string, users: number}} enterprise
+ * @property {Object.<string, BudgetLine & {users: number}>} byOrg
+ * @property {Object.<string, BudgetLine>} byUser
+ */
+
+/**
+ * @typedef {Object} AIUsageCriteria
+ * @property {string|null} dateFrom
+ * @property {string|null} dateTo
+ * @property {string|null} user
+ * @property {string|null} model
+ * @property {string|null} org
+ * @property {string|null} costCenter
+ */

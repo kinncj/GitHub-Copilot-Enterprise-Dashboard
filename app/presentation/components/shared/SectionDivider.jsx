@@ -1,7 +1,7 @@
 import React from 'react';
-import { Activity, Users, Code2 } from 'lucide-react';
+import { Activity, Users, Code2, DollarSign, Cpu, Building2, Gauge, Wallet } from 'lucide-react';
 
-const icons = { activity: Activity, users: Users, 'code-2': Code2 };
+const icons = { activity: Activity, users: Users, 'code-2': Code2, 'dollar-sign': DollarSign, cpu: Cpu, 'building-2': Building2, gauge: Gauge, wallet: Wallet };
 
 export function SectionDivider({ icon, label }) {
   const Icon = icons[icon] || Activity;

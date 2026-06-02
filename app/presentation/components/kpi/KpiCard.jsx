@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Info } from 'lucide-react';
 import { triggerDownload, captureElementAsPng } from '../../../../common/utils/download.js';
 
-export function KpiCard({ label, value, subtitle, description, tooltip }) {
+export function KpiCard({ label, value, subtitle, description, tooltip, valueColor }) {
   const [hovered, setHovered] = useState(false);
   const cardRef = useRef(null);
   const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -36,7 +36,7 @@ export function KpiCard({ label, value, subtitle, description, tooltip }) {
         )}
       </div>
       {description && <div style={{ fontSize:'0.68rem',marginBottom:'0.5rem',color:'var(--text-2)' }}>{description}</div>}
-      <div style={{ fontSize:'2rem',fontWeight:700,letterSpacing:'-0.03em',color:'var(--text-1)',lineHeight:1.1 }}>{value}</div>
+      <div style={{ fontSize:'2rem',fontWeight:700,letterSpacing:'-0.03em',color:valueColor || 'var(--text-1)',lineHeight:1.1 }}>{value}</div>
       {subtitle && <div style={{ fontSize:'0.72rem',marginTop:'0.4rem',color:'var(--text-2)' }}>{subtitle}</div>}
       {hovered && (
         <div

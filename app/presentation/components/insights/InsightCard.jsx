@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Star, TrendingUp, TrendingDown, AlertCircle, XCircle, Info, Award } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, AlertCircle, XCircle, Info, Award, DollarSign, Cpu, Bot, Shuffle } from 'lucide-react';
 import { triggerDownload, captureElementAsPng } from '../../../../common/utils/download.js';
 
 const icons = {
@@ -9,6 +9,10 @@ const icons = {
   'alert-circle': AlertCircle,
   'x-circle': XCircle,
   award: Award,
+  'dollar-sign': DollarSign,
+  cpu: Cpu,
+  bot: Bot,
+  shuffle: Shuffle,
 };
 const colors = { success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#60a5fa' };
 

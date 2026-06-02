@@ -25,7 +25,19 @@ export const CONFIG = {
 
   // Value Calculation defaults (overridable by user at runtime)
   BLENDED_RATE_PER_HOUR: 90,
-  MANUAL_LINES_PER_HOUR: 30
+  MANUAL_LINES_PER_HOUR: 30,
+
+  // AI Usage (credit/cost report) thresholds
+  NEAR_QUOTA_THRESHOLD: 0.80,   // flag users at ≥80% of their monthly credit quota
+  TOP_SPENDERS_SHOWN: 5,        // how many users to list in the Top Spenders insight
+  MIN_PROJECTION_DAYS: 7,       // below this many observed days, projections are "preliminary"
+
+  // GitHub bills AI usage in "AI credits" (a.k.a. premium requests). Each credit
+  // is worth $0.01. Model multipliers are already baked into the credit counts in
+  // the export, so credits × CREDIT_USD gives gross dollars.
+  // Source: https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
+  CREDIT_USD: 0.01,
+  PRICING_DOCS_URL: 'https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing'
 };
 
 /**

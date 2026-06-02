@@ -302,3 +302,92 @@ Count of user-day records where Copilot was triggered (`code_generation_activity
 | Table "CSV" | Button inside Data Explorer | CSV | Aggregated per-user view matching the table (9 columns) |
 | Chart "CSV" | Download button on each chart card | CSV | Data slice for that specific chart |
 | Chart "PNG" | Camera button on each chart card | PNG | Screenshot of the rendered chart |
+
+---
+
+## Second dataset — AI Usage Report (credits & cost)
+
+Alongside the activity NDJSON, GitHub exports an **AI Usage Report CSV** (`AIUsageReport_*.csv`). This
+is a billing / AI-credit consumption dataset — a different schema and a different story. Drop it on the
+same upload zone; the file type is auto-detected (`app/domain/data/detect.js`) and routed to a
+dedicated AI Usage dashboard. When both an activity export and an AI Usage CSV are loaded, an
+**Activity / AI Usage** tab switcher appears. The two datasets are never merged.
+
+### CSV columns
+
+| Column | What it means |
+|--------|---------------|
+| `date` / `username` | Per-user per-day row |
+| `product` / `sku` | `copilot`; `copilot_ai_credit` (chat/completions) or `coding_agent_ai_credit` (coding agent) |
+| `model` | Model label, e.g. `Claude Sonnet 4.6`. A `Auto: ` prefix means GitHub auto-routed the model |
+| `quantity` / `aic_quantity` | **AI credits** consumed (fractional) |
+| `unit_type` | `ai-credits` |
+| `applied_cost_per_quantity` | USD per credit (e.g. `$0.01`) |
+| `gross_amount` | Gross USD value of the consumption (the headline spend metric) |
+| `discount_amount` / `net_amount` | USD discounted / net billed. `net` is often **$0** while usage stays within the included monthly quota |
+| `total_monthly_quota` | The user's monthly credit quota — drives the Quota Utilization chart |
+| `organization` / `repository` / `cost_center_name` | Grouping dimensions (`repository` is often blank) |
+| `aic_gross_amount` | AI-credit gross USD (mirror of `gross_amount`) |
+
+### What the AI Usage dashboard shows
+
+- **KPIs:** Total Credits, Gross Value, Net Billed, Active Users, Avg Credits/User, Top Model,
+  Coding-Agent Share.
+- **Charts:** Credits & Cost over time; Top Users by Credits; Quota Utilization (% of each user's
+  monthly quota, red ≥80%); Credits by Model; Auto-Routed vs Explicit; Spend by Organization / Cost
+  Center / SKU.
+- **Insights:** Top Spenders, Near/Over Quota, Most-Used Model, Auto-vs-Explicit split, Coding-Agent
+  usage.
+- **Table:** per-user credits, gross/net $, quota and % of quota, distinct models used.
+
+`Auto: X` and explicit `X` rows are merged under the base model `X` for per-model rollups, with the
+auto/explicit split tracked separately.
+
+### Budget & burn rate
+
+Because `total_monthly_quota` is a per-user **monthly** allowance but an export usually spans only a few
+days, the budget view is a **run-rate projection**: keep actual usage for elapsed days, then extend the
+observed daily average across the remaining days of the month.
+
+```
+rate      = creditsUsed / daysObserved          (observed daily average)
+projected = creditsUsed + rate × remainingDays  = creditsUsed × (1 + remainingDays/daysObserved)
+```
+
+This is computed at three levels (`app/domain/aiusage/budget.js`):
+
+| Level | Budget (allotted) | Used | Projected |
+|-------|-------------------|------|-----------|
+| **Individual** | the user's `total_monthly_quota` | sum of that user's `quantity` | run-rate to month end |
+| **Organization** | sum of distinct member quotas | sum of org `quantity` | run-rate to month end |
+| **Enterprise** | sum of all distinct user quotas | total `quantity` | run-rate to month end |
+
+**Credits ⇄ dollars.** GitHub bills in **AI credits** (premium requests) at **$0.01 / credit**; model
+multipliers are already baked into the credit counts, so `dollars = credits × 0.01`. The rate and the
+source link live in `constants.js` (`CREDIT_USD`, `PRICING_DOCS_URL`). Reference:
+[GitHub models & pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing).
+
+The dashboard shows: an enterprise status pill (On Track / At Risk / Over Budget — or **Preliminary**
+when too few days are observed), summary cards (Credits Allotted, Credits Used, Consumption Value,
+Billed to Date, Projected Month-End, Projected Overage, Window, At-Risk Accounts), an **Enterprise Budget
+Burn-Down** chart (cumulative vs projection vs budget ceiling), **Org Budget Utilization**, **Projected
+Quota Overage (Users)**, and **Budget by Organization / by User** tables listing Credits Used, Credits
+Allotted, % Used, Projected %, Consumption Value, and Allocated Budget.
+
+**Honesty guardrails.** Because a few days of data make for a volatile projection, budgets come with
+guardrails:
+
+- **Consumption ≠ billing.** *Consumption Value* is the gross list-price value of credits used
+  (credits × $0.01). *Billed to Date* is `net_amount` — the money actually charged, usually **$0** while
+  under the included allowance.
+- **Overage is per-seat, not pooled.** Quota is enforced per user — one person's unused credits do not
+  cover another's overage. So *Projected Overage* is the **sum of each user's own projected excess**
+  (`Σ max(0, projected_user − quota_user)`), not enterprise consumption minus the summed allowance. This
+  is why the org can look "67% of allowance / on track" while still facing real overage charges from a
+  few heavy users — the per-seat figure is the honest spend risk.
+- **Low-confidence projections.** Below 7 observed days (`MIN_PROJECTION_DAYS`) the projection is shown
+  as **preliminary** — the red "over budget" alarm is suppressed and insights are informational only.
+- **Multi-month files** are detected and flagged; the monthly projection assumes a single month, so
+  filter to one month for an accurate burn rate.
+- **License config is session-only** and dataset-specific — it is cleared when you reset or load a new
+  dataset, so seat counts never carry over to a different enterprise's file.
